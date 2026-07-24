@@ -19,3 +19,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - Use pnpm for dependency installation, local scripts, and continuous integration.
+
+### Fixed
+
+- Correct the board square orientation and improve coordinate, legal-move, and dialog contrast.
+- Allow new games to accept moves after a completed match.

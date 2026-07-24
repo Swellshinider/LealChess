@@ -4,6 +4,11 @@
 }
 
 .board-frame {
+  --coordinate-on-dark: #fff;
+  --coordinate-on-light: var(--night);
+  --move-marker: rgb(23 36 44 / 62%);
+  --premove-marker: rgb(217 154 61 / 72%);
+
   aspect-ratio: 1;
   background: var(--carbon);
   box-shadow:
@@ -21,12 +26,84 @@
 
 :host ::ng-deep cg-board {
   background: conic-gradient(
-      var(--board-light) 25%,
-      var(--board-dark) 0 50%,
-      var(--board-light) 0 75%,
-      var(--board-dark) 0
+      var(--board-dark) 25%,
+      var(--board-light) 0 50%,
+      var(--board-dark) 0 75%,
+      var(--board-light) 0
     )
     0 0 / 25% 25%;
+}
+
+:host ::ng-deep .cg-wrap coords {
+  font-weight: 700;
+  opacity: 1;
+}
+
+:host ::ng-deep .orientation-white .ranks :nth-child(odd),
+:host ::ng-deep .orientation-white .files :nth-child(odd),
+:host ::ng-deep .orientation-black .ranks :nth-child(even),
+:host ::ng-deep .orientation-black .files :nth-child(even) {
+  color: var(--coordinate-on-dark);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 65%);
+}
+
+:host ::ng-deep .orientation-white .ranks :nth-child(even),
+:host ::ng-deep .orientation-white .files :nth-child(even),
+:host ::ng-deep .orientation-black .ranks :nth-child(odd),
+:host ::ng-deep .orientation-black .files :nth-child(odd) {
+  color: var(--coordinate-on-light);
+}
+
+:host ::ng-deep cg-board square.move-dest {
+  background: radial-gradient(circle, var(--move-marker) 0 22%, transparent 23%);
+}
+
+:host ::ng-deep cg-board square.premove-dest {
+  background: radial-gradient(circle, var(--premove-marker) 0 22%, transparent 23%);
+}
+
+:host ::ng-deep cg-board square.oc.move-dest {
+  background: radial-gradient(
+    circle,
+    transparent 0 72%,
+    var(--move-marker) 73% 86%,
+    transparent 87%
+  );
+}
+
+:host ::ng-deep cg-board square.oc.premove-dest {
+  background: radial-gradient(
+    circle,
+    transparent 0 72%,
+    var(--premove-marker) 73% 86%,
+    transparent 87%
+  );
+}
+
+:host ::ng-deep cg-board square.move-dest:hover,
+:host ::ng-deep cg-board square.move-dest.hover {
+  background: rgb(23 36 44 / 24%);
+}
+
+:host ::ng-deep cg-board square.premove-dest:hover,
+:host ::ng-deep cg-board square.premove-dest.hover {
+  background: rgb(217 154 61 / 28%);
+}
+
+:host ::ng-deep cg-board square.last-move {
+  background-color: rgb(217 154 61 / 34%);
+}
+
+:host ::ng-deep cg-board square.selected {
+  background-color: rgb(23 36 44 / 38%);
+}
+
+:host ::ng-deep cg-board square.check {
+  background: radial-gradient(circle, rgb(168 77 69 / 90%) 0 24%, transparent 72%);
+}
+
+:host ::ng-deep cg-board square.current-premove {
+  background-color: rgb(217 154 61 / 35%);
 }
 
 [data-board-theme='classic'] {

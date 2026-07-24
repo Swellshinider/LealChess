@@ -9,7 +9,18 @@ test('starts as White, supports click moves, premoves, annotations, and restorat
   page,
 }) => {
   await startGame(page, 'White', 'Advanced');
+  await expect(page.locator('coords.files coord').nth(0)).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await expect(page.locator('coords.files coord').nth(1)).toHaveCSS('color', 'rgb(23, 36, 44)');
+  await expect(page.locator('coords.ranks coord').nth(0)).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await expect(page.locator('coords.ranks coord').nth(1)).toHaveCSS('color', 'rgb(23, 36, 44)');
   await clickSquare(page, 'e2');
+  const legalDestinations = page.locator('square.move-dest');
+  await expect(legalDestinations).toHaveCount(2);
+  await expect
+    .poll(() =>
+      legalDestinations.first().evaluate((square) => getComputedStyle(square).backgroundImage),
+    )
+    .not.toBe('none');
   await clickSquare(page, 'e4');
   await expect(page.getByRole('heading', { name: 'Stockfish is thinking' })).toBeVisible();
   await clickSquare(page, 'g1');
@@ -36,6 +47,10 @@ test('starts as Black, receives an opening move, changes difficulty, and resigns
   await expect(page.locator('#difficulty')).toHaveValue('intermediate');
 
   await page.getByRole('button', { name: 'Resign', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Keep playing' })).toHaveCSS(
+    'color',
+    'rgb(23, 36, 44)',
+  );
   await page.getByRole('button', { name: 'Resign game' }).click();
   await expect(page.getByRole('heading', { name: 'You resigned' })).toBeVisible();
 });
@@ -63,6 +78,12 @@ test('completes a checkmate flow from a restored position', async ({ page }) => 
   await seedGame(page, '7k/5Q2/6K1/8/8/8/8/8 w - - 0 1', 'white');
   await dragPieceTo(page, 'piece.white.queen', 'g7');
   await expect(page.getByText(/wins by checkmate/i).first()).toBeVisible();
+
+  await page.getByRole('button', { name: 'New game' }).first().click();
+  await startGame(page, 'White', 'Casual');
+  await clickSquare(page, 'e2');
+  await clickSquare(page, 'e4');
+  await expect(page.locator('.history')).toContainText('e4');
 });
 
 test('keeps the board primary on a mobile viewport', async ({ page }, testInfo) => {
