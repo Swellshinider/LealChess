@@ -173,6 +173,24 @@ describe('GameController', () => {
 
     expect(controller.state().moves).toHaveLength(0);
   });
+
+  it('starts a playable game after the previous game has finished', async () => {
+    await controller.initialize();
+    await controller.startGame({ colorSelection: 'white', difficulty: 'casual' });
+    await controller.resignGame();
+
+    expect(controller.state().phase).toBe('game-over');
+    expect(controller.state().result).not.toBeNull();
+
+    await controller.startGame({ colorSelection: 'white', difficulty: 'casual' });
+
+    expect(controller.state().phase).toBe('active');
+    expect(controller.state().result).toBeNull();
+    expect(controller.state().pendingPremove).toBeNull();
+    expect(controller.state().restored).toBe(false);
+    expect(controller.state().legalDestinations.get('e2')).toEqual(['e3', 'e4']);
+    await expect(controller.makePlayerMove({ from: 'e2', to: 'e4' })).resolves.toBe(true);
+  });
 });
 
 function snapshot(chess: Chess): PersistedGame {
