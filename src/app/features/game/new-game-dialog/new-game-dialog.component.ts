@@ -1,10 +1,16 @@
 import { ChangeDetectionStrategy, Component, effect, input, output, signal } from '@angular/core';
 import { DIFFICULTY_PRESETS } from '../../../core/engine/difficulty';
-import type { ColorSelection, DifficultyId, StartGameOptions } from '../../../core/game/game.types';
+import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
+import type {
+  ColorSelection,
+  DifficultyId,
+  EngineStatus,
+  StartGameOptions,
+} from '../../../core/game/game.types';
 
 @Component({
   selector: 'app-new-game-dialog',
-  imports: [],
+  imports: [ModalFocusDirective],
   templateUrl: './new-game-dialog.component.html',
   styleUrl: './new-game-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -13,8 +19,11 @@ export class NewGameDialogComponent {
   readonly open = input(false);
   readonly canClose = input(true);
   readonly defaultDifficulty = input<DifficultyId>('casual');
+  readonly engineStatus = input<EngineStatus>('idle');
+  readonly engineError = input<string | null>(null);
   readonly started = output<StartGameOptions>();
   readonly cancelled = output<void>();
+  readonly retryRequested = output<void>();
 
   protected readonly color = signal<ColorSelection>('random');
   protected readonly difficulty = signal<DifficultyId>('casual');
@@ -38,6 +47,7 @@ export class NewGameDialogComponent {
   }
 
   protected start(): void {
+    if (this.engineStatus() !== 'ready') return;
     this.started.emit({
       colorSelection: this.color(),
       difficulty: this.difficulty(),

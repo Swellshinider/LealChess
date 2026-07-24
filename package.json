@@ -12,7 +12,8 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:coverage": "ng test --coverage",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "screenshots": "playwright test --config playwright.screenshots.config.ts"
   },
   "private": true,
   "packageManager": "pnpm@11.17.0",
@@ -37,6 +38,7 @@
     "@angular/build": "^22.0.8",
     "@angular/cli": "^22.0.8",
     "@angular/compiler-cli": "^22.0.0",
+    "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "^1.55.0",
     "@vitest/coverage-v8": "^4.1.10",
     "angular-eslint": "^22.1.0",

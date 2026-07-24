@@ -17,6 +17,7 @@ import type { DrawShape } from '@lichess-org/chessground/draw';
 import type { Dests, Key } from '@lichess-org/chessground/types';
 import { Chess, type Square } from 'chess.js';
 import type { ChessColor } from '../../../shared/chess/chess.types';
+import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
 import {
   STARTING_FEN,
   type BoardTheme,
@@ -50,7 +51,7 @@ type PuzzleStatus = 'ready' | 'incorrect' | 'correct' | 'revealed';
 
 @Component({
   selector: 'app-review-page',
-  imports: [RouterLink],
+  imports: [ModalFocusDirective, RouterLink],
   templateUrl: './review-page.component.html',
   styleUrl: './review-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -85,6 +86,8 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   );
   private api: Api | null = null;
   private apiElement: HTMLElement | null = null;
+  private resizeObserver: ResizeObserver | null = null;
+  private resizeFrame: number | null = null;
   private shapes: DrawShape[] = [];
 
   constructor() {
@@ -98,8 +101,18 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       const host = this.boardHost()?.nativeElement;
       if (host && host !== this.apiElement) {
         this.api?.destroy();
+        this.resizeObserver?.disconnect();
         this.api = Chessground(host, this.boardConfig());
         this.apiElement = host;
+        this.resizeObserver = new ResizeObserver(() => {
+          if (this.resizeFrame !== null) cancelAnimationFrame(this.resizeFrame);
+          this.resizeFrame = requestAnimationFrame(() => {
+            this.api?.state.dom.bounds.clear();
+            this.api?.redrawAll();
+            this.resizeFrame = null;
+          });
+        });
+        this.resizeObserver.observe(host);
       }
       this.syncBoard();
     });
@@ -131,17 +144,23 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.coachAnalysis.cancel();
+    if (this.resizeFrame !== null) cancelAnimationFrame(this.resizeFrame);
+    this.resizeObserver?.disconnect();
     this.api?.destroy();
   }
 
   @HostListener('document:keydown', ['$event'])
   protected handleKey(event: KeyboardEvent): void {
     this.sound.unlock();
-    if (
-      this.mode() !== 'review' ||
-      event.target instanceof HTMLInputElement ||
-      event.target instanceof HTMLSelectElement
-    ) {
+    const target = event.target;
+    const isInteractive =
+      target instanceof HTMLElement &&
+      Boolean(
+        target.closest(
+          'button, a, input, select, textarea, summary, [contenteditable="true"], [role="dialog"]',
+        ),
+      );
+    if (this.mode() !== 'review' || this.pendingPromotion() || isInteractive) {
       return;
     }
     const action: Record<string, () => void> = {
@@ -162,6 +181,19 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.pendingPromotion.set(null);
     this.api?.cancelMove();
     this.syncBoard();
+  }
+
+  protected handleModeKey(event: KeyboardEvent): void {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const wantsPractice = event.key === 'ArrowRight' || event.key === 'End';
+    if (wantsPractice && this.positions().length) {
+      this.enterPractice(this.trainingIndex());
+      queueMicrotask(() => document.getElementById('practice-tab')?.focus());
+    } else {
+      this.leavePractice();
+      queueMicrotask(() => document.getElementById('score-sheet-tab')?.focus());
+    }
   }
 
   @HostListener('document:pointerdown')
@@ -338,6 +370,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       selectable: { enabled: false },
       drawable: { enabled: true, shapes: this.shapes },
     });
+    this.api.state.dom.bounds.clear();
     this.api.redrawAll();
   }
 
@@ -374,6 +407,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       selectable: { enabled: active },
       drawable: { enabled: false, shapes },
     });
+    this.api.state.dom.bounds.clear();
     this.api.redrawAll();
   }
 

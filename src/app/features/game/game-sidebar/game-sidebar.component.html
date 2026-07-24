@@ -1,5 +1,11 @@
 <aside class="sidebar" aria-label="Game controls">
-  <section class="status-card" [class.error]="state().engineStatus === 'error'">
+  <section
+    class="status-card"
+    [class.error]="state().engineStatus === 'error'"
+    [attr.role]="state().engineStatus === 'error' ? 'alert' : 'status'"
+    [attr.aria-busy]="state().engineStatus === 'loading'"
+    aria-atomic="true"
+  >
     <div class="status-kicker">
       <span class="status-dot" aria-hidden="true"></span>
       {{ state().phase === 'game-over' ? 'Game over' : 'Match status' }}
@@ -36,8 +42,12 @@
     </select>
 
     <div class="primary-actions">
-      <button type="button" class="new" (click)="newGameRequested.emit()">New game</button>
-      <button type="button" (click)="confirm('restart')" [disabled]="state().phase === 'setup'">
+      <button type="button" class="new" (click)="newGameRequested.emit($event)">New game</button>
+      <button
+        type="button"
+        (click)="confirm('restart', $event)"
+        [disabled]="state().phase === 'setup'"
+      >
         Restart
       </button>
     </div>
@@ -46,7 +56,7 @@
       <button
         type="button"
         class="resign"
-        (click)="confirm('resign')"
+        (click)="confirm('resign', $event)"
         [disabled]="state().phase !== 'active'"
       >
         Resign
@@ -107,12 +117,20 @@
 
 @if (confirmation(); as action) {
   <div class="confirmation-backdrop">
-    <section role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+    <section
+      appModalFocus
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="confirm-title"
+      aria-describedby="confirm-description"
+      tabindex="-1"
+      (modalDismissed)="closeConfirmation()"
+    >
       <span class="eyebrow">Confirm action</span>
       <h2 id="confirm-title">
         {{ action === 'resign' ? 'Resign this game?' : 'Restart this game?' }}
       </h2>
-      <p>
+      <p id="confirm-description">
         {{
           action === 'resign'
             ? 'The game will end immediately.'
@@ -120,7 +138,7 @@
         }}
       </p>
       <div>
-        <button type="button" (click)="confirmation.set(null)">Keep playing</button>
+        <button type="button" data-modal-initial (click)="closeConfirmation()">Keep playing</button>
         <button type="button" class="danger" (click)="runConfirmedAction()">
           {{ action === 'resign' ? 'Resign game' : 'Restart game' }}
         </button>

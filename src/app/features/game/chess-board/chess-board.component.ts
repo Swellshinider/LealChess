@@ -16,6 +16,7 @@ import type { Dests, Key } from '@lichess-org/chessground/types';
 import type { Square } from 'chess.js';
 import { GameController } from '../../../core/game/game-controller.service';
 import type { MoveInput, PromotionPiece } from '../../../core/game/game.types';
+import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
 
 interface PendingPromotion {
   move: Omit<MoveInput, 'promotion'>;
@@ -24,7 +25,7 @@ interface PendingPromotion {
 
 @Component({
   selector: 'app-chess-board',
-  imports: [],
+  imports: [ModalFocusDirective],
   templateUrl: './chess-board.component.html',
   styleUrl: './chess-board.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,6 +40,8 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy {
   private api: Api | null = null;
   private shapes: DrawShape[] = [];
   private redrawFrame: number | null = null;
+  private resizeFrame: number | null = null;
+  private resizeObserver: ResizeObserver | null = null;
   private layoutKey = '';
   private fullRedrawPending = false;
   private readonly refreshBounds = () => this.api?.state.dom.bounds.clear();
@@ -54,6 +57,15 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy {
     this.api = Chessground(this.boardHost.nativeElement, this.createConfig());
     this.boardHost.nativeElement.addEventListener('mousedown', this.refreshBounds, true);
     this.boardHost.nativeElement.addEventListener('touchstart', this.refreshBounds, true);
+    this.resizeObserver = new ResizeObserver(() => {
+      if (this.resizeFrame !== null) cancelAnimationFrame(this.resizeFrame);
+      this.resizeFrame = requestAnimationFrame(() => {
+        this.api?.state.dom.bounds.clear();
+        this.api?.redrawAll();
+        this.resizeFrame = null;
+      });
+    });
+    this.resizeObserver.observe(this.boardHost.nativeElement);
     this.syncBoard(this.state());
   }
 
@@ -61,6 +73,10 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy {
     if (this.redrawFrame !== null) {
       cancelAnimationFrame(this.redrawFrame);
     }
+    if (this.resizeFrame !== null) {
+      cancelAnimationFrame(this.resizeFrame);
+    }
+    this.resizeObserver?.disconnect();
     this.boardHost.nativeElement.removeEventListener('mousedown', this.refreshBounds, true);
     this.boardHost.nativeElement.removeEventListener('touchstart', this.refreshBounds, true);
     this.api?.destroy();
@@ -174,6 +190,7 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy {
     }
     this.redrawFrame = requestAnimationFrame(() => {
       if (this.fullRedrawPending) {
+        this.api?.state.dom.bounds.clear();
         this.api?.redrawAll();
         this.fullRedrawPending = false;
       } else {

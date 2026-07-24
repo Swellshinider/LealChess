@@ -9,6 +9,8 @@ export interface PlatformFetchRequest {
 export interface PlatformFetchResult {
   profile: ImportedProfile;
   games: ImportedGame[];
+  discoveredCount: number;
+  skippedCount: number;
   warning?: string;
 }
 

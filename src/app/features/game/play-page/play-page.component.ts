@@ -18,6 +18,7 @@ export class PlayPageComponent implements OnInit, OnDestroy {
   protected readonly controller = inject(GameController);
   protected readonly newGameOpen = signal(false);
   protected readonly state = this.controller.state;
+  private newGameTrigger: HTMLElement | null = null;
 
   ngOnInit(): void {
     void this.controller.initialize();
@@ -33,13 +34,17 @@ export class PlayPageComponent implements OnInit, OnDestroy {
     this.controller.unlockSound();
   }
 
-  protected openNewGame(): void {
+  protected openNewGame(event?: Event): void {
+    if (event?.currentTarget instanceof HTMLElement) {
+      this.newGameTrigger = event.currentTarget;
+    }
     this.newGameOpen.set(true);
   }
 
   protected closeNewGame(): void {
     if (this.state().phase !== 'setup') {
       this.newGameOpen.set(false);
+      requestAnimationFrame(() => this.newGameTrigger?.focus());
     }
   }
 

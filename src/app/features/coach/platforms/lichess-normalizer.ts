@@ -26,11 +26,19 @@ export function normalizeLichessGame(
   source: LichessGameResponse,
   profileKey: string,
   importedAt: string,
-): ImportedGame {
-  const gameId = source.id ?? crypto.randomUUID();
+): ImportedGame | null {
+  const gameId = source.id;
+  if (!gameId) return null;
   const pgn = source.pgn ?? '';
   const variant = source.variant ?? 'standard';
-  const parsed = parseImportedPgn(pgn, variant);
+  const parsed = pgn.trim()
+    ? parseImportedPgn(pgn, variant)
+    : {
+        status: 'unavailable' as const,
+        moves: [],
+        error:
+          'Game moves are unavailable. The game may be private or deleted; make it public and import again.',
+      };
   const headers = pgnHeaders(pgn);
   return {
     key: `lichess:${gameId}`,

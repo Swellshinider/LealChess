@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import type { OnInit } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import type { ChessColor } from '../../../shared/chess/chess.types';
 import { CoachImportService } from '../data/coach-import.service';
-import type { GameAnalysis, ImportedGame, SpeedFilter } from '../domain/coach.types';
+import type { ChessPlatform, GameAnalysis, ImportedGame, SpeedFilter } from '../domain/coach.types';
 import { categoryLabel, learnerColorForGame } from '../analysis/analysis-rules';
 
 @Component({
@@ -25,6 +25,7 @@ export class LearnPageComponent implements OnInit {
     }),
     speed: new FormControl<SpeedFilter>('any', { nonNullable: true }),
   });
+  protected readonly usernameError = signal(false);
 
   async ngOnInit(): Promise<void> {
     await this.coach.initialize();
@@ -36,11 +37,18 @@ export class LearnPageComponent implements OnInit {
   }
 
   protected async importGames(): Promise<void> {
-    if (this.form.invalid || this.coach.loading()) {
+    const request = this.form.getRawValue();
+    const hasUsername = request.chessComUsername.trim() || request.lichessUsername.trim();
+    this.usernameError.set(!hasUsername);
+    if (this.form.invalid || !hasUsername || this.coach.loading()) {
       this.form.markAllAsTouched();
       return;
     }
-    await this.coach.import(this.form.getRawValue());
+    await this.coach.import(request);
+  }
+
+  protected retry(platform: ChessPlatform): void {
+    void this.coach.retry(platform);
   }
 
   protected learnerColor(game: ImportedGame): ChessColor | undefined {

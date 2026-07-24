@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import type { PlatformFetchRequest, PlatformFetchResult } from '../domain/platform-import.types';
 import { normalizeChessComGame, type ChessComGameResponse } from './chess-com-normalizer';
-import { platformErrorMessage } from './platform-errors';
+import { platformImportError } from './platform-errors';
 
 interface ChessComProfileResponse {
   username?: string;
@@ -27,7 +27,7 @@ export class ChessComApiService {
         ),
       );
     } catch (error) {
-      throw new Error(platformErrorMessage(error, 'chess-com'));
+      throw platformImportError(error, 'chess-com');
     }
 
     try {
@@ -64,6 +64,9 @@ export class ChessComApiService {
         games.length < request.maxGames && request.speed !== 'any' && scannedNonEmpty >= 12
           ? `Found ${games.length} matching games in the 12 newest non-empty archives.`
           : undefined;
+      const normalized = games
+        .map((game) => normalizeChessComGame(game, profileKey, now))
+        .filter((game) => game !== null);
       return {
         profile: {
           platform: 'chess-com',
@@ -73,11 +76,13 @@ export class ChessComApiService {
           ...(profileResponse.avatar ? { avatarUrl: profileResponse.avatar } : {}),
           updatedAt: now,
         },
-        games: games.map((game) => normalizeChessComGame(game, profileKey, now)),
+        games: normalized,
+        discoveredCount: games.length,
+        skippedCount: games.length - normalized.length,
         ...(warning ? { warning } : {}),
       };
     } catch (error) {
-      throw new Error(platformErrorMessage(error, 'chess-com', true));
+      throw platformImportError(error, 'chess-com', true);
     }
   }
 }

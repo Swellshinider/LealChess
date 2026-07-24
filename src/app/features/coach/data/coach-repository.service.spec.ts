@@ -49,7 +49,10 @@ describe('CoachRepositoryService', () => {
 
   it('deduplicates imports, preserves first import, and unions profile associations', async () => {
     const repository = TestBed.inject(CoachRepositoryService);
-    await repository.saveSuccessfulImport(profile, [game()]);
+    await expect(repository.saveSuccessfulImport(profile, [game()])).resolves.toEqual({
+      addedCount: 1,
+      duplicateCount: 0,
+    });
     const changed = {
       ...game(),
       speed: 'blitz',
@@ -57,7 +60,10 @@ describe('CoachRepositoryService', () => {
       lastImportedAt: '2026-07-24T13:00:00.000Z',
       profileKeys: ['lichess:learner', 'lichess:second'],
     };
-    await repository.saveSuccessfulImport(profile, [changed]);
+    await expect(repository.saveSuccessfulImport(profile, [changed])).resolves.toEqual({
+      addedCount: 0,
+      duplicateCount: 1,
+    });
     const stored = await repository.game('lichess', 'game-1');
     expect(stored).toMatchObject({
       speed: 'blitz',

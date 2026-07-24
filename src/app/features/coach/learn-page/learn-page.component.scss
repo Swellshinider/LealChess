@@ -113,31 +113,78 @@ form {
   }
 }
 
+.form-help,
+.field-error {
+  color: var(--mist);
+  font-size: 0.85rem;
+  margin: 10px 0 0;
+}
+
+.field-error {
+  color: #f2b0aa;
+}
+
 .platform-statuses {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   grid-template-columns: repeat(2, 1fr);
   margin-top: 18px;
+}
 
-  p {
-    border-left: 3px solid var(--teal);
-    color: var(--mist);
-    margin: 0;
-    padding: 8px 12px;
+.platform-status {
+  background: var(--night);
+  border: 1px solid rgb(200 213 207 / 14%);
+  border-left: 4px solid var(--teal);
+  color: var(--mist);
+  padding: 14px 16px;
 
-    &[data-state='error'] {
-      border-color: var(--danger);
-    }
+  &[data-state='loading'] {
+    border-left-color: var(--teal);
+  }
 
-    &[data-state='success'],
-    &[data-state='warning'] {
-      border-color: var(--amber);
-    }
+  &[data-state='error'] {
+    border-left-color: var(--danger);
+  }
+
+  &[data-state='success'],
+  &[data-state='warning'] {
+    border-left-color: var(--amber);
+  }
+
+  > div {
+    align-items: baseline;
+    display: flex;
+    justify-content: space-between;
   }
 
   strong {
     color: var(--paper);
-    display: block;
+  }
+
+  span {
+    color: var(--amber);
+    font-family: var(--font-utility);
+    font-size: 0.58rem;
+    text-transform: uppercase;
+  }
+
+  p {
+    margin: 8px 0 0;
+  }
+
+  .recovery {
+    color: var(--paper);
+  }
+
+  button {
+    background: transparent;
+    border: 1px solid rgb(200 213 207 / 28%);
+    border-radius: 4px;
+    color: var(--paper);
+    font-weight: 700;
+    margin-top: 12px;
+    min-height: 38px;
+    padding: 7px 12px;
   }
 }
 
@@ -262,6 +309,15 @@ form {
   }
 }
 
+.failed-import {
+  border-left: 4px solid var(--danger);
+
+  span {
+    color: #f2b0aa;
+    font-family: var(--font-utility);
+  }
+}
+
 .game-list article {
   align-items: center;
   border-bottom: 1px solid rgb(200 213 207 / 13%);
@@ -308,6 +364,32 @@ form {
     color: var(--amber);
     font-weight: 700;
     text-decoration: none;
+  }
+}
+
+.unavailable-game {
+  color: var(--mist);
+  font-size: 0.78rem;
+  text-align: left;
+
+  > strong {
+    color: #f2b0aa;
+  }
+
+  p {
+    margin: 4px 0;
+  }
+
+  summary {
+    color: var(--amber);
+    cursor: pointer;
+  }
+
+  pre {
+    max-height: 200px;
+    max-width: 320px;
+    overflow: auto;
+    white-space: pre-wrap;
   }
 }
 

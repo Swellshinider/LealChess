@@ -3,23 +3,38 @@
     #boardHost
     class="chessground-host"
     role="img"
-    [attr.aria-label]="
-      'Chessboard, ' + state().orientation + ' orientation. ' + state().announcement
-    "
+    aria-label="Chessboard"
+    aria-describedby="play-board-description"
   ></div>
+  <p id="play-board-description" class="sr-only">
+    {{ state().orientation }} orientation. {{ state().turn }} to move.
+    {{ state().announcement }} Use a pointer or touch to move pieces. Game actions and move history
+    remain available from the keyboard.
+  </p>
 
   @if (promotion(); as pending) {
     <div
+      appModalFocus
       class="promotion-backdrop"
       role="dialog"
       aria-modal="true"
       aria-labelledby="promotion-title"
+      aria-describedby="promotion-help"
+      tabindex="-1"
+      (modalDismissed)="cancelPromotion()"
     >
       <div class="promotion-card">
         <span id="promotion-title">Choose promotion</span>
+        <span id="promotion-help" class="sr-only">
+          Choose a piece with Tab, then press Enter. Press Escape to cancel.
+        </span>
         <div class="promotion-pieces">
           @for (piece of promotionPieces; track piece) {
-            <button type="button" (click)="choosePromotion(piece)">
+            <button
+              type="button"
+              [attr.data-modal-initial]="$first ? '' : null"
+              (click)="choosePromotion(piece)"
+            >
               <span class="promotion-symbol" aria-hidden="true">
                 {{ piece === 'q' ? '♛' : piece === 'r' ? '♜' : piece === 'b' ? '♝' : '♞' }}
               </span>

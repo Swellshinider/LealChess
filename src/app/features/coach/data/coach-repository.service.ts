@@ -7,6 +7,11 @@ import type {
   ImportedProfile,
 } from '../domain/coach.types';
 
+export interface ImportSaveResult {
+  addedCount: number;
+  duplicateCount: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CoachRepositoryService {
   private readonly database = inject(LealChessDatabaseService);
@@ -47,12 +52,22 @@ export class CoachRepositoryService {
     await (await this.database.open()).put('gameAnalyses', analysis);
   }
 
-  async saveSuccessfulImport(profile: ImportedProfile, games: ImportedGame[]): Promise<void> {
+  async saveSuccessfulImport(
+    profile: ImportedProfile,
+    games: ImportedGame[],
+  ): Promise<ImportSaveResult> {
     const database = await this.database.open();
     const transaction = database.transaction(['coachProfiles', 'importedGames'], 'readwrite');
     const store = transaction.objectStore('importedGames');
+    let addedCount = 0;
+    let duplicateCount = 0;
     for (const game of games) {
       const existing = await store.get(game.key);
+      if (existing) {
+        duplicateCount += 1;
+      } else {
+        addedCount += 1;
+      }
       await store.put({
         ...game,
         firstImportedAt: existing?.firstImportedAt ?? game.firstImportedAt,
@@ -61,6 +76,7 @@ export class CoachRepositoryService {
     }
     await transaction.objectStore('coachProfiles').put(profile);
     await transaction.done;
+    return { addedCount, duplicateCount };
   }
 }
 
