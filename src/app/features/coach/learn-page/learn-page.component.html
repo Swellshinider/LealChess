@@ -1,0 +1,169 @@
+<main class="learn-page">
+  <header class="hero">
+    <p class="eyebrow">Your games, made useful</p>
+    <h1>Your chess coach</h1>
+    <p class="lead">Your best lessons are already in your games.</p>
+    <p>
+      Review positions from your own games. Your training plan will be built from your real play.
+    </p>
+  </header>
+
+  <section class="import-panel" aria-labelledby="import-heading">
+    <div class="section-heading">
+      <div>
+        <p class="folio">Import desk · 01</p>
+        <h2 id="import-heading">Find learning moments</h2>
+      </div>
+      <span>Chess.com + Lichess</span>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="importGames()">
+      <label>
+        Chess.com username
+        <input formControlName="chessComUsername" autocomplete="username" placeholder="Username" />
+      </label>
+      <label>
+        Lichess username
+        <input formControlName="lichessUsername" autocomplete="username" placeholder="Username" />
+      </label>
+      <label>
+        Games per platform
+        <input formControlName="maxGames" type="number" min="1" max="100" />
+      </label>
+      <label>
+        Speed
+        <select formControlName="speed">
+          <option value="any">Any</option>
+          <option value="bullet">Bullet</option>
+          <option value="blitz">Blitz</option>
+          <option value="rapid">Rapid</option>
+          <option value="classical-daily">Classical / Daily</option>
+        </select>
+      </label>
+      <button type="submit" [disabled]="coach.loading()">
+        {{ coach.loading() ? 'Importing…' : 'Import your games' }}
+      </button>
+    </form>
+    @if (form.controls.maxGames.invalid && form.controls.maxGames.touched) {
+      <p class="field-error">Choose between 1 and 100 games per platform.</p>
+    }
+
+    <div class="platform-statuses" aria-live="polite" aria-atomic="true">
+      @for (
+        status of [coach.statuses()['chess-com'], coach.statuses().lichess];
+        track status.platform
+      ) {
+        <p [attr.data-state]="status.state">
+          <strong>{{ status.platform === 'chess-com' ? 'Chess.com' : 'Lichess' }}</strong>
+          {{ status.message }}
+        </p>
+      }
+    </div>
+  </section>
+
+  <section class="ledger-summary" aria-labelledby="summary-heading">
+    <div class="section-heading">
+      <div>
+        <p class="folio">Study ledger · 02</p>
+        <h2 id="summary-heading">Your imported record</h2>
+      </div>
+      <span>{{ coach.summary().total }} games</span>
+    </div>
+    <dl class="totals">
+      <div>
+        <dt>Total</dt>
+        <dd>{{ coach.summary().total }}</dd>
+      </div>
+      <div>
+        <dt>Wins</dt>
+        <dd>{{ coach.summary().wins }}</dd>
+      </div>
+      <div>
+        <dt>Draws</dt>
+        <dd>{{ coach.summary().draws }}</dd>
+      </div>
+      <div>
+        <dt>Losses</dt>
+        <dd>{{ coach.summary().losses }}</dd>
+      </div>
+    </dl>
+    <div class="split-record">
+      <p>
+        <strong>As White</strong>
+        {{ coach.summary().asWhite.wins }}W · {{ coach.summary().asWhite.draws }}D ·
+        {{ coach.summary().asWhite.losses }}L
+      </p>
+      <p>
+        <strong>As Black</strong>
+        {{ coach.summary().asBlack.wins }}W · {{ coach.summary().asBlack.draws }}D ·
+        {{ coach.summary().asBlack.losses }}L
+      </p>
+    </div>
+    @if (coach.summary().topOpenings.length) {
+      <ol class="openings" aria-label="Most played openings">
+        @for (opening of coach.summary().topOpenings; track opening.name) {
+          <li>
+            <span>{{ opening.eco }} {{ opening.name }}</span>
+            <strong>{{ opening.count }}</strong>
+          </li>
+        }
+      </ol>
+    }
+  </section>
+
+  <section class="games-ledger" aria-labelledby="games-heading">
+    <div class="section-heading">
+      <div>
+        <p class="folio">Game archive · 03</p>
+        <h2 id="games-heading">Review your games</h2>
+      </div>
+    </div>
+    @if (!coach.games().length) {
+      <div class="empty-state">
+        <span aria-hidden="true">♙</span>
+        <h3>Your study ledger is ready</h3>
+        <p>Import recent games to begin reviewing positions from your own play.</p>
+      </div>
+    } @else {
+      <div class="game-list">
+        @for (game of coach.games(); track game.key) {
+          <article>
+            <div class="game-index">{{ $index + 1 < 10 ? '0' : '' }}{{ $index + 1 }}</div>
+            <div class="players">
+              <p>
+                <span class="piece" aria-hidden="true">♔</span>
+                <strong>{{ game.white.username }}</strong>
+                <span>{{ game.white.rating ?? '—' }}</span>
+              </p>
+              <p>
+                <span class="piece" aria-hidden="true">♚</span>
+                <strong>{{ game.black.username }}</strong>
+                <span>{{ game.black.rating ?? '—' }}</span>
+              </p>
+            </div>
+            <div class="result">
+              <strong>{{ resultLabel(game) }}</strong>
+              <span>{{ game.platform === 'chess-com' ? 'Chess.com' : 'Lichess' }}</span>
+            </div>
+            <div class="metadata">
+              <p>{{ formatDate(game.endTime) }} · {{ game.speed }} · {{ game.timeControl }}</p>
+              <p>{{ game.opening?.eco }} {{ game.opening?.name ?? 'Opening not recorded' }}</p>
+            </div>
+            <div class="review-action">
+              @if (game.parseStatus === 'ready') {
+                <a [routerLink]="reviewLink(game)"
+                  >Ready to review <span aria-hidden="true">→</span></a
+                >
+              } @else {
+                <details>
+                  <summary>{{ game.parseError }}</summary>
+                  <pre>{{ game.pgn }}</pre>
+                </details>
+              }
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </section>
+</main>

@@ -1,6 +1,7 @@
 import type { Square } from 'chess.js';
+import type { ChessColor } from '../../shared/chess/chess.types';
 
-export type ChessColor = 'white' | 'black';
+export type { ChessColor } from '../../shared/chess/chess.types';
 export type ColorSelection = ChessColor | 'random';
 export type DifficultyId = 'beginner' | 'casual' | 'intermediate' | 'advanced' | 'expert';
 export type BoardTheme = 'tournament' | 'classic' | 'high-contrast';

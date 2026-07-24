@@ -1,0 +1,113 @@
+<main class="review-page">
+  <a class="back-link" routerLink="/learn">← Back to your study ledger</a>
+
+  @if (loading()) {
+    <p class="loading" aria-live="polite">Loading your game…</p>
+  } @else if (!game()) {
+    <section class="not-found">
+      <h1>Game not found</h1>
+      <p>This game is not in your local study ledger. Import it again, then retry.</p>
+    </section>
+  } @else {
+    <header>
+      <div>
+        <p class="eyebrow">
+          {{ game()?.platform === 'chess-com' ? 'Chess.com' : 'Lichess' }} review
+        </p>
+        <h1>{{ game()?.white?.username }} vs {{ game()?.black?.username }}</h1>
+        <p>
+          {{ game()?.opening?.eco }} {{ game()?.opening?.name ?? 'Opening not recorded' }} ·
+          {{ game()?.result }}
+        </p>
+      </div>
+      <button type="button" (click)="flipBoard()">Flip board</button>
+    </header>
+
+    @if (game()?.parseStatus !== 'ready') {
+      <section class="not-found">
+        <h2>Replay unavailable</h2>
+        <p>{{ game()?.parseError }}</p>
+        <details>
+          <summary>Raw PGN</summary>
+          <pre>{{ game()?.pgn }}</pre>
+        </details>
+      </section>
+    } @else {
+      <div class="review-layout">
+        <section class="board-panel" aria-label="Game position">
+          <div #boardHost class="review-board" [attr.data-board-theme]="boardTheme()"></div>
+        </section>
+
+        <aside>
+          <div class="move-heading">
+            <div>
+              <span>Current position</span>
+              <strong>Ply {{ currentPly() }} of {{ game()?.moves?.length }}</strong>
+            </div>
+            <span>{{
+              currentPly() === 0 ? 'Starting position' : game()?.moves?.[currentPly() - 1]?.san
+            }}</span>
+          </div>
+
+          <ol class="moves" aria-label="Moves">
+            @for (move of game()?.moves; track move.ply) {
+              <li>
+                <span>{{ moveNumber(move.ply) }}</span>
+                <button
+                  type="button"
+                  [class.current]="currentPly() === move.ply"
+                  [attr.aria-current]="currentPly() === move.ply ? 'step' : null"
+                  (click)="goTo(move.ply)"
+                >
+                  {{ move.san }}
+                </button>
+              </li>
+            }
+          </ol>
+
+          <div class="replay-controls" aria-label="Replay controls">
+            <button
+              type="button"
+              (click)="goTo(0)"
+              [disabled]="currentPly() === 0"
+              aria-label="First position"
+            >
+              |←
+            </button>
+            <button
+              type="button"
+              (click)="goTo(currentPly() - 1)"
+              [disabled]="currentPly() === 0"
+              aria-label="Previous move"
+            >
+              ←
+            </button>
+            <button
+              type="button"
+              (click)="goTo(currentPly() + 1)"
+              [disabled]="currentPly() === game()?.moves?.length"
+              aria-label="Next move"
+            >
+              →
+            </button>
+            <button
+              type="button"
+              (click)="goTo(game()?.moves?.length ?? 0)"
+              [disabled]="currentPly() === game()?.moves?.length"
+              aria-label="Last position"
+            >
+              →|
+            </button>
+          </div>
+          <p class="keyboard-help">
+            Arrow keys move one ply · Home / End jump to the edges · Right-drag to annotate
+          </p>
+        </aside>
+      </div>
+    }
+  }
+
+  @if (!game() || game()?.parseStatus !== 'ready') {
+    <div #boardHost class="hidden-board" aria-hidden="true"></div>
+  }
+</main>
