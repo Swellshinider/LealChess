@@ -9,7 +9,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- Repeatable product screenshots, an expanded local-first project guide, and a training roadmap.
+- An expanded local-first project guide and training roadmap.
 - Keyboard focus management for dialogs and promotion choices, clearer board descriptions, live
   review announcements, and automated accessibility checks for play and study workflows.
 - Cancellable local Stockfish analysis for imported games, with cached move classifications,

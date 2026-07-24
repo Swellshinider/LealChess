@@ -1,11 +1,9 @@
 # LealChess
 
-LealChess is a local-first chess training desk for playing Stockfish, studying your own games, and
+LealChess is a chess training desk for playing Stockfish, studying your own games, and
 practicing the decisions that cost you the most.
 
-Play a complete game against five Stockfish levels, import recent Chess.com and Lichess games, then
-review and analyze them in the browser. Engine analysis, practice history, preferences, and imported
-games stay on your device.
+![Screenshot](./docs/screenshots/lealchess_screenshot.png)
 
 ## What you can do
 
@@ -15,20 +13,6 @@ games stay on your device.
 - Run cancellable local Stockfish analysis and resume it later without losing completed work.
 - Turn inaccuracies, mistakes, and blunders into focused practice positions.
 - Find recurring opening, tactical, positional, and endgame priorities across analyzed games.
-
-## Product tour
-
-### Play Stockfish
-
-![A LealChess game against Stockfish with the board, move history, and match controls](docs/screenshots/play.png)
-
-### Build your study ledger
-
-![The LealChess learning desk with platform imports, record summary, priorities, and imported games](docs/screenshots/learn.png)
-
-### Review and practice missed opportunities
-
-![A LealChess practice position created from local Stockfish analysis](docs/screenshots/review-practice.png)
 
 ## Local-first by design
 
@@ -75,15 +59,6 @@ pnpm test:coverage
 pnpm build
 pnpm e2e
 ```
-
-Regenerate the privacy-safe README screenshots with fixed test data:
-
-```sh
-pnpm screenshots
-```
-
-The screenshot command starts the development server through a dedicated Playwright configuration
-and writes the three images in `docs/screenshots`. It requires Playwright Chromium to be installed.
 
 ## Built with
 

@@ -12,8 +12,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:coverage": "ng test --coverage",
-    "e2e": "playwright test",
-    "screenshots": "playwright test --config playwright.screenshots.config.ts"
+    "e2e": "playwright test"
   },
   "private": true,
   "packageManager": "pnpm@11.17.0",
