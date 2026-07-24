@@ -1,4 +1,5 @@
 import 'fake-indexeddb/auto';
+import { TestBed } from '@angular/core/testing';
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { DEFAULT_PREFERENCES } from '../game/game.types';
@@ -25,10 +26,11 @@ describe('IndexedDbPersistenceService', () => {
       configurable: true,
       value: new IDBFactory(),
     });
+    TestBed.configureTestingModule({ providers: [IndexedDbPersistenceService] });
   });
 
   it('round-trips the active game and preferences', async () => {
-    const repository = new IndexedDbPersistenceService();
+    const repository = TestBed.inject(IndexedDbPersistenceService);
     const preferences = { ...DEFAULT_PREFERENCES, soundEnabled: false as const };
     await repository.saveGame(game);
     await repository.savePreferences(preferences);
@@ -38,7 +40,7 @@ describe('IndexedDbPersistenceService', () => {
   });
 
   it('falls back safely for corrupted records', async () => {
-    const repository = new IndexedDbPersistenceService();
+    const repository = TestBed.inject(IndexedDbPersistenceService);
     const database = await new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open('leal-chess', 1);
       request.onupgradeneeded = () => request.result.createObjectStore('state', { keyPath: 'key' });

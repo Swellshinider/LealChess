@@ -1,0 +1,198 @@
+:host {
+  display: block;
+  min-height: 100%;
+}
+
+.app-frame {
+  min-height: 100dvh;
+  padding: 18px clamp(16px, 3vw, 44px) 28px;
+}
+
+.play-toolbar {
+  width: min(1180px, 100%);
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  p {
+    color: var(--mist);
+    font-family: var(--font-utility);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    margin: 0;
+    text-transform: uppercase;
+  }
+}
+
+.new-game-compact {
+  display: none;
+}
+
+.restore-banner {
+  align-items: center;
+  background: var(--amber);
+  border: 0;
+  border-radius: 7px;
+  color: var(--night);
+  display: flex;
+  font-weight: 700;
+  gap: 24px;
+  justify-content: space-between;
+  margin: 0 auto 12px;
+  padding: 9px 12px;
+  width: min(1180px, 100%);
+}
+
+.game-layout {
+  align-items: stretch;
+  display: grid;
+  gap: clamp(18px, 3vw, 34px);
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  margin: 0 auto;
+  max-width: 1180px;
+}
+
+.board-column {
+  align-self: start;
+  display: grid;
+  grid-template-columns: 5px 1fr;
+  width: min(100%, calc(100dvh - 152px));
+}
+
+.player-strip {
+  align-items: center;
+  color: var(--paper);
+  display: flex;
+  gap: 10px;
+  grid-column: 2;
+  min-height: 47px;
+  padding: 6px 2px;
+
+  &.opponent {
+    order: -1;
+  }
+
+  strong,
+  small {
+    display: block;
+  }
+
+  strong {
+    font-size: 0.9rem;
+  }
+
+  small {
+    color: var(--mist);
+    font-family: var(--font-utility);
+    font-size: 0.66rem;
+    text-transform: capitalize;
+  }
+}
+
+.avatar {
+  align-items: center;
+  background: var(--carbon);
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 8px 3px 8px 3px;
+  color: var(--paper);
+  display: flex;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  height: 33px;
+  justify-content: center;
+  width: 33px;
+
+  &.bot {
+    color: var(--amber);
+  }
+}
+
+.thinking-label,
+.your-turn {
+  font-family: var(--font-utility);
+  font-size: 0.67rem;
+  margin-left: auto;
+  text-transform: uppercase;
+}
+
+.thinking-label {
+  color: var(--amber);
+}
+
+.your-turn {
+  color: var(--paper);
+}
+
+.turn-rail {
+  background: rgb(255 255 255 / 8%);
+  border-radius: 5px;
+  grid-column: 1;
+  margin-right: 5px;
+
+  &.opponent {
+    grid-row: 1 / 3;
+  }
+
+  &.player {
+    grid-row: 3 / 5;
+  }
+
+  &.active {
+    background: var(--amber);
+    box-shadow: 0 0 18px rgb(217 154 61 / 35%);
+  }
+
+  &.thinking {
+    animation: rail-pulse 0.9s ease-in-out infinite alternate;
+  }
+}
+
+app-chess-board {
+  grid-column: 2;
+}
+
+@keyframes rail-pulse {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 880px) {
+  .app-frame {
+    padding-inline: 12px;
+  }
+
+  .game-layout {
+    display: block;
+  }
+
+  .board-column {
+    width: 100%;
+  }
+
+  app-game-sidebar {
+    display: block;
+    margin-top: 18px;
+  }
+
+  .new-game-compact {
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 7px;
+    color: var(--paper);
+    display: block;
+    min-height: 42px;
+    padding: 0 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turn-rail.thinking {
+    animation: none;
+  }
+}

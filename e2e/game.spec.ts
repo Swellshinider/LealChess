@@ -169,7 +169,7 @@ async function seedGame(page: Page, fen: string, playerColor: 'white' | 'black')
   await page.evaluate(
     async ({ storedFen, storedPgn, color }) => {
       const database = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open('leal-chess', 1);
+        const request = indexedDB.open('leal-chess');
         request.onupgradeneeded = () => {
           if (!request.result.objectStoreNames.contains('state')) {
             request.result.createObjectStore('state', { keyPath: 'key' });

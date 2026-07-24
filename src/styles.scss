@@ -70,6 +70,54 @@ a:focus-visible {
   width: 1px;
 }
 
+.review-page {
+  .promotion-backdrop {
+    align-items: center;
+    background: rgb(23 36 44 / 78%);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    position: absolute;
+    z-index: 10;
+  }
+
+  .promotion-card {
+    background: var(--carbon);
+    border: 1px solid rgb(200 213 207 / 24%);
+    box-shadow: 0 20px 50px rgb(0 0 0 / 45%);
+    color: var(--paper);
+    display: grid;
+    gap: 16px;
+    padding: 20px;
+
+    > span {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+  }
+
+  .promotion-pieces {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(2, 1fr);
+
+    button {
+      background: var(--night);
+      border: 1px solid rgb(200 213 207 / 20%);
+      color: var(--paper);
+      min-width: 100px;
+      padding: 10px;
+    }
+
+    span {
+      color: var(--amber);
+      font-size: 1.35rem;
+      margin-right: 5px;
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

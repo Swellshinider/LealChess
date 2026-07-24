@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
+import { Injectable, inject } from '@angular/core';
+import type { IDBPDatabase } from 'idb';
 import {
   DEFAULT_PREFERENCES,
   type BoardTheme,
@@ -16,18 +16,11 @@ import {
   type PersistencePort,
   type RestoredState,
 } from './persistence.types';
-
-interface LealChessDatabase extends DBSchema {
-  state: {
-    key: 'active-game' | 'preferences';
-    value:
-      { key: 'active-game'; value: PersistedGame } | { key: 'preferences'; value: GamePreferences };
-  };
-}
+import { LealChessDatabaseService, type LealChessDatabase } from './leal-chess-database.service';
 
 @Injectable()
 export class IndexedDbPersistenceService implements PersistencePort {
-  private database: Promise<IDBPDatabase<LealChessDatabase>> | null = null;
+  private readonly database = inject(LealChessDatabaseService);
   private writes = Promise.resolve();
 
   async restore(): Promise<RestoredState> {
@@ -76,14 +69,7 @@ export class IndexedDbPersistenceService implements PersistencePort {
   }
 
   private getDatabase(): Promise<IDBPDatabase<LealChessDatabase>> {
-    this.database ??= openDB<LealChessDatabase>('leal-chess', 1, {
-      upgrade(database) {
-        if (!database.objectStoreNames.contains('state')) {
-          database.createObjectStore('state', { keyPath: 'key' });
-        }
-      },
-    });
-    return this.database;
+    return this.database.open();
   }
 
   private queueWrite(
