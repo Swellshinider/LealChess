@@ -48,7 +48,7 @@ h2 {
 }
 
 .intro {
-  color: #66746e;
+  color: #586660;
   font-size: 0.85rem;
   margin: 0 0 20px;
 }
@@ -105,6 +105,60 @@ select {
   width: 100%;
 }
 
+.engine-startup {
+  align-items: center;
+  background: #e2e8e4;
+  border-left: 4px solid var(--teal);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: auto 1fr;
+  margin-top: 16px;
+  padding: 11px 12px;
+
+  &[data-state='error'] {
+    border-left-color: var(--danger);
+    grid-template-columns: auto 1fr auto;
+  }
+
+  strong,
+  small {
+    display: block;
+    text-align: left;
+  }
+
+  strong {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+  }
+
+  small {
+    color: #5d6964;
+    margin: 2px 0 0;
+  }
+
+  button {
+    background: transparent;
+    border: 1px solid #82908a;
+    border-radius: 4px;
+    color: var(--night);
+    font-weight: 700;
+    min-height: 38px;
+    padding: 6px 10px;
+  }
+}
+
+.engine-mark {
+  align-items: center;
+  background: var(--night);
+  color: var(--amber);
+  display: flex;
+  font-family: var(--font-utility);
+  font-size: 0.65rem;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+}
+
 .start {
   background: var(--amber);
   border: 0;
@@ -114,10 +168,15 @@ select {
   margin-top: 12px;
   min-height: 48px;
   width: 100%;
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.62;
+  }
 }
 
 small {
-  color: #78837f;
+  color: #586660;
   display: block;
   font-size: 0.67rem;
   margin-top: 12px;

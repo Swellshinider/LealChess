@@ -19,13 +19,21 @@ export function normalizeChessComGame(
   source: ChessComGameResponse,
   profileKey: string,
   importedAt: string,
-): ImportedGame {
+): ImportedGame | null {
   const url = source.url ?? '';
   const urlId = /\/game\/(?:live|daily)\/(\d+)/.exec(url)?.[1];
-  const gameId = urlId ?? source.uuid ?? crypto.randomUUID();
+  const gameId = urlId ?? source.uuid;
+  if (!gameId) return null;
   const pgn = source.pgn ?? '';
   const variant = source.rules ?? 'standard';
-  const parsed = parseImportedPgn(pgn, variant);
+  const parsed = pgn.trim()
+    ? parseImportedPgn(pgn, variant)
+    : {
+        status: 'unavailable' as const,
+        moves: [],
+        error:
+          'Game moves are unavailable. The game may be private or deleted; make it public and import again.',
+      };
   const headers = pgnHeaders(pgn);
   const openingName = headers['Opening'] ?? openingNameFromUrl(headers['ECOUrl'] ?? source.eco);
   return {

@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 
 const pgn = `[Event "Imported game"]
 [White "Learner"]
@@ -23,7 +24,7 @@ test('imports both platforms, persists and deduplicates games, then replays move
   await page.getByLabel('Lichess username').fill('Learner');
   await page.getByRole('button', { name: 'Import your games' }).click();
 
-  await expect(page.getByText('Imported 1 games. Ready to find learning moments.')).toHaveCount(2);
+  await expect(page.getByText('Added 1 game.')).toHaveCount(2);
   await expect(page.locator('.game-list article')).toHaveCount(2);
   await expect(page.locator('.game-list').getByText("King's Pawn Game")).toHaveCount(2);
 
@@ -32,6 +33,7 @@ test('imports both platforms, persists and deduplicates games, then replays move
   await expect(page.getByLabel('Chess.com username')).toHaveValue('Learner');
 
   await page.getByRole('button', { name: 'Import your games' }).click();
+  await expect(page.getByText(/No new games were added/)).toHaveCount(2);
   await expect(page.locator('.game-list article')).toHaveCount(2);
   await expect
     .poll(() =>
@@ -85,15 +87,24 @@ test('imports both platforms, persists and deduplicates games, then replays move
   );
   await drawReviewArrow(page, 'c7', 'g5');
   await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(1);
-  await expect(page.getByText('Ply 0 of 4')).toBeVisible();
+  await expect(page.getByText('Ply 0 of 4', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Next move' }).click();
-  await expect(page.getByText('Ply 1 of 4')).toBeVisible();
+  await expect(page.getByText('Ply 1 of 4', { exact: true })).toBeVisible();
   await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(1);
+  await page.getByLabel('Replay keyboard shortcuts').focus();
   await page.keyboard.press('End');
-  await expect(page.getByText('Ply 4 of 4')).toBeVisible();
+  await expect(page.getByText('Ply 4 of 4', { exact: true })).toBeVisible();
+  await expect(
+    page.locator('[aria-live="polite"]').filter({ hasText: 'Position 4 of 4' }),
+  ).toBeAttached();
   await page.getByRole('button', { name: 'f3' }).click();
-  await expect(page.getByText('Ply 1 of 4')).toBeVisible();
+  await expect(page.getByText('Ply 1 of 4', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Flip board' }).click();
+  await expect(page.getByRole('img', { name: 'Review chessboard' })).toHaveAttribute(
+    'aria-describedby',
+    'review-board-description',
+  );
+  await assertNoSeriousA11yViolations(page);
 });
 
 test('analyzes locally, caches the result, and opens a missed position', async ({
@@ -111,8 +122,20 @@ test('analyzes locally, caches the result, and opens a missed position', async (
   });
   await page.getByRole('button', { name: /Practice \d+ moments/ }).click();
   await expect(page.getByRole('heading', { name: 'Find a better move' })).toBeVisible();
-  await page.getByRole('button', { name: 'Reveal move' }).click();
+  const practiceTab = page.getByRole('tab', { name: 'Practice' });
+  await expect(practiceTab).toHaveAttribute('aria-selected', 'true');
+  await practiceTab.focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.getByRole('tab', { name: 'Score sheet' })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await page.keyboard.press('ArrowRight');
+  await expect(practiceTab).toHaveAttribute('aria-selected', 'true');
+  await page.getByRole('button', { name: 'Reveal move' }).focus();
+  await page.keyboard.press('Enter');
   await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(1);
+  await assertNoSeriousA11yViolations(page);
 
   await page.reload();
   await expect(page.getByRole('heading', { name: /learning moments found/ })).toBeVisible();
@@ -129,8 +152,74 @@ test('keeps a successful platform import when the other platform fails', async (
   await page.getByRole('button', { name: 'Import your games' }).click();
 
   await expect(page.getByText(/Lichess is limiting requests/)).toBeVisible();
-  await expect(page.getByText('Imported 1 games. Ready to find learning moments.')).toBeVisible();
+  await expect(page.getByText('Added 1 game.')).toBeVisible();
   await expect(page.locator('.game-list article')).toHaveCount(1);
+});
+
+test('explains invalid users and restricted game exports', async ({ page }) => {
+  await page.unroute('**/api.chess.com/**');
+  await page.route('**/api.chess.com/**', (route) =>
+    route.fulfill({ status: 404, body: 'Not found' }),
+  );
+  await page.getByLabel('Chess.com username').fill('MissingPlayer');
+  await page.getByRole('button', { name: 'Import your games' }).click();
+
+  await expect(page.getByRole('alert')).toContainText('We could not find that Chess.com username.');
+  await expect(page.getByText(/Check the spelling, update the username/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'No games were added' })).toBeVisible();
+
+  await page.unroute('**/lichess.org/api/**');
+  await page.route('**/lichess.org/api/**', (route) => {
+    if (route.request().url().includes('/api/games/user/')) {
+      return route.fulfill({ status: 403, body: 'Private' });
+    }
+    return json(route, { username: 'Learner' });
+  });
+  await page.getByLabel('Chess.com username').fill('');
+  await page.getByLabel('Lichess username').fill('Learner');
+  await page.getByRole('button', { name: 'Import your games' }).click();
+
+  await expect(
+    page.locator('.platform-status[data-state="error"]').filter({ hasText: 'Lichess' }),
+  ).toContainText('Lichess is not allowing access to these games.');
+  await expect(page.getByText(/Make the games public or use another profile/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Retry Lichess' })).toBeVisible();
+});
+
+test('keeps identified unavailable games and reports malformed export records', async ({
+  page,
+}) => {
+  await page.unroute('**/lichess.org/api/**');
+  await page.route('**/lichess.org/api/**', (route) => {
+    if (route.request().url().includes('/api/games/user/')) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/x-ndjson',
+        body: [
+          JSON.stringify({ id: 'deleted-game', pgn: '', players: {} }),
+          JSON.stringify({ id: 'malformed-game', pgn: '1. ThisIsNotAMove', players: {} }),
+          'not-json',
+        ].join('\n'),
+      });
+    }
+    return json(route, { username: 'Learner' });
+  });
+  await page.getByLabel('Lichess username').fill('Learner');
+  await page.getByRole('button', { name: 'Import your games' }).click();
+
+  await expect(page.getByText(/Added 2 games/)).toBeVisible();
+  await expect(page.getByText(/2 games cannot be replayed yet/)).toBeVisible();
+  await expect(page.getByText(/1 game could not be identified and was skipped/)).toBeVisible();
+  await expect(page.locator('.unavailable-game > strong')).toHaveCount(2);
+  await expect(page.locator('.game-list article')).toHaveCount(2);
+});
+
+test('announces import validation and has no serious accessibility violations', async ({
+  page,
+}) => {
+  await page.getByRole('button', { name: 'Import your games' }).click();
+  await expect(page.getByRole('alert')).toHaveText('Enter a Chess.com or Lichess username.');
+  await assertNoSeriousA11yViolations(page);
 });
 
 async function mockChessCom(page: Page): Promise<void> {
@@ -246,4 +335,13 @@ async function seedBoardTheme(
     });
     database.close();
   }, boardTheme);
+}
+
+async function assertNoSeriousA11yViolations(page: Page) {
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(
+    results.violations.filter(
+      (violation) => violation.impact === 'critical' || violation.impact === 'serious',
+    ),
+  ).toEqual([]);
 }

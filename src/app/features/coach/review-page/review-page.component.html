@@ -49,6 +49,9 @@
               @case ('running') {
                 Reading your decisions…
               }
+              @case ('starting') {
+                Starting Stockfish…
+              }
               @case ('partial') {
                 Analysis paused
               }
@@ -71,16 +74,23 @@
           }
         </div>
 
-        @if (coachAnalysis.state().phase === 'running') {
-          <div class="analysis-progress">
-            <span>
-              {{ coachAnalysis.state().completed }} / {{ coachAnalysis.state().total }} moves
-            </span>
-            <progress
-              [value]="coachAnalysis.state().completed"
-              [max]="coachAnalysis.state().total"
-              [attr.aria-label]="'Analysis ' + analysisProgress() + '% complete'"
-            ></progress>
+        @if (
+          coachAnalysis.state().phase === 'starting' || coachAnalysis.state().phase === 'running'
+        ) {
+          <div class="analysis-progress" role="status" aria-live="polite" aria-atomic="true">
+            @if (coachAnalysis.state().phase === 'starting') {
+              <span>Preparing the local engine</span>
+              <progress aria-label="Starting Stockfish"></progress>
+            } @else {
+              <span>
+                {{ coachAnalysis.state().completed }} / {{ coachAnalysis.state().total }} moves
+              </span>
+              <progress
+                [value]="coachAnalysis.state().completed"
+                [max]="coachAnalysis.state().total"
+                [attr.aria-label]="'Analysis ' + analysisProgress() + '% complete'"
+              ></progress>
+            }
             <button type="button" class="secondary-action" (click)="cancelAnalysis()">
               Cancel
             </button>
@@ -104,42 +114,91 @@
         }
       </section>
 
-      <div class="mode-switch" aria-label="Review mode">
+      <div class="mode-switch" role="tablist" aria-label="Review mode">
         <button
           type="button"
+          id="score-sheet-tab"
+          role="tab"
+          aria-controls="score-sheet-panel"
           [class.active]="mode() === 'review'"
-          [attr.aria-pressed]="mode() === 'review'"
+          [attr.aria-selected]="mode() === 'review'"
+          [attr.tabindex]="mode() === 'review' ? 0 : -1"
+          (keydown)="handleModeKey($event)"
           (click)="leavePractice()"
         >
           Score sheet
         </button>
         <button
           type="button"
+          id="practice-tab"
+          role="tab"
+          aria-controls="practice-panel"
           [class.active]="mode() === 'practice'"
-          [attr.aria-pressed]="mode() === 'practice'"
+          [attr.aria-selected]="mode() === 'practice'"
+          [attr.tabindex]="mode() === 'practice' ? 0 : -1"
           [disabled]="!positions().length"
+          (keydown)="handleModeKey($event)"
           (click)="enterPractice(trainingIndex())"
         >
           Practice
         </button>
       </div>
+      <p class="sr-only" aria-live="polite" aria-atomic="true">
+        @if (mode() === 'review') {
+          Position {{ currentPly() }} of {{ game()?.moves?.length }}.
+          {{
+            currentPly() === 0 ? 'Starting position.' : game()?.moves?.[currentPly() - 1]?.san + '.'
+          }}
+        } @else {
+          Practice position {{ trainingIndex() + 1 }} of {{ positions().length }}.
+          {{ puzzleStatus() }}.
+        }
+      </p>
 
       <div class="review-layout">
         <section class="board-panel" aria-label="Game position">
-          <div #boardHost class="review-board" [attr.data-board-theme]="boardTheme()"></div>
+          <div
+            #boardHost
+            class="review-board"
+            role="img"
+            aria-label="Review chessboard"
+            aria-describedby="review-board-description"
+            [attr.data-board-theme]="boardTheme()"
+          ></div>
+          <p id="review-board-description" class="sr-only">
+            {{ orientation() }} orientation.
+            {{
+              mode() === 'review'
+                ? 'Showing ply ' + currentPly() + ' of ' + game()?.moves?.length + '.'
+                : 'Practice position ' + (trainingIndex() + 1) + ' of ' + positions().length + '.'
+            }}
+            Use a pointer or touch to move practice pieces. Keyboard users can reveal the move and
+            continue.
+          </p>
 
           @if (pendingPromotion()) {
             <div
+              appModalFocus
               class="promotion-backdrop"
               role="dialog"
               aria-modal="true"
               aria-labelledby="promotion-title"
+              aria-describedby="practice-promotion-help"
+              tabindex="-1"
+              (modalDismissed)="cancelPromotion()"
             >
               <div class="promotion-card">
                 <span id="promotion-title">Choose promotion</span>
+                <span id="practice-promotion-help" class="sr-only">
+                  Choose a piece with Tab, then press Enter. Press Escape to cancel.
+                </span>
                 <div class="promotion-pieces">
                   @for (piece of promotionPieces; track piece) {
-                    <button type="button" (click)="choosePromotion(piece)">
+                    <button
+                      type="button"
+                      [attr.data-modal-initial]="$first ? '' : null"
+                      (click)="choosePromotion(piece)"
+                    >
                       <span aria-hidden="true">
                         {{ piece === 'q' ? '♛' : piece === 'r' ? '♜' : piece === 'b' ? '♝' : '♞' }}
                       </span>
@@ -156,7 +215,12 @@
         </section>
 
         @if (mode() === 'review') {
-          <aside class="score-sheet">
+          <aside
+            id="score-sheet-panel"
+            class="score-sheet"
+            role="tabpanel"
+            aria-labelledby="score-sheet-tab"
+          >
             <div class="move-heading">
               <div>
                 <span>Current position</span>
@@ -269,12 +333,17 @@
                 →|
               </button>
             </div>
-            <p class="keyboard-help">
+            <p class="keyboard-help" tabindex="0" aria-label="Replay keyboard shortcuts">
               Arrow keys move one ply · Home / End jump to the edges · Right-drag to annotate
             </p>
           </aside>
         } @else {
-          <aside class="practice-sheet">
+          <aside
+            id="practice-panel"
+            class="practice-sheet"
+            role="tabpanel"
+            aria-labelledby="practice-tab"
+          >
             @if (activePosition(); as position) {
               <p class="folio">
                 Position {{ trainingIndex() + 1 }} of {{ positions().length }} ·
@@ -284,7 +353,8 @@
               <p class="practice-context">
                 You played
                 <strong>{{ game()?.moves?.[position.ply - 1]?.san }}</strong>
-                here. Move a piece for {{ learnerColor() }}.
+                here. Move a piece for {{ learnerColor() }} with a pointer or touch. From the
+                keyboard, reveal the move and continue to the next position.
               </p>
               <div class="puzzle-feedback" [attr.data-status]="puzzleStatus()" aria-live="polite">
                 @switch (puzzleStatus()) {

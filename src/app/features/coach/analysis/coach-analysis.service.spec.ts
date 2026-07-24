@@ -17,7 +17,15 @@ class FakeAnalysisEngine implements AnalysisEnginePort {
   readonly requests: PositionAnalysisRequest[] = [];
   matchFirst = false;
   blockSecondLearnerMove = false;
+  initialization: Promise<void> = Promise.resolve();
+  initializationError: Error | null = null;
   private resumed = false;
+
+  initialize(): Promise<void> {
+    return this.initializationError
+      ? Promise.reject(this.initializationError)
+      : this.initialization;
+  }
 
   analyze(request: PositionAnalysisRequest): Promise<PositionAnalysisResult> {
     this.requests.push(request);
@@ -111,6 +119,42 @@ describe('CoachAnalysisService', () => {
     await service.analyze(game, 'white');
     expect(service.state()).toMatchObject({ phase: 'complete', completed: 2, total: 2 });
     expect(engine.requests).toHaveLength(3);
+  });
+
+  it('exposes engine startup before analysis progress begins', async () => {
+    let releaseInitialization!: () => void;
+    engine.initialization = new Promise((resolve) => {
+      releaseInitialization = resolve;
+    });
+    const service = TestBed.inject(CoachAnalysisService);
+    const game = importedGame();
+    await service.load(game, 'white');
+
+    const run = service.analyze(game, 'white');
+    await waitFor(() => service.state().phase === 'starting');
+    expect(engine.requests).toHaveLength(0);
+    releaseInitialization();
+    await run;
+
+    expect(service.state().phase).toBe('complete');
+  });
+
+  it('reports startup failure and succeeds when analysis is retried', async () => {
+    engine.initializationError = new Error('Stockfish analysis could not be started.');
+    const service = TestBed.inject(CoachAnalysisService);
+    const game = importedGame();
+    await service.load(game, 'white');
+
+    await service.analyze(game, 'white');
+    expect(service.state()).toMatchObject({
+      phase: 'error',
+      error: 'Stockfish analysis could not be started.',
+    });
+    expect(engine.requests).toHaveLength(0);
+
+    engine.initializationError = null;
+    await service.analyze(game, 'white');
+    expect(service.state().phase).toBe('complete');
   });
 });
 

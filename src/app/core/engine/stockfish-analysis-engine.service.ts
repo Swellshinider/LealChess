@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import type {
   AnalysisEnginePort,
   PositionAnalysisRequest,
@@ -6,6 +6,7 @@ import type {
 } from './analysis-engine.types';
 import { parseBestMove } from './uci-parser';
 import { parseAnalysisInfo, type UciAnalysisInfo } from './uci-analysis-parser';
+import { STOCKFISH_WORKER_FACTORY } from './stockfish-worker';
 
 type Waiter = {
   predicate: (line: string) => boolean;
@@ -16,10 +17,12 @@ type Waiter = {
 
 @Injectable()
 export class StockfishAnalysisEngineService implements AnalysisEnginePort {
+  private readonly createStockfishWorker = inject(STOCKFISH_WORKER_FACTORY);
   private worker: Worker | null = null;
   private waiters: Waiter[] = [];
   private initialized = false;
   private initializing: Promise<void> | null = null;
+  private lifecycle = 0;
   private active:
     | {
         resolve: (value: PositionAnalysisResult) => void;
@@ -56,30 +59,55 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
   }
 
   destroy(): void {
-    this.dispose(new Error('Stockfish analysis was stopped.'));
+    this.lifecycle += 1;
+    this.initializing = null;
+    this.disposeWorker(new Error('Stockfish analysis was stopped.'));
   }
 
-  private async initialize(): Promise<void> {
-    if (this.initialized && this.worker) return;
-    this.initializing ??= this.createWorker().finally(() => {
+  initialize(): Promise<void> {
+    if (this.initialized && this.worker) return Promise.resolve();
+    const lifecycle = this.lifecycle;
+    this.initializing ??= this.initializeWithRetry(lifecycle).finally(() => {
       this.initializing = null;
     });
-    await this.initializing;
+    return this.initializing;
   }
 
-  private async createWorker(): Promise<void> {
-    const workerUrl = new URL('assets/stockfish/stockfish-18-lite-single.js', document.baseURI);
-    const worker = new Worker(workerUrl);
+  private async initializeWithRetry(lifecycle: number): Promise<void> {
+    try {
+      await this.createWorker(lifecycle);
+    } catch (error) {
+      if (lifecycle !== this.lifecycle) {
+        throw asError(error, 'Stockfish analysis was stopped.');
+      }
+      this.disposeWorker(new Error('Retrying Stockfish analysis initialization.'));
+      await this.createWorker(lifecycle).catch((retryError: unknown) => {
+        const failure = asError(retryError, 'Stockfish analysis could not be started.');
+        this.disposeWorker(failure);
+        throw failure;
+      });
+    }
+  }
+
+  private async createWorker(lifecycle: number): Promise<void> {
+    const worker = this.createStockfishWorker();
     this.worker = worker;
     worker.addEventListener('message', (event: MessageEvent<unknown>) => {
-      if (typeof event.data === 'string') this.handleLine(event.data);
+      if (worker === this.worker && typeof event.data === 'string') this.handleLine(event.data);
     });
-    worker.addEventListener('error', () => this.dispose(new Error('Stockfish Worker failed.')));
-    worker.addEventListener('messageerror', () =>
-      this.dispose(new Error('Stockfish sent an unreadable message.')),
-    );
+    worker.addEventListener('error', () => {
+      if (worker === this.worker) this.disposeWorker(new Error('Stockfish Worker failed.'));
+    });
+    worker.addEventListener('messageerror', () => {
+      if (worker === this.worker) {
+        this.disposeWorker(new Error('Stockfish sent an unreadable message.'));
+      }
+    });
     await this.waitFor('uciok', 20000, () => this.post('uci'));
     await this.waitFor('readyok', 10000, () => this.post('isready'));
+    if (worker !== this.worker || lifecycle !== this.lifecycle) {
+      throw new Error('Stockfish analysis was stopped.');
+    }
     this.initialized = true;
   }
 
@@ -141,9 +169,8 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
     this.worker.postMessage(command);
   }
 
-  private dispose(error: Error): void {
+  private disposeWorker(error: Error): void {
     this.initialized = false;
-    this.initializing = null;
     for (const waiter of this.waiters.splice(0)) {
       clearTimeout(waiter.timeout);
       waiter.reject(error);
@@ -156,4 +183,8 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
 
 function abortError(): DOMException {
   return new DOMException('Analysis cancelled.', 'AbortError');
+}
+
+function asError(error: unknown, fallback: string): Error {
+  return error instanceof Error ? error : new Error(fallback);
 }

@@ -16,7 +16,8 @@ import {
   moveToUci,
 } from './analysis-rules';
 
-export type AnalysisPhase = 'idle' | 'ready' | 'running' | 'partial' | 'complete' | 'error';
+export type AnalysisPhase =
+  'idle' | 'ready' | 'starting' | 'running' | 'partial' | 'complete' | 'error';
 
 export interface AnalysisViewState {
   phase: AnalysisPhase;
@@ -70,13 +71,18 @@ export class CoachAnalysisService {
     this.mutableAnalysis.set(analysis);
     this.abortController = new AbortController();
     this.mutableState.set({
-      phase: 'running',
+      phase: 'starting',
       completed: analysis.moves.length,
       total: userMoves.length,
       error: null,
     });
 
     try {
+      await this.engine.initialize();
+      if (this.abortController.signal.aborted) {
+        throw new DOMException('Analysis cancelled.', 'AbortError');
+      }
+      this.mutableState.update((state) => ({ ...state, phase: 'running' }));
       const completedPlies = new Set(analysis.moves.map((move) => move.ply));
       for (const move of userMoves) {
         if (completedPlies.has(move.ply)) continue;

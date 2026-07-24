@@ -30,6 +30,7 @@ describe('platform normalizers', () => {
       'chess-com:learner',
       importedAt,
     );
+    expect(game).not.toBeNull();
     expect(game).toMatchObject({
       key: 'chess-com:123456',
       platformGameId: '123456',
@@ -40,8 +41,8 @@ describe('platform normalizers', () => {
       opening: { eco: 'C20', name: "King's Pawn Game" },
       parseStatus: 'ready',
     });
-    expect(game.black.rating).toBeUndefined();
-    expect(game.moves).toHaveLength(2);
+    expect(game!.black.rating).toBeUndefined();
+    expect(game!.moves).toHaveLength(2);
   });
 
   it('uses Chess.com UUID fallback and retains unsupported games', () => {
@@ -50,9 +51,9 @@ describe('platform normalizers', () => {
       'chess-com:learner',
       importedAt,
     );
-    expect(game.key).toBe('chess-com:fallback');
-    expect(game.parseStatus).toBe('unsupported-variant');
-    expect(game.moves).toEqual([]);
+    expect(game!.key).toBe('chess-com:fallback');
+    expect(game!.parseStatus).toBe('unsupported-variant');
+    expect(game!.moves).toEqual([]);
   });
 
   it('normalizes Lichess optional players, clocks, opening, and winner', () => {
@@ -71,12 +72,44 @@ describe('platform normalizers', () => {
       'lichess:learner',
       importedAt,
     );
+    expect(game).not.toBeNull();
     expect(game).toMatchObject({
       key: 'lichess:abcd1234',
       result: '1-0',
       speed: 'blitz',
       opening: { eco: 'C20', name: "King's Pawn Game" },
     });
-    expect(game.black.username).toBe('Opponent');
+    expect(game!.black.username).toBe('Opponent');
+  });
+
+  it('retains identified unavailable games and skips records without stable IDs', () => {
+    const unavailable = normalizeChessComGame(
+      { uuid: 'private-game', pgn: '' },
+      'chess-com:learner',
+      importedAt,
+    );
+
+    expect(unavailable).toMatchObject({
+      key: 'chess-com:private-game',
+      parseStatus: 'unavailable',
+      moves: [],
+    });
+    expect(unavailable?.parseError).toContain('private or deleted');
+    expect(normalizeChessComGame({ pgn }, 'chess-com:learner', importedAt)).toBeNull();
+    expect(normalizeLichessGame({ pgn }, 'lichess:learner', importedAt)).toBeNull();
+  });
+
+  it('retains a stable game with a malformed PGN for recovery', () => {
+    const game = normalizeLichessGame(
+      { id: 'malformed', pgn: '1. ThisIsNotAMove' },
+      'lichess:learner',
+      importedAt,
+    );
+
+    expect(game).toMatchObject({
+      key: 'lichess:malformed',
+      parseStatus: 'invalid-pgn',
+      moves: [],
+    });
   });
 });

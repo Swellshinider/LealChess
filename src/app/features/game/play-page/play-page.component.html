@@ -1,7 +1,7 @@
 <div class="app-frame" [class.is-restored]="state().restored">
   <header class="play-toolbar">
     <p>Play the position</p>
-    <button class="new-game-compact" type="button" (click)="openNewGame()">New game</button>
+    <button class="new-game-compact" type="button" (click)="openNewGame($event)">New game</button>
   </header>
 
   @if (state().restored) {
@@ -50,7 +50,7 @@
       </div>
     </section>
 
-    <app-game-sidebar (newGameRequested)="openNewGame()" />
+    <app-game-sidebar (newGameRequested)="openNewGame($event)" />
   </main>
 
   <div class="sr-only" aria-live="polite" aria-atomic="true">{{ state().announcement }}</div>
@@ -67,6 +67,9 @@
   [open]="newGameOpen() || state().phase === 'setup'"
   [canClose]="state().phase !== 'setup'"
   [defaultDifficulty]="state().difficulty"
+  [engineStatus]="state().engineStatus"
+  [engineError]="state().engineError"
   (cancelled)="closeNewGame()"
+  (retryRequested)="controller.retryEngine()"
   (started)="startGame($event)"
 />

@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { getDifficulty } from './difficulty';
 import type { EngineMove, EnginePort, EngineSearchRequest } from './engine.types';
+import { STOCKFISH_WORKER_FACTORY } from './stockfish-worker';
 import { parseBestMove } from './uci-parser';
 import type { DifficultyId } from '../game/game.types';
 
@@ -13,6 +14,7 @@ type Waiter = {
 
 @Injectable()
 export class StockfishEngineService implements EnginePort {
+  private readonly createWorker = inject(STOCKFISH_WORKER_FACTORY);
   private worker: Worker | null = null;
   private waiters: Waiter[] = [];
   private activeSearch: {
@@ -37,14 +39,16 @@ export class StockfishEngineService implements EnginePort {
 
   private async initializeWithRetry(lifecycle: number): Promise<void> {
     try {
-      await this.createAndInitializeWorker();
+      await this.createAndInitializeWorker(lifecycle);
     } catch (error) {
       if (lifecycle !== this.lifecycle) {
         throw this.asError(error, 'Stockfish was stopped.');
       }
       this.disposeWorker(new Error('Retrying Stockfish initialization.'));
-      await this.createAndInitializeWorker().catch((retryError: unknown) => {
-        throw this.asError(retryError, 'Stockfish could not be started.');
+      await this.createAndInitializeWorker(lifecycle).catch((retryError: unknown) => {
+        const failure = this.asError(retryError, 'Stockfish could not be started.');
+        this.disposeWorker(failure);
+        throw failure;
       });
     }
   }
@@ -82,25 +86,31 @@ export class StockfishEngineService implements EnginePort {
     this.disposeWorker(new Error('Stockfish was stopped.'));
   }
 
-  private async createAndInitializeWorker(): Promise<void> {
-    const workerUrl = new URL('assets/stockfish/stockfish-18-lite-single.js', document.baseURI);
-    const worker = new Worker(workerUrl);
+  private async createAndInitializeWorker(lifecycle: number): Promise<void> {
+    const worker = this.createWorker();
     this.worker = worker;
 
     worker.addEventListener('message', (event: MessageEvent<unknown>) => {
-      if (typeof event.data === 'string') {
+      if (worker === this.worker && typeof event.data === 'string') {
         this.handleLine(event.data);
       }
     });
     worker.addEventListener('error', () => {
-      this.failWorker(new Error('Stockfish Worker failed.'));
+      if (worker === this.worker) {
+        this.failWorker(new Error('Stockfish Worker failed.'));
+      }
     });
     worker.addEventListener('messageerror', () => {
-      this.failWorker(new Error('Stockfish sent an unreadable message.'));
+      if (worker === this.worker) {
+        this.failWorker(new Error('Stockfish sent an unreadable message.'));
+      }
     });
 
     await this.waitFor('uciok', 20000, () => this.post('uci'));
     await this.waitFor('readyok', 10000, () => this.post('isready'));
+    if (worker !== this.worker || lifecycle !== this.lifecycle) {
+      throw new Error('Stockfish was stopped.');
+    }
     this.initialized = true;
   }
 

@@ -1,6 +1,15 @@
 @if (open()) {
   <div class="dialog-backdrop">
-    <section role="dialog" aria-modal="true" aria-labelledby="new-game-title">
+    <section
+      appModalFocus
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="new-game-title"
+      aria-describedby="new-game-intro engine-startup-status"
+      tabindex="-1"
+      [modalCanDismiss]="canClose()"
+      (modalDismissed)="cancelled.emit()"
+    >
       @if (canClose()) {
         <button
           class="close"
@@ -13,12 +22,13 @@
       }
       <span class="kicker">New match</span>
       <h2 id="new-game-title">Choose your side</h2>
-      <p class="intro">Set the board, then make the first plan.</p>
+      <p id="new-game-intro" class="intro">Set the board, then make the first plan.</p>
 
       <div class="color-options" aria-label="Player color">
         @for (option of colors; track option.value) {
           <button
             type="button"
+            [attr.data-modal-initial]="$first ? '' : null"
             [class.selected]="color() === option.value"
             [attr.aria-pressed]="color() === option.value"
             (click)="color.set(option.value)"
@@ -36,7 +46,35 @@
         }
       </select>
 
-      <button class="start" type="button" (click)="start()">Start game</button>
+      <div
+        id="engine-startup-status"
+        class="engine-startup"
+        [attr.data-state]="engineStatus()"
+        [attr.role]="engineStatus() === 'error' ? 'alert' : 'status'"
+        [attr.aria-busy]="engineStatus() === 'loading'"
+        aria-atomic="true"
+      >
+        <span class="engine-mark" aria-hidden="true">SF</span>
+        <div>
+          @if (engineStatus() === 'loading') {
+            <strong>Starting Stockfish</strong>
+            <small>Preparing the engine on this device…</small>
+          } @else if (engineStatus() === 'error') {
+            <strong>Stockfish could not start</strong>
+            <small>{{ engineError() }}</small>
+          } @else {
+            <strong>Stockfish is ready</strong>
+            <small>The engine is running locally.</small>
+          }
+        </div>
+        @if (engineStatus() === 'error') {
+          <button type="button" (click)="retryRequested.emit()">Retry engine</button>
+        }
+      </div>
+
+      <button class="start" type="button" [disabled]="engineStatus() !== 'ready'" (click)="start()">
+        {{ engineStatus() === 'loading' ? 'Starting engine…' : 'Start game' }}
+      </button>
       <small>Stockfish runs entirely on this device.</small>
     </section>
   </div>

@@ -4,7 +4,7 @@ import type { ChessColor } from '../../../shared/chess/chess.types';
 export type ChessPlatform = 'chess-com' | 'lichess';
 export type SpeedFilter = 'any' | 'bullet' | 'blitz' | 'rapid' | 'classical-daily';
 export type ImportState = 'idle' | 'loading' | 'success' | 'warning' | 'error';
-export type ParseStatus = 'ready' | 'unsupported-variant' | 'invalid-pgn';
+export type ParseStatus = 'ready' | 'unsupported-variant' | 'invalid-pgn' | 'unavailable';
 
 export interface ImportedProfile {
   platform: ChessPlatform;
@@ -71,7 +71,16 @@ export interface PlatformImportStatus {
   platform: ChessPlatform;
   state: ImportState;
   message: string;
-  importedCount: number;
+  counts: ImportOutcomeCounts;
+  recovery?: string;
+  canRetry: boolean;
+}
+
+export interface ImportOutcomeCounts {
+  added: number;
+  duplicates: number;
+  unavailable: number;
+  skipped: number;
 }
 
 export interface ImportSummary {

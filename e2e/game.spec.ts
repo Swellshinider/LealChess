@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -27,7 +28,9 @@ test('starts as White, supports click moves, premoves, annotations, and restorat
   await clickSquare(page, 'f3');
 
   await expect(page.locator('.history li')).toHaveCount(2, { timeout: 15_000 });
-  await expect(page.getByText(/Premove played|Premove .* queued/)).toBeAttached();
+  await expect(
+    page.locator('div[aria-live="polite"]').filter({ hasText: /Premove played|Premove .* queued/ }),
+  ).toBeAttached();
 
   await drawShape(page, 'c1', 'g5');
   await drawShape(page, 'd4', 'd4');
@@ -61,7 +64,11 @@ test('supports drag-to-move and cancels a premove that becomes illegal', async (
   await clickSquare(page, 'e4');
   await clickSquare(page, 'f5');
   await expect(page.locator('.history li')).toHaveCount(1, { timeout: 15_000 });
-  await expect(page.getByText(/no longer legal and was cancelled/i)).toBeAttached();
+  await expect(
+    page
+      .locator('div[aria-live="polite"]')
+      .filter({ hasText: /no longer legal and was cancelled/i }),
+  ).toBeAttached();
 });
 
 test('promotes a pawn with a touch-friendly chooser', async ({ page }) => {
@@ -70,8 +77,61 @@ test('promotes a pawn with a touch-friendly chooser', async ({ page }) => {
   await expect(page.locator('square.selected')).toHaveCount(1);
   await clickSquare(page, 'a8');
   await expect(page.getByRole('dialog', { name: 'Choose promotion' })).toBeVisible();
-  await page.getByRole('button', { name: /Queen/ }).click();
+  await expect(page.getByRole('button', { name: /Queen/ })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: /Rook/ })).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Enter');
   await expect(page.locator('piece.white.queen')).toBeAttached();
+});
+
+test('keeps dialogs keyboard-contained and restores focus', async ({ page }) => {
+  const setupDialog = page.getByRole('dialog', { name: 'Choose your side' });
+  await expect(page.getByRole('button', { name: 'White', exact: true })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(setupDialog).toBeVisible();
+
+  await startGame(page, 'White', 'Casual');
+  const newGame = page.getByRole('button', { name: 'New game' }).first();
+  await newGame.click();
+  await expect(page.getByRole('button', { name: 'White', exact: true })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(setupDialog).toBeHidden();
+  await expect(newGame).toBeFocused();
+
+  const resign = page.getByRole('button', { name: 'Resign', exact: true });
+  await resign.click();
+  await expect(page.getByRole('button', { name: 'Keep playing' })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('alertdialog')).toBeHidden();
+  await expect(resign).toBeFocused();
+});
+
+test('shows Stockfish startup failure and recovers on retry', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'Worker startup recovery smoke test');
+  await page.route('**/stockfish-18-lite-single.js', (route) => route.abort());
+  await page.reload();
+
+  const dialog = page.getByRole('dialog', { name: 'Choose your side' });
+  await expect(dialog.getByRole('alert')).toContainText('Stockfish could not start', {
+    timeout: 15_000,
+  });
+  await expect(page.getByRole('button', { name: 'Start game' })).toBeDisabled();
+
+  await page.unroute('**/stockfish-18-lite-single.js');
+  await dialog.getByRole('button', { name: 'Retry engine' }).click();
+  await expect(dialog.getByText('Stockfish is ready')).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole('button', { name: 'Start game' })).toBeEnabled();
+});
+
+test('has no serious accessibility violations in setup and active play', async ({ page }) => {
+  await assertNoSeriousA11yViolations(page);
+  await startGame(page, 'White', 'Casual');
+  await expect(page.getByRole('img', { name: 'Chessboard' })).toHaveAttribute(
+    'aria-describedby',
+    'play-board-description',
+  );
+  await assertNoSeriousA11yViolations(page);
 });
 
 test('completes a checkmate flow from a restored position', async ({ page }) => {
@@ -233,4 +293,13 @@ async function settleLayout(page: Page) {
       requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
     });
   });
+}
+
+async function assertNoSeriousA11yViolations(page: Page) {
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(
+    results.violations.filter(
+      (violation) => violation.impact === 'critical' || violation.impact === 'serious',
+    ),
+  ).toEqual([]);
 }

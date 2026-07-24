@@ -5,10 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased] - 24-07-2026
 
 ### Added
 
+- An expanded local-first project guide and training roadmap.
+- Keyboard focus management for dialogs and promotion choices, clearer board descriptions, live
+  review announcements, and automated accessibility checks for play and study workflows.
 - Cancellable local Stockfish analysis for imported games, with cached move classifications,
   recurring learning priorities, and interactive practice from missed opportunities.
 - Learning dashboard for importing recent Chess.com and Lichess games into a private local
@@ -27,10 +30,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Report platform imports with separate new, duplicate, unavailable, and skipped game outcomes,
+  keeping recoverable private, deleted, or malformed records in the study ledger.
 - Use pnpm for dependency installation, local scripts, and continuous integration.
 
 ### Fixed
 
+- Recover Stockfish play and analysis from worker startup failures with automatic and visible manual
+  retry paths.
 - Match imported-game reviews to the saved board theme and coordinate contrast while restoring
   move sounds and right-click annotations.
 - Correct the board square orientation and improve coordinate, legal-move, and dialog contrast.

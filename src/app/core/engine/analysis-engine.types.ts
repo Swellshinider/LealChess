@@ -16,6 +16,7 @@ export interface PositionAnalysisResult {
 }
 
 export interface AnalysisEnginePort {
+  initialize(): Promise<void>;
   analyze(request: PositionAnalysisRequest): Promise<PositionAnalysisResult>;
   destroy(): void;
 }

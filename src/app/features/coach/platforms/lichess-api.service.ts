@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import type { PlatformFetchRequest, PlatformFetchResult } from '../domain/platform-import.types';
 import { normalizeLichessGame, type LichessGameResponse } from './lichess-normalizer';
-import { platformErrorMessage } from './platform-errors';
+import { platformImportError } from './platform-errors';
 
 interface LichessProfileResponse {
   username?: string;
@@ -24,7 +24,7 @@ export class LichessApiService {
         this.http.get<LichessProfileResponse>(`https://lichess.org/api/user/${encoded}`),
       );
     } catch (error) {
-      throw new Error(platformErrorMessage(error, 'lichess'));
+      throw platformImportError(error, 'lichess');
     }
 
     try {
@@ -43,12 +43,22 @@ export class LichessApiService {
           responseType: 'text',
         }),
       );
-      const sources = response
-        .split(/\r?\n/)
-        .filter((line) => line.trim())
-        .map((line) => JSON.parse(line) as LichessGameResponse);
+      const lines = response.split(/\r?\n/).filter((line) => line.trim());
+      const sources: LichessGameResponse[] = [];
+      let unreadableLines = 0;
+      for (const line of lines) {
+        try {
+          sources.push(JSON.parse(line) as LichessGameResponse);
+        } catch {
+          unreadableLines += 1;
+        }
+      }
       const now = new Date().toISOString();
       const canonicalUsername = profileResponse.username ?? username;
+      const normalized = sources
+        .slice(0, request.maxGames)
+        .map((game) => normalizeLichessGame(game, `lichess:${username.toLowerCase()}`, now))
+        .filter((game) => game !== null);
       return {
         profile: {
           platform: 'lichess',
@@ -57,12 +67,13 @@ export class LichessApiService {
           profileUrl: `https://lichess.org/@/${canonicalUsername}`,
           updatedAt: now,
         },
-        games: sources
-          .slice(0, request.maxGames)
-          .map((game) => normalizeLichessGame(game, `lichess:${username.toLowerCase()}`, now)),
+        games: normalized,
+        discoveredCount: Math.min(sources.length, request.maxGames) + unreadableLines,
+        skippedCount:
+          Math.min(sources.length, request.maxGames) - normalized.length + unreadableLines,
       };
     } catch (error) {
-      throw new Error(platformErrorMessage(error, 'lichess', true));
+      throw platformImportError(error, 'lichess', true);
     }
   }
 }
