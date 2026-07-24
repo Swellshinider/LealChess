@@ -9,6 +9,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Cancellable local Stockfish analysis for imported games, with cached move classifications,
+  recurring learning priorities, and interactive practice from missed opportunities.
 - Learning dashboard for importing recent Chess.com and Lichess games into a private local
   study ledger, with filters, learner-perspective records, opening summaries, and resilient
   per-platform status.

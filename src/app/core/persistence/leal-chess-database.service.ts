@@ -1,11 +1,15 @@
 import { Injectable } from '@angular/core';
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import type { ImportedGame, ImportedProfile } from '../../features/coach/domain/coach.types';
+import type {
+  GameAnalysis,
+  ImportedGame,
+  ImportedProfile,
+} from '../../features/coach/domain/coach.types';
 import type { GamePreferences } from '../game/game.types';
 import type { PersistedGame } from './persistence.types';
 
 export const LEAL_CHESS_DATABASE_NAME = 'leal-chess';
-export const LEAL_CHESS_DATABASE_VERSION = 2;
+export const LEAL_CHESS_DATABASE_VERSION = 3;
 export const PROFILE_KEYS_INDEX = 'by-profile-key';
 
 export interface LealChessDatabase extends DBSchema {
@@ -22,6 +26,10 @@ export interface LealChessDatabase extends DBSchema {
     key: string;
     value: ImportedGame;
     indexes: { 'by-profile-key': string };
+  };
+  gameAnalyses: {
+    key: string;
+    value: GameAnalysis;
   };
 }
 
@@ -44,6 +52,9 @@ export class LealChessDatabaseService {
           if (!database.objectStoreNames.contains('importedGames')) {
             const games = database.createObjectStore('importedGames', { keyPath: 'key' });
             games.createIndex(PROFILE_KEYS_INDEX, 'profileKeys', { multiEntry: true });
+          }
+          if (!database.objectStoreNames.contains('gameAnalyses')) {
+            database.createObjectStore('gameAnalyses', { keyPath: 'importedGameKey' });
           }
         },
       },

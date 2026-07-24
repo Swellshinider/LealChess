@@ -32,6 +32,18 @@ describe('CoachRepositoryService', () => {
     expect(database.objectStoreNames.contains('state')).toBe(true);
     expect(database.objectStoreNames.contains('coachProfiles')).toBe(true);
     expect(database.objectStoreNames.contains('importedGames')).toBe(true);
+    expect(database.objectStoreNames.contains('gameAnalyses')).toBe(true);
+    database.close();
+  });
+
+  it('adds the analysis cache to a version-2 coach database without losing games', async () => {
+    const versionTwo = await openVersionTwo();
+    versionTwo.close();
+    const repository = TestBed.inject(CoachRepositoryService);
+
+    expect(await repository.game('lichess', 'game-1')).toMatchObject({ key: 'lichess:game-1' });
+    const database = await openNative();
+    expect(database.objectStoreNames.contains('gameAnalyses')).toBe(true);
     database.close();
   });
 
@@ -107,6 +119,21 @@ function openVersionOne(): Promise<IDBDatabase> {
 function openNative(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('leal-chess');
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function openVersionTwo(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('leal-chess', 2);
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore('state', { keyPath: 'key' });
+      request.result.createObjectStore('coachProfiles', { keyPath: 'platform' });
+      const games = request.result.createObjectStore('importedGames', { keyPath: 'key' });
+      games.createIndex('by-profile-key', 'profileKeys', { multiEntry: true });
+      games.put(game());
+    };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });

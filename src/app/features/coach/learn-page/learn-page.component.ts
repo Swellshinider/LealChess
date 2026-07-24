@@ -4,7 +4,8 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { RouterLink } from '@angular/router';
 import type { ChessColor } from '../../../shared/chess/chess.types';
 import { CoachImportService } from '../data/coach-import.service';
-import type { ImportedGame, SpeedFilter } from '../domain/coach.types';
+import type { GameAnalysis, ImportedGame, SpeedFilter } from '../domain/coach.types';
+import { categoryLabel, learnerColorForGame } from '../analysis/analysis-rules';
 
 @Component({
   selector: 'app-learn-page',
@@ -43,13 +44,7 @@ export class LearnPageComponent implements OnInit {
   }
 
   protected learnerColor(game: ImportedGame): ChessColor | undefined {
-    const profile = this.coach.profiles().find((item) => item.platform === game.platform);
-    if (!profile) return undefined;
-    return game.white.username.toLowerCase() === profile.username.toLowerCase()
-      ? 'white'
-      : game.black.username.toLowerCase() === profile.username.toLowerCase()
-        ? 'black'
-        : undefined;
+    return learnerColorForGame(game, this.coach.profiles());
   }
 
   protected resultLabel(game: ImportedGame): string {
@@ -69,4 +64,18 @@ export class LearnPageComponent implements OnInit {
       ? 'Unknown date'
       : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(date);
   }
+
+  protected analysisFor(game: ImportedGame): GameAnalysis | undefined {
+    return this.coach.analyses().find((analysis) => analysis.importedGameKey === game.key);
+  }
+
+  protected analysisLabel(analysis: GameAnalysis): string {
+    if (analysis.status === 'partial') {
+      return `${analysis.moves.length} of ${analysis.totalUserMoves} moves analyzed`;
+    }
+    const moments = analysis.moves.filter((move) => move.classification !== 'good').length;
+    return moments === 1 ? '1 learning moment' : `${moments} learning moments`;
+  }
+
+  protected categoryLabel = categoryLabel;
 }

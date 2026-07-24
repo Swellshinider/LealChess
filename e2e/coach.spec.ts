@@ -3,12 +3,12 @@ import { expect, test, type Page, type Route } from '@playwright/test';
 const pgn = `[Event "Imported game"]
 [White "Learner"]
 [Black "Opponent"]
-[Result "1-0"]
+[Result "0-1"]
 [ECO "C20"]
 [Opening "King's Pawn Game"]
 [TimeControl "600+0"]
 
-1. e4 e5 2. Nf3 Nc6 1-0`;
+1. f3 e5 2. g4 Qh4# 0-1`;
 
 test.beforeEach(async ({ page }) => {
   await mockChessCom(page);
@@ -59,7 +59,7 @@ test('imports both platforms, persists and deduplicates games, then replays move
 
   await seedBoardTheme(page, 'classic');
   await page
-    .getByRole('link', { name: /Ready to review/ })
+    .getByRole('link', { name: /Open review/ })
     .first()
     .click();
   await expect(page.locator('.review-board')).toBeVisible();
@@ -91,9 +91,32 @@ test('imports both platforms, persists and deduplicates games, then replays move
   await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(1);
   await page.keyboard.press('End');
   await expect(page.getByText('Ply 4 of 4')).toBeVisible();
-  await page.getByRole('button', { name: 'e4' }).click();
+  await page.getByRole('button', { name: 'f3' }).click();
   await expect(page.getByText('Ply 1 of 4')).toBeVisible();
   await page.getByRole('button', { name: 'Flip board' }).click();
+});
+
+test('analyzes locally, caches the result, and opens a missed position', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'Real analysis worker smoke test');
+  test.setTimeout(45_000);
+  await page.getByLabel('Lichess username').fill('Learner');
+  await page.getByRole('button', { name: 'Import your games' }).click();
+  await page.getByRole('link', { name: /Open review/ }).click();
+
+  await page.getByRole('button', { name: 'Analyze game' }).click();
+  await expect(page.getByRole('heading', { name: /learning moments found/ })).toBeVisible({
+    timeout: 30_000,
+  });
+  await page.getByRole('button', { name: /Practice \d+ moments/ }).click();
+  await expect(page.getByRole('heading', { name: 'Find a better move' })).toBeVisible();
+  await page.getByRole('button', { name: 'Reveal move' }).click();
+  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(1);
+
+  await page.reload();
+  await expect(page.getByRole('heading', { name: /learning moments found/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Analyze game' })).toHaveCount(0);
 });
 
 test('keeps a successful platform import when the other platform fails', async ({ page }) => {
@@ -177,7 +200,9 @@ function json(route: Route, body: unknown) {
 }
 
 async function drawReviewArrow(page: Page, from: string, to: string): Promise<void> {
-  const board = await page.locator('.review-board cg-board').boundingBox();
+  const reviewBoard = page.locator('.review-board');
+  await reviewBoard.scrollIntoViewIfNeeded();
+  const board = await reviewBoard.locator('cg-board').boundingBox();
   if (!board) throw new Error('Review board is not visible.');
   const point = (square: string) => ({
     x: board.x + ((square.charCodeAt(0) - 97 + 0.5) * board.width) / 8,
@@ -187,7 +212,9 @@ async function drawReviewArrow(page: Page, from: string, to: string): Promise<vo
   const destination = point(to);
   await page.mouse.move(origin.x, origin.y);
   await page.mouse.down({ button: 'right' });
-  await page.mouse.move(destination.x, destination.y, { steps: 5 });
+  await page.waitForTimeout(50);
+  await page.mouse.move(destination.x, destination.y, { steps: 12 });
+  await page.waitForTimeout(50);
   await page.mouse.up({ button: 'right' });
 }
 

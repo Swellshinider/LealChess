@@ -111,6 +111,37 @@
     }
   </section>
 
+  <section class="study-priorities" aria-labelledby="priorities-heading">
+    <div class="section-heading">
+      <div>
+        <p class="folio">Coach's margin</p>
+        <h2 id="priorities-heading">Study priorities</h2>
+      </div>
+      <span>{{ coach.completedAnalyses().length }} analyzed games</span>
+    </div>
+    @if (coach.priorities().length) {
+      <ol>
+        @for (priority of coach.priorities(); track priority.category) {
+          <li>
+            <span class="priority-rank">{{ $index + 1 }}</span>
+            <div>
+              <h3>{{ categoryLabel(priority.category) }}</h3>
+              <p>{{ priority.advice }}</p>
+            </div>
+            <strong>{{ priority.moments }} moments<br />{{ priority.games }} games</strong>
+          </li>
+        }
+      </ol>
+    } @else {
+      <div class="priority-empty">
+        <p>
+          Analyze at least two games to reveal patterns that repeat across your play. The summary is
+          generated locally from move categories, not by an AI service.
+        </p>
+      </div>
+    }
+  </section>
+
   <section class="games-ledger" aria-labelledby="games-heading">
     <div class="section-heading">
       <div>
@@ -151,9 +182,15 @@
             </div>
             <div class="review-action">
               @if (game.parseStatus === 'ready') {
-                <a [routerLink]="reviewLink(game)"
-                  >Ready to review <span aria-hidden="true">→</span></a
-                >
+                @if (analysisFor(game); as analysis) {
+                  <span class="analysis-status" [attr.data-status]="analysis.status">
+                    {{ analysisLabel(analysis) }}
+                  </span>
+                }
+                <a [routerLink]="reviewLink(game)">
+                  {{ analysisFor(game)?.status === 'complete' ? 'Review analysis' : 'Open review' }}
+                  <span aria-hidden="true">→</span>
+                </a>
               } @else {
                 <details>
                   <summary>{{ game.parseError }}</summary>

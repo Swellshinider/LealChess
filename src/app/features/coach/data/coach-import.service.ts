@@ -1,7 +1,13 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { calculateImportSummary } from '../analysis/import-summary';
+import {
+  analysisFingerprint,
+  learnerColorForGame,
+  learningPriorities,
+} from '../analysis/analysis-rules';
 import type {
   ChessPlatform,
+  GameAnalysis,
   ImportedGame,
   ImportedProfile,
   ImportRequest,
@@ -34,12 +40,17 @@ export class CoachImportService {
   private readonly repository = inject(CoachRepositoryService);
   private readonly mutableProfiles = signal<ImportedProfile[]>([]);
   private readonly mutableGames = signal<ImportedGame[]>([]);
+  private readonly mutableAnalyses = signal<GameAnalysis[]>([]);
   private readonly mutableStatuses = signal<Record<ChessPlatform, PlatformImportStatus>>(
     structuredClone(IDLE_STATUS),
   );
 
   readonly profiles = this.mutableProfiles.asReadonly();
   readonly games = this.mutableGames.asReadonly();
+  readonly analyses = this.mutableAnalyses.asReadonly();
+  readonly completedAnalyses = computed(() =>
+    this.mutableAnalyses().filter((analysis) => analysis.status === 'complete'),
+  );
   readonly statuses = this.mutableStatuses.asReadonly();
   readonly loading = computed(() =>
     Object.values(this.mutableStatuses()).some((status) => status.state === 'loading'),
@@ -52,14 +63,30 @@ export class CoachImportService {
       ),
     ),
   );
+  readonly priorities = computed(() => learningPriorities(this.completedAnalyses()));
 
   async initialize(): Promise<void> {
-    const [profiles, games] = await Promise.all([
+    const [profiles, games, cachedAnalyses] = await Promise.all([
       this.repository.profiles(),
       this.repository.gamesForActiveProfiles(),
+      this.repository.analyses(),
     ]);
     this.mutableProfiles.set(profiles);
     this.mutableGames.set(games);
+    const gamesByKey = new Map(games.map((game) => [game.key, game]));
+    const currentAnalyses = await Promise.all(
+      cachedAnalyses.map(async (analysis) => {
+        const game = gamesByKey.get(analysis.importedGameKey);
+        const color = game ? learnerColorForGame(game, profiles) : undefined;
+        if (!game || !color) return null;
+        return (await analysisFingerprint(game, color)) === analysis.sourceFingerprint
+          ? analysis
+          : null;
+      }),
+    );
+    this.mutableAnalyses.set(
+      currentAnalyses.filter((analysis): analysis is GameAnalysis => analysis !== null),
+    );
   }
 
   async import(request: ImportRequest): Promise<void> {

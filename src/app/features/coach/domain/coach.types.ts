@@ -90,28 +90,41 @@ export interface PgnParseResult {
   error?: string;
 }
 
-export type MistakeSeverity = 'inaccuracy' | 'mistake' | 'blunder';
-export type MistakeCategory = 'opening' | 'tactical' | 'positional' | 'endgame' | 'time-management';
+export type MoveClassification = 'good' | 'inaccuracy' | 'mistake' | 'blunder';
+export type MistakeCategory = 'opening' | 'tactical' | 'positional' | 'endgame';
+export type AnalysisStatus = 'partial' | 'complete';
 
 export interface EngineEvaluation {
-  centipawns?: number;
-  mateIn?: number;
+  score: { kind: 'centipawn'; value: number } | { kind: 'mate'; moves: number };
   depth: number;
 }
 
 export interface MoveAnalysis {
   importedGameKey: string;
   ply: number;
-  before: EngineEvaluation;
-  after: EngineEvaluation;
-  severity?: MistakeSeverity;
+  playedMove: string;
+  bestMove: string;
+  bestMoveSan: string;
+  principalVariation: string[];
+  bestEvaluation: EngineEvaluation;
+  playedEvaluation: EngineEvaluation;
+  centipawnLoss?: number;
+  classification: MoveClassification;
   category?: MistakeCategory;
 }
 
 export interface GameAnalysis {
   importedGameKey: string;
+  schemaVersion: number;
+  sourceFingerprint: string;
+  engineVersion: string;
+  depth: number;
+  learnerColor: ChessColor;
+  status: AnalysisStatus;
+  totalUserMoves: number;
   moves: MoveAnalysis[];
-  analyzedAt: string;
+  updatedAt: string;
+  completedAt?: string;
 }
 
 export interface TrainingPosition {
@@ -119,5 +132,16 @@ export interface TrainingPosition {
   ply: number;
   fen: string;
   category: MistakeCategory;
-  severity: MistakeSeverity;
+  classification: Exclude<MoveClassification, 'good'>;
+  playedMove: string;
+  bestMove: string;
+  bestMoveSan: string;
+  principalVariation: string[];
+}
+
+export interface LearningPriority {
+  category: MistakeCategory;
+  moments: number;
+  games: number;
+  advice: string;
 }

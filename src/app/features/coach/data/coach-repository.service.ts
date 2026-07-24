@@ -1,6 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { LealChessDatabaseService } from '../../../core/persistence/leal-chess-database.service';
-import type { ChessPlatform, ImportedGame, ImportedProfile } from '../domain/coach.types';
+import type {
+  ChessPlatform,
+  GameAnalysis,
+  ImportedGame,
+  ImportedProfile,
+} from '../domain/coach.types';
 
 @Injectable({ providedIn: 'root' })
 export class CoachRepositoryService {
@@ -28,6 +33,18 @@ export class CoachRepositoryService {
 
   async game(platform: ChessPlatform, gameId: string): Promise<ImportedGame | undefined> {
     return (await this.database.open()).get('importedGames', `${platform}:${gameId}`);
+  }
+
+  async analysis(gameKey: string): Promise<GameAnalysis | undefined> {
+    return (await this.database.open()).get('gameAnalyses', gameKey);
+  }
+
+  async analyses(): Promise<GameAnalysis[]> {
+    return (await this.database.open()).getAll('gameAnalyses');
+  }
+
+  async saveAnalysis(analysis: GameAnalysis): Promise<void> {
+    await (await this.database.open()).put('gameAnalyses', analysis);
   }
 
   async saveSuccessfulImport(profile: ImportedProfile, games: ImportedGame[]): Promise<void> {
