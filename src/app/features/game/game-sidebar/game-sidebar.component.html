@@ -1,0 +1,130 @@
+<aside class="sidebar" aria-label="Game controls">
+  <section class="status-card" [class.error]="state().engineStatus === 'error'">
+    <div class="status-kicker">
+      <span class="status-dot" aria-hidden="true"></span>
+      {{ state().phase === 'game-over' ? 'Game over' : 'Match status' }}
+    </div>
+    <h1>{{ statusTitle() }}</h1>
+    <p>{{ statusDetail() }}</p>
+    @if (state().engineStatus === 'error') {
+      <button class="retry" type="button" (click)="controller.retryEngine()">Retry engine</button>
+    }
+    @if (state().pendingPremove) {
+      <button class="text-action" type="button" (click)="controller.cancelPremove()">
+        Cancel premove
+      </button>
+    }
+    @if (state().canClaimDraw && state().isPlayerTurn) {
+      <button class="claim" type="button" (click)="controller.claimDraw()">Claim draw</button>
+    }
+  </section>
+
+  <section class="history-card">
+    <header>
+      <h2>Score sheet</h2>
+      <span>{{ state().moves.length }} plies</span>
+    </header>
+    <app-move-history [moves]="state().moves" />
+  </section>
+
+  <section class="controls-card">
+    <label for="difficulty">Bot difficulty</label>
+    <select id="difficulty" [value]="state().difficulty" (change)="changeDifficulty($event)">
+      @for (preset of difficulties; track preset.id) {
+        <option [value]="preset.id">{{ preset.label }} — {{ preset.description }}</option>
+      }
+    </select>
+
+    <div class="primary-actions">
+      <button type="button" class="new" (click)="newGameRequested.emit()">New game</button>
+      <button type="button" (click)="confirm('restart')" [disabled]="state().phase === 'setup'">
+        Restart
+      </button>
+    </div>
+    <div class="secondary-actions">
+      <button type="button" (click)="controller.flipBoard()">Flip board</button>
+      <button
+        type="button"
+        class="resign"
+        (click)="confirm('resign')"
+        [disabled]="state().phase !== 'active'"
+      >
+        Resign
+      </button>
+    </div>
+  </section>
+
+  <section class="settings-card">
+    <button
+      class="settings-toggle"
+      type="button"
+      [attr.aria-expanded]="settingsOpen()"
+      (click)="settingsOpen.set(!settingsOpen())"
+    >
+      Board & feedback
+      <span aria-hidden="true">{{ settingsOpen() ? '−' : '+' }}</span>
+    </button>
+    @if (settingsOpen()) {
+      <div class="settings-body">
+        <label class="switch">
+          <span>Sound</span>
+          <input
+            type="checkbox"
+            [checked]="state().preferences.soundEnabled"
+            (change)="toggleSound($event)"
+          />
+        </label>
+        <label class="switch">
+          <span>Legal move dots</span>
+          <input
+            type="checkbox"
+            [checked]="state().preferences.showLegalMoves"
+            (change)="toggleLegalMoves($event)"
+          />
+        </label>
+        <label class="switch">
+          <span>Premoves</span>
+          <input
+            type="checkbox"
+            [checked]="state().preferences.premovesEnabled"
+            (change)="togglePremoves($event)"
+          />
+        </label>
+        <label for="board-theme">Board palette</label>
+        <select
+          id="board-theme"
+          [value]="state().preferences.boardTheme"
+          (change)="changeTheme($event)"
+        >
+          <option value="tournament">Tournament</option>
+          <option value="classic">Classic</option>
+          <option value="high-contrast">High contrast</option>
+        </select>
+      </div>
+    }
+  </section>
+</aside>
+
+@if (confirmation(); as action) {
+  <div class="confirmation-backdrop">
+    <section role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+      <span class="eyebrow">Confirm action</span>
+      <h2 id="confirm-title">
+        {{ action === 'resign' ? 'Resign this game?' : 'Restart this game?' }}
+      </h2>
+      <p>
+        {{
+          action === 'resign'
+            ? 'The game will end immediately.'
+            : 'The current position and move history will be cleared.'
+        }}
+      </p>
+      <div>
+        <button type="button" (click)="confirmation.set(null)">Keep playing</button>
+        <button type="button" class="danger" (click)="runConfirmedAction()">
+          {{ action === 'resign' ? 'Resign game' : 'Restart game' }}
+        </button>
+      </div>
+    </section>
+  </div>
+}

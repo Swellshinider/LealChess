@@ -1,0 +1,103 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.board-frame {
+  aspect-ratio: 1;
+  background: var(--carbon);
+  box-shadow:
+    0 22px 50px rgb(5 12 16 / 35%),
+    0 0 0 1px rgb(255 255 255 / 8%);
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.chessground-host {
+  height: 100%;
+  width: 100%;
+}
+
+:host ::ng-deep cg-board {
+  background: conic-gradient(
+      var(--board-light) 25%,
+      var(--board-dark) 0 50%,
+      var(--board-light) 0 75%,
+      var(--board-dark) 0
+    )
+    0 0 / 25% 25%;
+}
+
+[data-board-theme='classic'] {
+  --board-light: #d8c3a1;
+  --board-dark: #8b6547;
+}
+
+[data-board-theme='high-contrast'] {
+  --board-light: #f4f5f5;
+  --board-dark: #416773;
+}
+
+.promotion-backdrop {
+  align-items: center;
+  background: rgb(13 22 27 / 76%);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 18px;
+  position: absolute;
+  z-index: 20;
+}
+
+.promotion-card {
+  background: var(--paper);
+  border-radius: 10px 3px 10px 3px;
+  box-shadow: 0 18px 60px rgb(0 0 0 / 35%);
+  color: var(--night);
+  max-width: 360px;
+  padding: 18px;
+  text-align: center;
+  width: 100%;
+
+  > span {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+}
+
+.promotion-pieces {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(4, 1fr);
+
+  button {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #c5ccca;
+    border-radius: 7px;
+    color: var(--night);
+    display: flex;
+    flex-direction: column;
+    font-size: 0.7rem;
+    min-height: 76px;
+    padding: 6px;
+  }
+}
+
+.promotion-symbol {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.cancel-promotion {
+  background: transparent;
+  border: 0;
+  color: #45545b;
+  margin-top: 12px;
+  min-height: 42px;
+  padding: 0 14px;
+}

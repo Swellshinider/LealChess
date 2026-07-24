@@ -1,0 +1,78 @@
+<div class="app-frame" [class.is-restored]="state().restored">
+  <header class="brand-bar">
+    <a class="brand" href="/" aria-label="LealChess home">
+      <span class="brand-mark" aria-hidden="true">♞</span>
+      <span>
+        <strong>LealChess</strong>
+        <small>Play the position</small>
+      </span>
+    </a>
+    <button class="new-game-compact" type="button" (click)="openNewGame()">New game</button>
+  </header>
+
+  @if (state().restored) {
+    <button class="restore-banner" type="button" (click)="controller.dismissRestored()">
+      <span>Previous game restored</span>
+      <span aria-hidden="true">×</span>
+      <span class="sr-only">Dismiss restored game message</span>
+    </button>
+  }
+
+  <main class="game-layout" [attr.data-theme]="state().preferences.boardTheme">
+    <section class="board-column" aria-label="Chess game">
+      <div
+        class="turn-rail opponent"
+        [class.active]="state().phase === 'active' && state().turn !== state().playerColor"
+        [class.thinking]="state().engineStatus === 'thinking'"
+        aria-hidden="true"
+      ></div>
+      <div class="player-strip opponent">
+        <span class="avatar bot" aria-hidden="true">SF</span>
+        <span>
+          <strong>Stockfish</strong>
+          <small>{{ state().difficulty }}</small>
+        </span>
+        @if (state().engineStatus === 'thinking') {
+          <span class="thinking-label">Thinking<span aria-hidden="true">…</span></span>
+        }
+      </div>
+
+      <app-chess-board />
+
+      <div
+        class="turn-rail player"
+        [class.active]="state().phase === 'active' && state().turn === state().playerColor"
+        aria-hidden="true"
+      ></div>
+      <div class="player-strip">
+        <span class="avatar human" aria-hidden="true">You</span>
+        <span>
+          <strong>You</strong>
+          <small>Playing {{ state().playerColor }}</small>
+        </span>
+        @if (state().isPlayerTurn) {
+          <span class="your-turn">Your move</span>
+        }
+      </div>
+    </section>
+
+    <app-game-sidebar (newGameRequested)="openNewGame()" />
+  </main>
+
+  <div class="sr-only" aria-live="polite" aria-atomic="true">{{ state().announcement }}</div>
+  <div class="sr-only" aria-live="assertive" aria-atomic="true">
+    @if (state().engineError) {
+      {{ state().engineError }}
+    } @else if (state().result) {
+      {{ state().result?.label }}
+    }
+  </div>
+</div>
+
+<app-new-game-dialog
+  [open]="newGameOpen() || state().phase === 'setup'"
+  [canClose]="state().phase !== 'setup'"
+  [defaultDifficulty]="state().difficulty"
+  (cancelled)="closeNewGame()"
+  (started)="startGame($event)"
+/>

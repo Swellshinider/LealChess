@@ -1,0 +1,18 @@
+<div class="history" aria-label="Move history" tabindex="0">
+  @if (pairs().length === 0) {
+    <div class="empty">
+      <span aria-hidden="true">♙</span>
+      <p>Your moves will appear here.</p>
+    </div>
+  } @else {
+    <ol>
+      @for (pair of pairs(); track pair.number; let last = $last) {
+        <li [class.current]="last">
+          <span class="number">{{ pair.number }}.</span>
+          <span class="move">{{ pair.white?.san ?? '—' }}</span>
+          <span class="move">{{ pair.black?.san ?? '—' }}</span>
+        </li>
+      }
+    </ol>
+  }
+</div>

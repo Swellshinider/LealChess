@@ -1,0 +1,34 @@
+<div class="board-frame" [attr.data-board-theme]="state().preferences.boardTheme">
+  <div
+    #boardHost
+    class="chessground-host"
+    role="img"
+    [attr.aria-label]="
+      'Chessboard, ' + state().orientation + ' orientation. ' + state().announcement
+    "
+  ></div>
+
+  @if (promotion(); as pending) {
+    <div
+      class="promotion-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="promotion-title"
+    >
+      <div class="promotion-card">
+        <span id="promotion-title">Choose promotion</span>
+        <div class="promotion-pieces">
+          @for (piece of promotionPieces; track piece) {
+            <button type="button" (click)="choosePromotion(piece)">
+              <span class="promotion-symbol" aria-hidden="true">
+                {{ piece === 'q' ? '♛' : piece === 'r' ? '♜' : piece === 'b' ? '♝' : '♞' }}
+              </span>
+              <span>{{ pieceLabel(piece) }}</span>
+            </button>
+          }
+        </div>
+        <button class="cancel-promotion" type="button" (click)="cancelPromotion()">Cancel</button>
+      </div>
+    </div>
+  }
+</div>
