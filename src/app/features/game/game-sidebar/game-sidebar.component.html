@@ -34,13 +34,6 @@
   </section>
 
   <section class="controls-card">
-    <label for="difficulty">Bot difficulty</label>
-    <select id="difficulty" [value]="state().difficulty" (change)="changeDifficulty($event)">
-      @for (preset of difficulties; track preset.id) {
-        <option [value]="preset.id">{{ preset.label }} — {{ preset.description }}</option>
-      }
-    </select>
-
     <div class="primary-actions">
       <button type="button" class="new" (click)="newGameRequested.emit($event)">New game</button>
       <button
@@ -62,56 +55,6 @@
         Resign
       </button>
     </div>
-  </section>
-
-  <section class="settings-card">
-    <button
-      class="settings-toggle"
-      type="button"
-      [attr.aria-expanded]="settingsOpen()"
-      (click)="settingsOpen.set(!settingsOpen())"
-    >
-      Board & feedback
-      <span aria-hidden="true">{{ settingsOpen() ? '−' : '+' }}</span>
-    </button>
-    @if (settingsOpen()) {
-      <div class="settings-body">
-        <label class="switch">
-          <span>Sound</span>
-          <input
-            type="checkbox"
-            [checked]="state().preferences.soundEnabled"
-            (change)="toggleSound($event)"
-          />
-        </label>
-        <label class="switch">
-          <span>Legal move dots</span>
-          <input
-            type="checkbox"
-            [checked]="state().preferences.showLegalMoves"
-            (change)="toggleLegalMoves($event)"
-          />
-        </label>
-        <label class="switch">
-          <span>Premoves</span>
-          <input
-            type="checkbox"
-            [checked]="state().preferences.premovesEnabled"
-            (change)="togglePremoves($event)"
-          />
-        </label>
-        <label for="board-theme">Board palette</label>
-        <select
-          id="board-theme"
-          [value]="state().preferences.boardTheme"
-          (change)="changeTheme($event)"
-        >
-          <option value="tournament">Tournament</option>
-          <option value="classic">Classic</option>
-          <option value="high-contrast">High contrast</option>
-        </select>
-      </div>
-    }
   </section>
 </aside>
 

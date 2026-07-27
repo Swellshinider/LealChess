@@ -27,7 +27,7 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
     | {
         resolve: (value: PositionAnalysisResult) => void;
         reject: (error: Error) => void;
-        info?: UciAnalysisInfo;
+        infos: Map<number, UciAnalysisInfo>;
         abort?: () => void;
         signal?: AbortSignal;
       }
@@ -39,6 +39,8 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
     if (this.active) throw new Error('Stockfish analysis is already running.');
 
     await this.waitFor('readyok', 5000, () => this.post('isready'));
+    this.post(`setoption name MultiPV value ${request.multiPv ?? 1}`);
+    this.post('setoption name UCI_ShowWDL value true');
     this.post(`position fen ${request.fen}`);
 
     return new Promise<PositionAnalysisResult>((resolve, reject) => {
@@ -51,6 +53,7 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
         reject,
         abort: request.signal ? abort : undefined,
         signal: request.signal,
+        infos: new Map(),
       };
       request.signal?.addEventListener('abort', abort, { once: true });
       const forcedMove = request.searchMove ? ` searchmoves ${request.searchMove}` : '';
@@ -104,6 +107,7 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
       }
     });
     await this.waitFor('uciok', 20000, () => this.post('uci'));
+    this.post('setoption name UCI_ShowWDL value true');
     await this.waitFor('readyok', 10000, () => this.post('isready'));
     if (worker !== this.worker || lifecycle !== this.lifecycle) {
       throw new Error('Stockfish analysis was stopped.');
@@ -121,13 +125,13 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
 
     const info = parseAnalysisInfo(line);
     if (info && !info.bounded && this.active) {
-      this.active.info = info;
+      this.active.infos.set(info.multiPv ?? 1, info);
       return;
     }
 
     const bestMove = parseBestMove(line);
     if (bestMove === undefined || !this.active) return;
-    const infoResult = this.active.info;
+    const infoResult = this.active.infos.get(1);
     if (!infoResult) {
       this.finishActive(undefined, new Error('Stockfish returned no evaluation.'));
       return;
@@ -136,6 +140,19 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
       bestMove,
       evaluation: infoResult.evaluation,
       principalVariation: infoResult.principalVariation,
+      ...(infoResult.expectedPoints === undefined
+        ? {}
+        : { expectedPoints: infoResult.expectedPoints }),
+      variations: [...this.active.infos.entries()]
+        .sort(([left], [right]) => left - right)
+        .map(([rank, variation]) => ({
+          rank,
+          evaluation: variation.evaluation,
+          principalVariation: variation.principalVariation,
+          ...(variation.expectedPoints === undefined
+            ? {}
+            : { expectedPoints: variation.expectedPoints }),
+        })),
     });
   }
 

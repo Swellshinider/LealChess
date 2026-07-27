@@ -37,8 +37,8 @@ export class IndexedDbPersistenceService implements PersistencePort {
             ? gameRecord.value
             : null,
         preferences:
-          preferenceRecord?.key === 'preferences' && this.isPreferences(preferenceRecord.value)
-            ? preferenceRecord.value
+          preferenceRecord?.key === 'preferences'
+            ? this.normalizePreferences(preferenceRecord.value)
             : { ...DEFAULT_PREFERENCES },
       };
     } catch {
@@ -104,18 +104,35 @@ export class IndexedDbPersistenceService implements PersistencePort {
     );
   }
 
-  private isPreferences(value: unknown): value is GamePreferences {
-    if (!this.isRecord(value)) {
-      return false;
-    }
-    return (
-      typeof value['soundEnabled'] === 'boolean' &&
-      typeof value['showLegalMoves'] === 'boolean' &&
-      typeof value['premovesEnabled'] === 'boolean' &&
-      this.isBoardTheme(value['boardTheme']) &&
-      this.isColor(value['orientation']) &&
-      this.isDifficulty(value['difficulty'])
-    );
+  private normalizePreferences(value: unknown): GamePreferences {
+    const record = this.isRecord(value) ? value : {};
+    return {
+      soundEnabled:
+        typeof record['soundEnabled'] === 'boolean'
+          ? record['soundEnabled']
+          : DEFAULT_PREFERENCES.soundEnabled,
+      showLegalMoves:
+        typeof record['showLegalMoves'] === 'boolean'
+          ? record['showLegalMoves']
+          : DEFAULT_PREFERENCES.showLegalMoves,
+      premovesEnabled:
+        typeof record['premovesEnabled'] === 'boolean'
+          ? record['premovesEnabled']
+          : DEFAULT_PREFERENCES.premovesEnabled,
+      showMoveClassifications:
+        typeof record['showMoveClassifications'] === 'boolean'
+          ? record['showMoveClassifications']
+          : DEFAULT_PREFERENCES.showMoveClassifications,
+      boardTheme: this.isBoardTheme(record['boardTheme'])
+        ? record['boardTheme']
+        : DEFAULT_PREFERENCES.boardTheme,
+      orientation: this.isColor(record['orientation'])
+        ? record['orientation']
+        : DEFAULT_PREFERENCES.orientation,
+      difficulty: this.isDifficulty(record['difficulty'])
+        ? record['difficulty']
+        : DEFAULT_PREFERENCES.difficulty,
+    };
   }
 
   private isMoveRecord(value: unknown): value is MoveRecord {
@@ -176,7 +193,14 @@ export class IndexedDbPersistenceService implements PersistencePort {
   }
 
   private isBoardTheme(value: unknown): value is BoardTheme {
-    return ['tournament', 'classic', 'high-contrast'].includes(String(value));
+    return [
+      'tournament',
+      'classic',
+      'high-contrast',
+      'rosewood',
+      'green-felt',
+      'blue-steel',
+    ].includes(String(value));
   }
 
   private isSquare(value: unknown): boolean {

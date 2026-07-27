@@ -4,6 +4,8 @@ export interface UciAnalysisInfo {
   evaluation: EngineEvaluation;
   principalVariation: string[];
   bounded: boolean;
+  multiPv?: number;
+  expectedPoints?: number;
 }
 
 export function parseAnalysisInfo(line: string): UciAnalysisInfo | undefined {
@@ -23,6 +25,12 @@ export function parseAnalysisInfo(line: string): UciAnalysisInfo | undefined {
     return undefined;
   }
   const pvIndex = tokens.indexOf('pv');
+  const multiPvIndex = tokens.indexOf('multipv');
+  const wdlIndex = tokens.indexOf('wdl');
+  const wins = Number(tokens[wdlIndex + 1]);
+  const draws = Number(tokens[wdlIndex + 2]);
+  const losses = Number(tokens[wdlIndex + 3]);
+  const total = wins + draws + losses;
   return {
     evaluation: {
       score: scoreKind === 'cp' ? { kind: 'centipawn', value } : { kind: 'mate', moves: value },
@@ -30,5 +38,11 @@ export function parseAnalysisInfo(line: string): UciAnalysisInfo | undefined {
     },
     principalVariation: pvIndex < 0 ? [] : tokens.slice(pvIndex + 1),
     bounded: /\b(?:lowerbound|upperbound)\b/.test(line),
+    ...(multiPvIndex >= 0 && Number.isFinite(Number(tokens[multiPvIndex + 1]))
+      ? { multiPv: Number(tokens[multiPvIndex + 1]) }
+      : {}),
+    ...(wdlIndex >= 0 && Number.isFinite(total) && total > 0
+      ? { expectedPoints: (wins + draws / 2) / total }
+      : {}),
   };
 }

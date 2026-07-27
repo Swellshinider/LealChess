@@ -17,6 +17,7 @@ import type { Square } from 'chess.js';
 import { GameController } from '../../../core/game/game-controller.service';
 import type { MoveInput, PromotionPiece } from '../../../core/game/game.types';
 import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
+import { LiveMoveAnalysisService } from '../live-analysis/live-move-analysis.service';
 
 interface PendingPromotion {
   move: Omit<MoveInput, 'promotion'>;
@@ -34,9 +35,11 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy {
   @ViewChild('boardHost', { static: true }) private boardHost!: ElementRef<HTMLElement>;
 
   private readonly controller = inject(GameController);
+  private readonly liveAnalysis = inject(LiveMoveAnalysisService);
   protected readonly promotion = signal<PendingPromotion | null>(null);
   protected readonly promotionPieces: readonly PromotionPiece[] = ['q', 'r', 'b', 'n'];
   protected readonly state = this.controller.state;
+  protected readonly classification = this.liveAnalysis.state;
   private api: Api | null = null;
   private shapes: DrawShape[] = [];
   private redrawFrame: number | null = null;
@@ -117,6 +120,15 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy {
 
   protected pieceLabel(piece: PromotionPiece): string {
     return { q: 'Queen', r: 'Rook', b: 'Bishop', n: 'Knight' }[piece];
+  }
+
+  protected classificationPosition(square: string): string {
+    const file = square.charCodeAt(0) - 97;
+    const rank = Number(square[1]) - 1;
+    const white = this.state().orientation === 'white';
+    const x = ((white ? file : 7 - file) + 0.5) * 12.5;
+    const y = ((white ? 7 - rank : rank) + 0.5) * 12.5;
+    return `left: ${x}%; top: ${y}%`;
   }
 
   private createConfig(): Config {

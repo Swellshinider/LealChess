@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/play');
   await expect(page.getByRole('heading', { name: 'Choose your side' })).toBeVisible();
 });
 
@@ -47,13 +47,11 @@ test('starts as White, supports click moves, premoves, annotations, and restorat
   }
 });
 
-test('starts as Black, receives an opening move, changes difficulty, and resigns', async ({
-  page,
-}) => {
+test('starts as Black, shows its chosen difficulty, and resigns', async ({ page }) => {
   await startGame(page, 'Black', 'Casual');
   await expect(page.locator('.history li')).toHaveCount(1, { timeout: 15_000 });
-  await page.locator('#difficulty').selectOption('intermediate');
-  await expect(page.locator('#difficulty')).toHaveValue('intermediate');
+  await expect(page.locator('#difficulty')).toHaveCount(0);
+  await expect(page.locator('.player-strip.opponent').getByText('casual')).toBeVisible();
 
   await page.getByRole('button', { name: 'Resign', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Keep playing' })).toHaveCSS(
@@ -62,6 +60,19 @@ test('starts as Black, receives an opening move, changes difficulty, and resigns
   );
   await page.getByRole('button', { name: 'Resign game' }).click();
   await expect(page.getByRole('heading', { name: 'You resigned' })).toBeVisible();
+});
+
+test('keeps live classifications off by default and shows a Book move when enabled', async ({
+  page,
+}) => {
+  await expect(page.locator('.live-classification')).toHaveCount(0);
+  await page.goto('/settings');
+  await page.getByLabel(/Move classifications/).check();
+  await page.goto('/play');
+  await startGame(page, 'White', 'Casual');
+  await clickSquare(page, 'e2');
+  await clickSquare(page, 'e4');
+  await expect(page.locator('.live-classification')).toHaveText('Book');
 });
 
 test('supports drag-to-move and cancels a premove that becomes illegal', async ({ page }) => {
@@ -152,17 +163,12 @@ test('completes a checkmate flow from a restored position', async ({ page }) => 
   await expect(page.locator('.history')).toContainText('e4');
 });
 
-test('keeps expanded board settings visible while move history scrolls', async ({
-  page,
-}, testInfo) => {
+test('keeps game controls visible while move history scrolls', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'Single desktop flex geometry check');
   await startGame(page, 'White', 'Casual');
   await clickSquare(page, 'e2');
   await clickSquare(page, 'e4');
   await expect(page.locator('.history li')).toHaveCount(1, { timeout: 15_000 });
-
-  await page.getByRole('button', { name: /Board & feedback/ }).click();
-  await expect(page.getByText('Legal move dots')).toBeVisible();
 
   await page.locator('.history ol').evaluate((list) => {
     const row = list.querySelector('li')!;
@@ -175,31 +181,18 @@ test('keeps expanded board settings visible while move history scrolls', async (
     const sidebar = document.querySelector<HTMLElement>('.sidebar')!.getBoundingClientRect();
     const history = document.querySelector<HTMLElement>('.history')!;
     const controls = document.querySelector<HTMLElement>('.controls-card')!.getBoundingClientRect();
-    const settingsElement = document.querySelector<HTMLElement>('.settings-card')!;
-    const settings = settingsElement.getBoundingClientRect();
-    const finalSetting = document
-      .querySelector<HTMLElement>('#board-theme')!
-      .getBoundingClientRect();
 
     return {
       controlsBottom: controls.bottom,
-      finalSettingBottom: finalSetting.bottom,
       historyClientHeight: history.clientHeight,
       historyScrollHeight: history.scrollHeight,
-      settingsBottom: settings.bottom,
-      settingsClientHeight: settingsElement.clientHeight,
-      settingsScrollHeight: settingsElement.scrollHeight,
-      settingsTop: settings.top,
       sidebarBottom: sidebar.bottom,
       viewportHeight: window.innerHeight,
     };
   });
 
   expect(geometry.historyScrollHeight).toBeGreaterThan(geometry.historyClientHeight);
-  expect(geometry.controlsBottom).toBeLessThanOrEqual(geometry.settingsTop + 1);
-  expect(geometry.settingsScrollHeight).toBeLessThanOrEqual(geometry.settingsClientHeight);
-  expect(geometry.finalSettingBottom).toBeLessThanOrEqual(geometry.settingsBottom + 1);
-  expect(geometry.settingsBottom).toBeLessThanOrEqual(geometry.sidebarBottom + 1);
+  expect(geometry.controlsBottom).toBeLessThanOrEqual(geometry.sidebarBottom + 1);
   expect(geometry.sidebarBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
 });
 

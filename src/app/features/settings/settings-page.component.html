@@ -1,0 +1,210 @@
+<div class="settings-shell">
+  <app-side-navigation />
+  <main class="settings-page">
+    <header class="page-heading">
+      <p>LealChess preferences</p>
+      <h1>Settings</h1>
+    </header>
+
+    <section aria-labelledby="accounts-heading">
+      <div class="section-heading">
+        <div>
+          <p class="folio">Accounts & imports</p>
+          <h2 id="accounts-heading">Bring your games to the study desk</h2>
+        </div>
+        <span>Saved locally</span>
+      </div>
+
+      <form [formGroup]="importForm" [attr.aria-busy]="coach.loading()" (ngSubmit)="importGames()">
+        <label>
+          Chess.com username
+          <input
+            formControlName="chessComUsername"
+            autocomplete="username"
+            placeholder="Username"
+          />
+        </label>
+        <label>
+          Lichess username
+          <input formControlName="lichessUsername" autocomplete="username" placeholder="Username" />
+        </label>
+        <label>
+          Games per platform
+          <input formControlName="maxGames" type="number" min="1" max="100" />
+        </label>
+        <label>
+          Speed
+          <select formControlName="speed">
+            <option value="any">Any</option>
+            <option value="bullet">Bullet</option>
+            <option value="blitz">Blitz</option>
+            <option value="rapid">Rapid</option>
+            <option value="classical-daily">Classical / Daily</option>
+          </select>
+        </label>
+        <button type="submit" [disabled]="coach.loading()">
+          {{ coach.loading() ? 'Importing…' : 'Import games' }}
+        </button>
+      </form>
+      <p class="form-help">
+        Enter either username. Each platform imports separately, so one can still succeed if the
+        other is unavailable.
+      </p>
+      @if (usernameError()) {
+        <p class="field-error" role="alert">Enter a Chess.com or Lichess username.</p>
+      }
+      @if (importForm.controls.maxGames.invalid && importForm.controls.maxGames.touched) {
+        <p class="field-error">Choose between 1 and 100 games per platform.</p>
+      }
+
+      <div class="platform-statuses">
+        @for (
+          status of [coach.statuses()['chess-com'], coach.statuses().lichess];
+          track status.platform
+        ) {
+          <article
+            class="platform-status"
+            [attr.data-state]="status.state"
+            [attr.role]="status.state === 'error' ? 'alert' : 'status'"
+            [attr.aria-busy]="status.state === 'loading'"
+          >
+            <div>
+              <strong>{{ status.platform === 'chess-com' ? 'Chess.com' : 'Lichess' }}</strong>
+              <span>{{ status.state }}</span>
+            </div>
+            <p>{{ status.message }}</p>
+            @if (status.recovery) {
+              <p class="recovery">{{ status.recovery }}</p>
+            }
+            @if (status.canRetry) {
+              <button type="button" (click)="retry(status.platform)">
+                Retry {{ status.platform === 'chess-com' ? 'Chess.com' : 'Lichess' }}
+              </button>
+            }
+          </article>
+        }
+      </div>
+    </section>
+
+    <section aria-labelledby="board-heading">
+      <div class="section-heading">
+        <div>
+          <p class="folio">Board & feedback</p>
+          <h2 id="board-heading">Shape the playing surface</h2>
+        </div>
+        <span>Changes save immediately</span>
+      </div>
+
+      <div class="board-settings-layout">
+        <div class="control-sheet">
+          <label class="switch-row">
+            <span><strong>Mute sounds</strong><small>Turn off move and game sounds.</small></span>
+            <input
+              type="checkbox"
+              [checked]="!preferences().soundEnabled"
+              (change)="updateMute($event)"
+            />
+          </label>
+          <label class="switch-row">
+            <span><strong>Legal move dots</strong><small>Mark available destinations.</small></span>
+            <input
+              type="checkbox"
+              [checked]="preferences().showLegalMoves"
+              (change)="updateBoolean('showLegalMoves', $event)"
+            />
+          </label>
+          <label class="switch-row">
+            <span
+              ><strong>Premoves</strong><small>Queue one move during Stockfish’s turn.</small></span
+            >
+            <input
+              type="checkbox"
+              [checked]="preferences().premovesEnabled"
+              (change)="updateBoolean('premovesEnabled', $event)"
+            />
+          </label>
+          <label class="switch-row">
+            <span>
+              <strong>Move classifications</strong>
+              <small>Grade your moves while you play.</small>
+            </span>
+            <input
+              type="checkbox"
+              [checked]="preferences().showMoveClassifications"
+              (change)="updateBoolean('showMoveClassifications', $event)"
+            />
+          </label>
+          <label class="select-row">
+            <span>Board palette</span>
+            <select [value]="preferences().boardTheme" (change)="updateTheme($event)">
+              @for (theme of themes; track theme.id) {
+                <option [value]="theme.id">{{ theme.label }}</option>
+              }
+            </select>
+          </label>
+          <label class="select-row">
+            <span>Default orientation</span>
+            <select [value]="preferences().orientation" (change)="updateOrientation($event)">
+              <option value="white">White</option>
+              <option value="black">Black</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="preview-wrap">
+          <p>Live preview</p>
+          <div class="preview-board" [attr.data-board-theme]="preferences().boardTheme">
+            <div #boardHost class="chessground-host" aria-label="Static board preview"></div>
+            @if (preferences().showMoveClassifications) {
+              <span
+                class="preview-classification"
+                [class.black-orientation]="preferences().orientation === 'black'"
+              >
+                Book
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="danger-zone" aria-labelledby="danger-heading">
+      <div>
+        <p class="folio">Local data</p>
+        <h2 id="danger-heading">Clear all data</h2>
+        <p>
+          Removes the active game, preferences, account settings, profiles, imported games and
+          analyses from this browser.
+        </p>
+      </div>
+      <button type="button" (click)="clearConfirmationOpen.set(true)">Clear all data</button>
+    </section>
+  </main>
+</div>
+
+@if (clearConfirmationOpen()) {
+  <div class="confirmation-backdrop">
+    <section
+      appModalFocus
+      class="confirmation-card"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="clear-title"
+      aria-describedby="clear-description"
+      tabindex="-1"
+      (modalDismissed)="closeClearConfirmation()"
+    >
+      <p class="folio">Confirm data removal</p>
+      <h2 id="clear-title">Clear everything saved by LealChess?</h2>
+      <p id="clear-description">
+        This action cannot be undone. Other browser data is not affected.
+      </p>
+      <div>
+        <button type="button" data-modal-initial (click)="closeClearConfirmation()">Cancel</button>
+        <button class="danger" type="button" [disabled]="clearing()" (click)="clearAllData()">
+          {{ clearing() ? 'Clearing…' : 'Clear all data' }}
+        </button>
+      </div>
+    </section>
+  </div>
+}

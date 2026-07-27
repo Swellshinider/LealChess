@@ -42,7 +42,7 @@ test('collapses the desktop panel, preserves the choice, and navigates between w
   await page.reload();
   await expect(page.getByRole('button', { name: 'Expand navigation' })).toBeVisible();
   await page.getByRole('link', { name: 'Play' }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/play$/);
   await expect(page.getByRole('heading', { name: 'Choose your side' })).toBeVisible();
 });
 
@@ -50,16 +50,13 @@ test('opens an accessible mobile drawer and restores focus after Escape', async 
   page,
 }, testInfo) => {
   test.skip(!testInfo.project.name.includes('mobile'), 'Mobile navigation behavior');
-  await page.goto('/');
+  await page.goto('/play');
 
   const trigger = page.getByRole('button', { name: 'Open navigation' });
   await trigger.click();
   const drawer = page.getByRole('dialog', { name: 'Navigation menu' });
   await expect(drawer).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Settings, unavailable' })).toHaveAttribute(
-    'aria-disabled',
-    'true',
-  );
+  await expect(page.getByRole('link', { name: 'Settings' })).toBeVisible();
 
   await page.keyboard.press('Escape');
 
@@ -72,7 +69,7 @@ test('adapts Play from a landscape tablet desk to a portrait board-first stack',
 }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'Single responsive geometry check');
   await page.setViewportSize({ width: 1024, height: 768 });
-  await page.goto('/');
+  await page.goto('/play');
 
   const board = page.locator('.board-column');
   const controls = page.locator('app-game-sidebar');
@@ -91,6 +88,42 @@ test('adapts Play from a landscape tablet desk to a portrait board-first stack',
       return portraitControls.y > portraitBoard.y + portraitBoard.height - 2;
     })
     .toBe(true);
+});
+
+test('launches each workspace from the landing page and redirects unknown routes home', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'LealChess' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Play/ })).toHaveAttribute('href', '/play');
+  await expect(page.getByRole('link', { name: /Learn/ })).toHaveAttribute('href', '/learn');
+  await expect(page.getByRole('link', { name: /Settings/ })).toHaveAttribute('href', '/settings');
+
+  await page.goto('/not-a-route');
+  await expect(page).toHaveURL(/\/$/);
+});
+
+test('previews and persists board preferences, then clears LealChess data', async ({ page }) => {
+  await page.goto('/settings');
+  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+  await expect(page.getByLabel(/Mute sounds/)).not.toBeChecked();
+  await expect(page.getByLabel(/Move classifications/)).not.toBeChecked();
+
+  await page.getByLabel(/Move classifications/).check();
+  await expect(page.locator('.preview-classification')).toHaveText('Book');
+  await page.getByLabel('Board palette').selectOption('rosewood');
+  await expect(page.locator('.preview-board')).toHaveAttribute('data-board-theme', 'rosewood');
+  await page.reload();
+  await expect(page.getByLabel(/Move classifications/)).toBeChecked();
+  await expect(page.getByLabel('Board palette')).toHaveValue('rosewood');
+
+  await page.getByRole('button', { name: 'Clear all data' }).first().click();
+  await expect(page.getByRole('alertdialog')).toBeVisible();
+  await page.getByRole('button', { name: 'Clear all data' }).last().click();
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto('/settings');
+  await expect(page.getByLabel(/Move classifications/)).not.toBeChecked();
+  await expect(page.getByLabel('Board palette')).toHaveValue('tournament');
 });
 
 async function expectWorkspaceToFitViewport(page: import('@playwright/test').Page) {

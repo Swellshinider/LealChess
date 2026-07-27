@@ -4,7 +4,8 @@ import type { ChessColor } from '../../shared/chess/chess.types';
 export type { ChessColor } from '../../shared/chess/chess.types';
 export type ColorSelection = ChessColor | 'random';
 export type DifficultyId = 'beginner' | 'casual' | 'intermediate' | 'advanced' | 'expert';
-export type BoardTheme = 'tournament' | 'classic' | 'high-contrast';
+export type BoardTheme =
+  'tournament' | 'classic' | 'high-contrast' | 'rosewood' | 'green-felt' | 'blue-steel';
 export type PromotionPiece = 'q' | 'r' | 'b' | 'n';
 
 export type GamePhase = 'setup' | 'restoring' | 'active' | 'game-over';
@@ -51,6 +52,7 @@ export interface GamePreferences {
   soundEnabled: boolean;
   showLegalMoves: boolean;
   premovesEnabled: boolean;
+  showMoveClassifications: boolean;
   boardTheme: BoardTheme;
   orientation: ChessColor;
   difficulty: DifficultyId;
@@ -89,6 +91,7 @@ export const DEFAULT_PREFERENCES: GamePreferences = {
   soundEnabled: true,
   showLegalMoves: true,
   premovesEnabled: true,
+  showMoveClassifications: false,
   boardTheme: 'tournament',
   orientation: 'white',
   difficulty: 'casual',

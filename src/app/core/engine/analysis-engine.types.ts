@@ -7,12 +7,22 @@ export interface PositionAnalysisRequest {
   depth: number;
   searchMove?: string;
   signal?: AbortSignal;
+  multiPv?: number;
+}
+
+export interface AnalysisVariation {
+  rank: number;
+  evaluation: EngineEvaluation;
+  principalVariation: string[];
+  expectedPoints?: number;
 }
 
 export interface PositionAnalysisResult {
   bestMove: MoveInput | null;
   evaluation: EngineEvaluation;
   principalVariation: string[];
+  expectedPoints?: number;
+  variations?: AnalysisVariation[];
 }
 
 export interface AnalysisEnginePort {

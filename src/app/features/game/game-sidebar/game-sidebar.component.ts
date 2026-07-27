@@ -1,7 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
-import { DIFFICULTY_PRESETS } from '../../../core/engine/difficulty';
 import { GameController } from '../../../core/game/game-controller.service';
-import type { BoardTheme, DifficultyId } from '../../../core/game/game.types';
 import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
 import { MoveHistoryComponent } from '../move-history/move-history.component';
 
@@ -17,10 +15,8 @@ type Confirmation = 'restart' | 'resign' | null;
 export class GameSidebarComponent {
   protected readonly controller = inject(GameController);
   readonly newGameRequested = output<Event>();
-  protected readonly difficulties = DIFFICULTY_PRESETS;
   protected readonly state = this.controller.state;
   protected readonly confirmation = signal<Confirmation>(null);
-  protected readonly settingsOpen = signal(false);
   private confirmationTrigger: HTMLElement | null = null;
 
   protected statusTitle(): string {
@@ -64,37 +60,6 @@ export class GameSidebarComponent {
       return `Premove ${state.pendingPremove.from}–${state.pendingPremove.to} is queued.`;
     }
     return state.isPlayerTurn ? 'Find your best continuation.' : 'You can queue one premove.';
-  }
-
-  protected changeDifficulty(event: Event): void {
-    const difficulty = (event.target as HTMLSelectElement).value as DifficultyId;
-    void this.controller.changeDifficulty(difficulty);
-  }
-
-  protected toggleSound(event: Event): void {
-    this.controller.updatePreferences({
-      soundEnabled: (event.target as HTMLInputElement).checked,
-    });
-  }
-
-  protected toggleLegalMoves(event: Event): void {
-    this.controller.updatePreferences({
-      showLegalMoves: (event.target as HTMLInputElement).checked,
-    });
-  }
-
-  protected togglePremoves(event: Event): void {
-    const enabled = (event.target as HTMLInputElement).checked;
-    this.controller.updatePreferences({ premovesEnabled: enabled });
-    if (!enabled) {
-      this.controller.cancelPremove();
-    }
-  }
-
-  protected changeTheme(event: Event): void {
-    this.controller.updatePreferences({
-      boardTheme: (event.target as HTMLSelectElement).value as BoardTheme,
-    });
   }
 
   protected confirm(action: Exclude<Confirmation, null>, event: Event): void {
