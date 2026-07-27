@@ -176,8 +176,8 @@ form > button {
 .board-settings-layout {
   align-items: start;
   display: grid;
-  gap: clamp(24px, 5vw, 70px);
-  grid-template-columns: minmax(280px, 1fr) minmax(260px, 430px);
+  gap: clamp(24px, 3vw, 44px);
+  grid-template-columns: minmax(280px, 1fr) minmax(260px, 400px);
 }
 
 .control-sheet {
@@ -220,58 +220,6 @@ form > button {
 
   select {
     min-width: 170px;
-  }
-}
-
-.preview-wrap {
-  p {
-    color: var(--mist);
-    font-family: var(--font-utility);
-    font-size: 0.6rem;
-    text-transform: uppercase;
-  }
-}
-
-.preview-board {
-  aspect-ratio: 1;
-  border: 7px solid var(--surface-lowest);
-  box-shadow: 0 18px 38px rgb(1 16 23 / 30%);
-  position: relative;
-  width: 100%;
-
-  ::ng-deep cg-board {
-    background: conic-gradient(
-        var(--board-dark) 25%,
-        var(--board-light) 0 50%,
-        var(--board-dark) 0 75%,
-        var(--board-light) 0
-      )
-      0 0 / 25% 25%;
-  }
-}
-
-.chessground-host {
-  height: 100%;
-  width: 100%;
-}
-
-.preview-classification {
-  background: #735c33;
-  border: 1px solid #f5d38d;
-  border-radius: 3px;
-  bottom: 39%;
-  color: #fff4d3;
-  font-family: var(--font-utility);
-  font-size: clamp(0.48rem, 1.4vw, 0.68rem);
-  left: 54%;
-  padding: 3px 5px;
-  pointer-events: none;
-  position: absolute;
-  transform: translate(-8%, 35%);
-
-  &.black-orientation {
-    bottom: 52%;
-    left: 39%;
   }
 }
 

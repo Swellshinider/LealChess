@@ -11,12 +11,7 @@
 
   aspect-ratio: 1;
   background: var(--carbon);
-  border-color: rgb(200 213 207 / 20%) var(--surface-lowest) var(--surface-lowest)
-    rgb(200 213 207 / 20%);
-  border-radius: 4px 0 4px 0;
-  border-style: solid;
-  border-width: 8px;
-  box-shadow: 0 18px 38px rgb(1 16 23 / 30%);
+  box-shadow: 0 12px 28px rgb(1 16 23 / 24%);
   overflow: hidden;
   position: relative;
   width: 100%;
@@ -39,8 +34,8 @@
   pointer-events: none;
   position: absolute;
   text-transform: uppercase;
-  transform: translate(-12%, 28%);
-  z-index: 8;
+  white-space: nowrap;
+  z-index: 12;
 
   &[data-phase='analyzing'] {
     opacity: 0.82;

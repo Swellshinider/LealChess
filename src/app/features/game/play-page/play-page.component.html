@@ -1,20 +1,12 @@
 <div class="play-shell">
   <app-side-navigation />
   <div class="app-frame">
-    <header class="play-toolbar">
-      <p>Play the position</p>
-      <button class="new-game-compact" type="button" (click)="openNewGame($event)">New game</button>
-    </header>
-
     <main class="game-layout" [attr.data-theme]="state().preferences.boardTheme">
       <section class="board-column" aria-label="Chess game">
         <div
-          class="turn-rail opponent"
+          class="player-strip opponent"
           [class.active]="state().phase === 'active' && state().turn !== state().playerColor"
-          [class.thinking]="state().engineStatus === 'thinking'"
-          aria-hidden="true"
-        ></div>
-        <div class="player-strip opponent">
+        >
           <span class="avatar bot" aria-hidden="true">SF</span>
           <span>
             <strong>Stockfish</strong>
@@ -28,19 +20,14 @@
         <app-chess-board />
 
         <div
-          class="turn-rail player"
+          class="player-strip"
           [class.active]="state().phase === 'active' && state().turn === state().playerColor"
-          aria-hidden="true"
-        ></div>
-        <div class="player-strip">
+        >
           <span class="avatar human" aria-hidden="true">You</span>
           <span>
             <strong>You</strong>
             <small>Playing {{ state().playerColor }}</small>
           </span>
-          @if (state().isPlayerTurn) {
-            <span class="your-turn">Your move</span>
-          }
         </div>
       </section>
 

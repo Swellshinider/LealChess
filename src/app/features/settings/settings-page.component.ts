@@ -1,15 +1,6 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  HostListener,
-  inject,
-  signal,
-  viewChild,
-} from '@angular/core';
-import type { AfterViewInit, ElementRef, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, inject, signal } from '@angular/core';
+import type { OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Chessground } from '@lichess-org/chessground';
-import type { Api } from '@lichess-org/chessground/api';
 import { BOARD_THEMES } from '../../core/game/board-themes';
 import {
   DEFAULT_PREFERENCES,
@@ -23,17 +14,22 @@ import { ModalFocusDirective } from '../../shared/a11y/modal-focus.directive';
 import { SideNavigationComponent } from '../../shared/layout/side-navigation/side-navigation.component';
 import { CoachImportService } from '../coach/data/coach-import.service';
 import type { ChessPlatform, SpeedFilter } from '../coach/domain/coach.types';
+import { SettingsPreviewBoardComponent } from './settings-preview-board/settings-preview-board.component';
 import type { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-settings-page',
-  imports: [ModalFocusDirective, ReactiveFormsModule, SideNavigationComponent],
+  imports: [
+    ModalFocusDirective,
+    ReactiveFormsModule,
+    SettingsPreviewBoardComponent,
+    SideNavigationComponent,
+  ],
   templateUrl: './settings-page.component.html',
   styleUrl: './settings-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SettingsPageComponent implements OnInit, AfterViewInit, OnDestroy {
-  private readonly boardHost = viewChild.required<ElementRef<HTMLElement>>('boardHost');
+export class SettingsPageComponent implements OnInit, OnDestroy {
   private readonly persistence = inject(PERSISTENCE_PORT);
   private readonly settingsPersistence = inject(SettingsPersistenceService);
   protected readonly coach = inject(CoachImportService);
@@ -51,8 +47,6 @@ export class SettingsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     }),
     speed: new FormControl<SpeedFilter>('any', { nonNullable: true }),
   });
-  private boardApi: Api | null = null;
-  private resizeObserver: ResizeObserver | null = null;
   private importPreferencesSubscription: Subscription | null = null;
 
   constructor() {
@@ -73,32 +67,10 @@ export class SettingsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         void this.settingsPersistence.saveImportPreferences(this.importForm.getRawValue());
       }
     });
-    this.syncPreview();
-  }
-
-  ngAfterViewInit(): void {
-    this.boardApi = Chessground(this.boardHost().nativeElement, {
-      fen: 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1',
-      orientation: this.preferences().orientation,
-      coordinates: true,
-      lastMove: ['e2', 'e4'],
-      movable: { color: undefined },
-      draggable: { enabled: false },
-      selectable: { enabled: false },
-      drawable: { enabled: false },
-      animation: { enabled: false },
-    });
-    this.resizeObserver = new ResizeObserver(() => {
-      this.boardApi?.state.dom.bounds.clear();
-      this.boardApi?.redrawAll();
-    });
-    this.resizeObserver.observe(this.boardHost().nativeElement);
   }
 
   ngOnDestroy(): void {
-    this.resizeObserver?.disconnect();
     this.importPreferencesSubscription?.unsubscribe();
-    this.boardApi?.destroy();
   }
 
   @HostListener('document:keydown.escape')
@@ -143,7 +115,6 @@ export class SettingsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.savePreferences({
       orientation: (event.target as HTMLSelectElement).value as ChessColor,
     });
-    this.syncPreview();
   }
 
   protected async clearAllData(): Promise<void> {
@@ -157,11 +128,5 @@ export class SettingsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     const next = { ...this.preferences(), ...changes };
     this.preferences.set(next);
     void this.persistence.savePreferences(next);
-  }
-
-  private syncPreview(): void {
-    this.boardApi?.set({ orientation: this.preferences().orientation });
-    this.boardApi?.state.dom.bounds.clear();
-    this.boardApi?.redrawAll();
   }
 }

@@ -1,0 +1,31 @@
+<div class="preview-heading">
+  <div>
+    <span>Live preview</span>
+    <strong>{{ turn() === 'white' ? 'White' : 'Black' }} to move</strong>
+  </div>
+  <button type="button" (click)="resetBoard()">Reset board</button>
+</div>
+
+<div class="preview-board" [attr.data-board-theme]="boardTheme()" (pointerdown)="unlockSound()">
+  <div
+    #boardHost
+    class="chessground-host"
+    role="img"
+    aria-label="Interactive board preview"
+    aria-describedby="settings-preview-description"
+  ></div>
+  <p id="settings-preview-description" class="sr-only">
+    {{ orientation() }} orientation. {{ turn() }} to move. Move pieces for either side to preview
+    your board settings.
+  </p>
+  @if (showMoveClassifications() && classificationSquare(); as square) {
+    <span
+      class="preview-classification"
+      [attr.style]="classificationPosition(square)"
+      role="status"
+      aria-label="Move classification preview: Good"
+    >
+      Good
+    </span>
+  }
+</div>
