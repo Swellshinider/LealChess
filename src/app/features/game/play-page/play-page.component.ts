@@ -2,13 +2,19 @@ import { ChangeDetectionStrategy, Component, HostListener, inject, signal } from
 import type { OnDestroy, OnInit } from '@angular/core';
 import { GameController } from '../../../core/game/game-controller.service';
 import type { StartGameOptions } from '../../../core/game/game.types';
+import { SideNavigationComponent } from '../../../shared/layout/side-navigation/side-navigation.component';
 import { ChessBoardComponent } from '../chess-board/chess-board.component';
 import { GameSidebarComponent } from '../game-sidebar/game-sidebar.component';
 import { NewGameDialogComponent } from '../new-game-dialog/new-game-dialog.component';
 
 @Component({
   selector: 'app-play-page',
-  imports: [ChessBoardComponent, GameSidebarComponent, NewGameDialogComponent],
+  imports: [
+    ChessBoardComponent,
+    GameSidebarComponent,
+    NewGameDialogComponent,
+    SideNavigationComponent,
+  ],
   providers: [GameController],
   templateUrl: './play-page.component.html',
   styleUrl: './play-page.component.scss',

@@ -3,20 +3,29 @@
   min-height: 100%;
 }
 
-.app-frame {
+.play-shell {
+  display: flex;
   min-height: 100dvh;
-  padding: 18px clamp(16px, 3vw, 44px) 28px;
+}
+
+.app-frame {
+  container-type: inline-size;
+  flex: 1 1 auto;
+  height: 100dvh;
+  min-width: 0;
+  overflow: auto;
+  padding: clamp(14px, 2vw, 28px);
 }
 
 .play-toolbar {
-  width: min(1180px, 100%);
-  margin: 0 auto 14px;
-  display: flex;
   align-items: center;
+  display: flex;
   justify-content: space-between;
+  margin: 0 auto 12px;
+  max-width: 1280px;
 
   p {
-    color: var(--mist);
+    color: var(--primary);
     font-family: var(--font-utility);
     font-size: 0.7rem;
     letter-spacing: 0.1em;
@@ -33,7 +42,6 @@
   align-items: center;
   background: var(--amber);
   border: 0;
-  border-radius: 7px;
   color: var(--night);
   display: flex;
   font-weight: 700;
@@ -41,23 +49,29 @@
   justify-content: space-between;
   margin: 0 auto 12px;
   padding: 9px 12px;
-  width: min(1180px, 100%);
+  max-width: 1280px;
+  width: 100%;
 }
 
 .game-layout {
+  --desk-width: clamp(280px, 26cqw, 336px);
+
   align-items: stretch;
   display: grid;
-  gap: clamp(18px, 3vw, 34px);
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  gap: clamp(14px, 2cqw, 26px);
+  grid-template-columns: minmax(0, 1fr) var(--desk-width);
   margin: 0 auto;
-  max-width: 1180px;
+  max-width: 1280px;
+  min-height: calc(100dvh - 76px);
 }
 
 .board-column {
-  align-self: start;
+  align-self: center;
   display: grid;
   grid-template-columns: 5px 1fr;
-  width: min(100%, calc(100dvh - 152px));
+  margin: auto;
+  max-width: 820px;
+  width: min(100%, calc(100dvh - 154px));
 }
 
 .player-strip {
@@ -67,7 +81,7 @@
   gap: 10px;
   grid-column: 2;
   min-height: 47px;
-  padding: 6px 2px;
+  padding: 7px 2px;
 
   &.opponent {
     order: -1;
@@ -79,7 +93,9 @@
   }
 
   strong {
-    font-size: 0.9rem;
+    font-family: var(--font-utility);
+    font-size: 0.82rem;
+    font-weight: 500;
   }
 
   small {
@@ -94,7 +110,7 @@
   align-items: center;
   background: var(--carbon);
   border: 1px solid rgb(255 255 255 / 12%);
-  border-radius: 8px 3px 8px 3px;
+  border-radius: 4px 0 4px 0;
   color: var(--paper);
   display: flex;
   font-family: var(--font-display);
@@ -127,7 +143,7 @@
 
 .turn-rail {
   background: rgb(255 255 255 / 8%);
-  border-radius: 5px;
+  border-radius: 2px;
   grid-column: 1;
   margin-right: 5px;
 
@@ -140,8 +156,8 @@
   }
 
   &.active {
-    background: var(--amber);
-    box-shadow: 0 0 18px rgb(217 154 61 / 35%);
+    background: var(--primary);
+    box-shadow: none;
   }
 
   &.thinking {
@@ -162,13 +178,10 @@ app-chess-board {
   }
 }
 
-@media (max-width: 880px) {
-  .app-frame {
-    padding-inline: 12px;
-  }
-
+@container (max-width: 900px) {
   .game-layout {
     display: block;
+    min-height: 0;
   }
 
   .board-column {
@@ -181,13 +194,29 @@ app-chess-board {
   }
 
   .new-game-compact {
-    background: transparent;
-    border: 1px solid rgb(255 255 255 / 20%);
-    border-radius: 7px;
+    background: var(--surface-container);
+    border: 1px solid var(--outline-variant);
     color: var(--paper);
     display: block;
     min-height: 42px;
     padding: 0 14px;
+  }
+}
+
+@media (max-width: 767px) {
+  .play-shell {
+    display: block;
+  }
+
+  .app-frame {
+    height: auto;
+    min-height: calc(100dvh - 64px);
+    overflow: visible;
+    padding: 12px;
+  }
+
+  .play-toolbar {
+    margin-bottom: 10px;
   }
 }
 

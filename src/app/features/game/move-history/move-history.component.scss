@@ -3,7 +3,7 @@
   min-height: 180px;
   overflow: auto;
   overscroll-behavior: contain;
-  scrollbar-color: #aab5b2 transparent;
+  scrollbar-color: var(--outline) transparent;
 }
 
 ol {
@@ -14,7 +14,7 @@ ol {
 
 li {
   align-items: center;
-  border-radius: 5px;
+  border-radius: 2px;
   display: grid;
   font-family: var(--font-utility);
   font-size: 0.8rem;
@@ -23,26 +23,26 @@ li {
   padding: 0 8px;
 
   &:nth-child(even) {
-    background: rgb(23 36 44 / 4%);
+    background: rgb(1 16 23 / 18%);
   }
 
   &.current {
-    background: rgb(82 122 120 / 12%);
+    background: rgb(165 206 204 / 16%);
   }
 }
 
 .number {
-  color: #708078;
+  color: var(--outline);
 }
 
 .move {
-  color: var(--night);
+  color: var(--paper);
   font-weight: 500;
 }
 
 .empty {
   align-items: center;
-  color: #56645e;
+  color: var(--mist);
   display: flex;
   flex-direction: column;
   height: 100%;

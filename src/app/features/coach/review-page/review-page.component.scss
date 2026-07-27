@@ -2,30 +2,12 @@
   display: block;
 }
 
-.review-page {
-  --inaccuracy: #d6b05c;
-  --mistake: #d47b43;
-
-  margin: 0 auto;
-  max-width: 1180px;
-  padding: 32px clamp(16px, 3vw, 44px) 60px;
-}
-
-.folio {
-  color: var(--amber);
-  font-family: var(--font-utility);
-  font-size: 0.62rem;
-  letter-spacing: 0.04em;
-  margin: 0 0 4px;
-  text-transform: uppercase;
-}
-
 .back-link {
-  color: var(--amber);
+  color: var(--primary);
   display: inline-block;
   font-family: var(--font-utility);
   font-size: 0.68rem;
-  margin-bottom: 28px;
+  margin-bottom: 14px;
   text-decoration: none;
 }
 
@@ -34,13 +16,13 @@ header {
   border-bottom: 1px solid rgb(200 213 207 / 16%);
   display: flex;
   justify-content: space-between;
-  margin-bottom: 24px;
-  padding-bottom: 18px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
 
   h1 {
     color: var(--paper);
     font-family: var(--font-display);
-    font-size: clamp(2.2rem, 5vw, 4rem);
+    font-size: clamp(2rem, 4vw, 3.25rem);
     line-height: 0.95;
     margin: 5px 0 10px;
   }
@@ -62,14 +44,14 @@ header {
 
 .analysis-strip {
   align-items: center;
-  background: rgb(36 52 60 / 78%);
+  background: var(--surface-container);
   border: 1px solid rgb(200 213 207 / 13%);
-  border-left: 4px solid var(--amber);
+  border-left: 4px solid var(--primary);
   display: grid;
   gap: 24px;
   grid-template-columns: minmax(0, 1fr) auto;
   margin-bottom: 16px;
-  padding: 18px 20px;
+  padding: 14px 18px;
 
   h2 {
     color: var(--paper);
@@ -119,9 +101,9 @@ header {
 }
 
 .primary-action {
-  background: var(--amber);
-  border: 1px solid var(--amber);
-  color: var(--night);
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  color: var(--on-primary);
 }
 
 .secondary-action,
@@ -167,8 +149,8 @@ header {
 
 .review-layout {
   display: grid;
-  gap: clamp(20px, 4vw, 42px);
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: clamp(14px, 2cqw, 28px);
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
 }
 
 .board-panel {
@@ -181,7 +163,12 @@ header {
   --coordinate-on-light: var(--night);
 
   aspect-ratio: 1;
-  box-shadow: 0 16px 42px rgb(0 0 0 / 25%);
+  border-color: rgb(200 213 207 / 20%) var(--surface-lowest) var(--surface-lowest)
+    rgb(200 213 207 / 20%);
+  border-radius: 4px 0 4px 0;
+  border-style: solid;
+  border-width: 8px;
+  box-shadow: 0 18px 38px rgb(1 16 23 / 30%);
   overflow: hidden;
   width: 100%;
 
@@ -232,7 +219,11 @@ header {
 
 aside {
   background: var(--carbon);
-  border: 1px solid rgb(200 213 207 / 13%);
+  border-color: rgb(200 213 207 / 18%) var(--surface-lowest) var(--surface-lowest)
+    rgb(200 213 207 / 18%);
+  border-radius: 4px 0 4px 0;
+  border-style: solid;
+  border-width: 1px;
   display: flex;
   flex-direction: column;
   max-height: min(720px, calc(100dvh - 180px));
@@ -491,7 +482,7 @@ aside {
   display: none;
 }
 
-@media (max-width: 800px) {
+@container (max-width: 900px) {
   .analysis-strip {
     align-items: start;
     grid-template-columns: 1fr;
@@ -508,5 +499,20 @@ aside {
 
   aside {
     max-height: 520px;
+  }
+}
+
+@media (max-width: 767px) {
+  .review-page {
+    padding: 22px 12px 42px;
+  }
+
+  header {
+    align-items: start;
+    gap: 14px;
+
+    button {
+      flex: 0 0 auto;
+    }
   }
 }

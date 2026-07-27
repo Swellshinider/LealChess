@@ -7,12 +7,24 @@
 @import '@lichess-org/chessground/assets/chessground.cburnett.css';
 
 :root {
+  --surface: #05151d;
+  --surface-lowest: #011017;
+  --surface-low: #0d1e25;
+  --surface-container: #112229;
+  --surface-container-high: #1c2c34;
+  --surface-container-highest: #27373f;
+  --outline: #8a9291;
+  --outline-variant: #404848;
   --night: #17242c;
   --carbon: #24343c;
   --paper: #edf0ec;
   --mist: #c8d5cf;
-  --teal: #527a78;
-  --amber: #d99a3d;
+  --primary: #a5cecc;
+  --on-primary: #093635;
+  --primary-container: #527a78;
+  --on-primary-container: #e5fffd;
+  --teal: var(--primary-container);
+  --amber: #fdba5a;
   --danger: #a84d45;
   --board-light: #c8d5cf;
   --board-dark: #527a78;
@@ -36,14 +48,21 @@ body {
 }
 
 body {
-  background:
-    radial-gradient(circle at 20% 0%, rgb(82 122 120 / 16%), transparent 38rem), var(--night);
+  background: var(--night);
+  color: var(--paper);
+  overflow-x: hidden;
 }
 
 button,
 select,
 input {
   font: inherit;
+}
+
+button,
+input,
+select {
+  border-radius: 2px;
 }
 
 button,
@@ -68,6 +87,35 @@ a:focus-visible {
   position: absolute;
   white-space: nowrap;
   width: 1px;
+}
+
+app-review-page {
+  .review-shell {
+    display: flex;
+    min-height: 100dvh;
+  }
+
+  .review-page {
+    --inaccuracy: #d6b05c;
+    --mistake: #d47b43;
+
+    container-type: inline-size;
+    flex: 1 1 auto;
+    margin: 0 auto;
+    max-width: 1400px;
+    min-width: 0;
+    padding: clamp(18px, 2.5vw, 32px);
+    width: 100%;
+  }
+
+  .folio {
+    color: var(--amber);
+    font-family: var(--font-utility);
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    margin: 0 0 4px;
+    text-transform: uppercase;
+  }
 }
 
 .review-page {
@@ -115,6 +163,12 @@ a:focus-visible {
       font-size: 1.35rem;
       margin-right: 5px;
     }
+  }
+}
+
+@media (max-width: 767px) {
+  app-review-page .review-shell {
+    display: block;
   }
 }
 

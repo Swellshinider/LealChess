@@ -10,10 +10,14 @@
 }
 
 section {
-  background: var(--paper);
-  border-radius: 13px 4px 13px 4px;
+  background: var(--carbon);
+  border-color: rgb(200 213 207 / 22%) var(--surface-lowest) var(--surface-lowest)
+    rgb(200 213 207 / 22%);
+  border-radius: 4px 0 4px 0;
+  border-style: solid;
+  border-width: 1px;
   box-shadow: 0 28px 90px rgb(0 0 0 / 45%);
-  color: var(--night);
+  color: var(--paper);
   max-width: 440px;
   padding: 28px;
   position: relative;
@@ -23,7 +27,7 @@ section {
 .close {
   background: transparent;
   border: 0;
-  color: #586660;
+  color: var(--mist);
   font-size: 1.5rem;
   min-height: 42px;
   min-width: 42px;
@@ -33,7 +37,7 @@ section {
 }
 
 .kicker {
-  color: #5d716a;
+  color: var(--primary);
   font-family: var(--font-utility);
   font-size: 0.65rem;
   letter-spacing: 0.1em;
@@ -48,7 +52,7 @@ h2 {
 }
 
 .intro {
-  color: #586660;
+  color: var(--mist);
   font-size: 0.85rem;
   margin: 0 0 20px;
 }
@@ -61,10 +65,10 @@ h2 {
 
   button {
     align-items: center;
-    background: #fff;
-    border: 1px solid #cbd3d0;
-    border-radius: 8px 3px 8px 3px;
-    color: var(--night);
+    background: var(--surface-low);
+    border: 1px solid var(--outline-variant);
+    border-radius: 3px 0 3px 0;
+    color: var(--paper);
     display: flex;
     flex-direction: column;
     font-size: 0.75rem;
@@ -79,15 +83,15 @@ h2 {
   }
 
   .selected {
-    background: var(--teal);
-    border-color: var(--teal);
-    color: #fff;
-    box-shadow: 0 7px 18px rgb(82 122 120 / 25%);
+    background: var(--primary-container);
+    border-color: var(--primary);
+    color: var(--on-primary-container);
+    box-shadow: none;
   }
 }
 
 label {
-  color: #5d6964;
+  color: var(--mist);
   display: block;
   font-size: 0.72rem;
   font-weight: 700;
@@ -95,10 +99,9 @@ label {
 }
 
 select {
-  background: #fff;
-  border: 1px solid #cbd3d0;
-  border-radius: 7px;
-  color: var(--night);
+  background: var(--surface-lowest);
+  border: 1px solid var(--outline-variant);
+  color: var(--paper);
   font: inherit;
   min-height: 46px;
   padding: 0 10px;
@@ -107,8 +110,8 @@ select {
 
 .engine-startup {
   align-items: center;
-  background: #e2e8e4;
-  border-left: 4px solid var(--teal);
+  background: var(--surface-container-high);
+  border-left: 4px solid var(--primary);
   display: grid;
   gap: 10px;
   grid-template-columns: auto 1fr;
@@ -132,15 +135,14 @@ select {
   }
 
   small {
-    color: #5d6964;
+    color: var(--mist);
     margin: 2px 0 0;
   }
 
   button {
     background: transparent;
-    border: 1px solid #82908a;
-    border-radius: 4px;
-    color: var(--night);
+    border: 1px solid var(--outline);
+    color: var(--paper);
     font-weight: 700;
     min-height: 38px;
     padding: 6px 10px;
@@ -160,10 +162,10 @@ select {
 }
 
 .start {
-  background: var(--amber);
+  background: var(--primary);
   border: 0;
-  border-radius: 8px 3px 8px 3px;
-  color: var(--night);
+  border-radius: 3px 0 3px 0;
+  color: var(--on-primary);
   font-weight: 800;
   margin-top: 12px;
   min-height: 48px;
@@ -176,7 +178,7 @@ select {
 }
 
 small {
-  color: #586660;
+  color: var(--mist);
   display: block;
   font-size: 0.67rem;
   margin-top: 12px;

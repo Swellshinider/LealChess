@@ -11,9 +11,12 @@
 
   aspect-ratio: 1;
   background: var(--carbon);
-  box-shadow:
-    0 22px 50px rgb(5 12 16 / 35%),
-    0 0 0 1px rgb(255 255 255 / 8%);
+  border-color: rgb(200 213 207 / 20%) var(--surface-lowest) var(--surface-lowest)
+    rgb(200 213 207 / 20%);
+  border-radius: 4px 0 4px 0;
+  border-style: solid;
+  border-width: 8px;
+  box-shadow: 0 18px 38px rgb(1 16 23 / 30%);
   overflow: hidden;
   position: relative;
   width: 100%;

@@ -1,0 +1,79 @@
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { NavigationPanelService } from '../navigation-panel.service';
+import { SideNavigationComponent } from './side-navigation.component';
+
+describe('SideNavigationComponent', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+    vi.restoreAllMocks();
+  });
+
+  it('exposes working routes and unavailable placeholders without activating them', async () => {
+    stubMedia({ desktop: true, mobile: false });
+    await TestBed.configureTestingModule({
+      imports: [SideNavigationComponent],
+      providers: [provideRouter([])],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(SideNavigationComponent);
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(host.querySelectorAll('a[href]').length).toBe(4);
+    expect(host.querySelector('[aria-label="Settings, unavailable"]')).not.toBeNull();
+    expect(host.querySelector('[aria-label="Help, unavailable"]')).not.toBeNull();
+
+    const toggle = host.querySelector<HTMLButtonElement>('.rail-toggle')!;
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    toggle.click();
+    fixture.detectChanges();
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('renders a modal mobile drawer that Escape dismisses', async () => {
+    stubMedia({ desktop: false, mobile: true });
+    await TestBed.configureTestingModule({
+      imports: [SideNavigationComponent],
+      providers: [provideRouter([])],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(SideNavigationComponent);
+    const navigation = TestBed.inject(NavigationPanelService);
+    navigation.openMobile();
+    fixture.detectChanges();
+    const drawer = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>(
+      '[role="dialog"]',
+    )!;
+
+    expect(drawer).not.toBeNull();
+    expect(drawer.getAttribute('aria-modal')).toBe('true');
+
+    drawer.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    fixture.detectChanges();
+
+    expect(navigation.mobileOpen()).toBe(false);
+  });
+});
+
+function stubMedia(options: { desktop: boolean; mobile: boolean }): void {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn((query: string) => {
+      const matches = query === '(min-width: 1200px)' ? options.desktop : options.mobile;
+      return {
+        matches,
+        media: query,
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      } as MediaQueryList;
+    }),
+  );
+}
