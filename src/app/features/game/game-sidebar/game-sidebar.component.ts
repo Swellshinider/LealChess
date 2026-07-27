@@ -62,6 +62,13 @@ export class GameSidebarComponent {
     return state.isPlayerTurn ? 'Find your best continuation.' : 'You can queue one premove.';
   }
 
+  protected showStatusDetail(): boolean {
+    const state = this.state();
+    return Boolean(
+      state.engineError || state.result || state.pendingPremove || state.engineStatus === 'loading',
+    );
+  }
+
   protected confirm(action: Exclude<Confirmation, null>, event: Event): void {
     if (event.currentTarget instanceof HTMLElement) {
       this.confirmationTrigger = event.currentTarget;

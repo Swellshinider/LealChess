@@ -17,6 +17,7 @@ import type { Square } from 'chess.js';
 import { GameController } from '../../../core/game/game-controller.service';
 import type { MoveInput, PromotionPiece } from '../../../core/game/game.types';
 import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
+import { boardOverlayPosition } from '../../../shared/chess/board-overlay-position';
 import { LiveMoveAnalysisService } from '../live-analysis/live-move-analysis.service';
 
 interface PendingPromotion {
@@ -123,12 +124,7 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy {
   }
 
   protected classificationPosition(square: string): string {
-    const file = square.charCodeAt(0) - 97;
-    const rank = Number(square[1]) - 1;
-    const white = this.state().orientation === 'white';
-    const x = ((white ? file : 7 - file) + 0.5) * 12.5;
-    const y = ((white ? 7 - rank : rank) + 0.5) * 12.5;
-    return `left: ${x}%; top: ${y}%`;
+    return boardOverlayPosition(square, this.state().orientation);
   }
 
   private createConfig(): Config {

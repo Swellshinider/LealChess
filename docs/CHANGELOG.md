@@ -17,6 +17,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Simplified Play into a board-first workspace with compact player details, one move panel, and a
+  minimal action toolbar.
+- Made the Settings board preview a legal two-sided sandbox with live board feedback and reset.
 - Moved Play to `/play`, account importing from Learn to Settings, and Board & feedback controls
   out of the active game.
 - Simplified Learn into a saved-study dashboard with a Settings prompt when no games are available.
@@ -28,6 +31,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Keep move-classification labels readable above pieces and within either board orientation.
 - Fit the Play board and game controls within desktop landscape viewports without page-level
   scrollbars.
 - Keep long move histories contained when Board & feedback is expanded.

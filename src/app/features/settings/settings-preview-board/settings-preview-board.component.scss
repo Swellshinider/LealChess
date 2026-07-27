@@ -1,0 +1,96 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.preview-heading {
+  align-items: end;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 9px;
+
+  span,
+  strong {
+    display: block;
+  }
+
+  span {
+    color: var(--mist);
+    font-family: var(--font-utility);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+  }
+
+  strong {
+    color: var(--paper);
+    font-size: 0.76rem;
+    margin-top: 4px;
+  }
+
+  button {
+    background: transparent;
+    border: 0;
+    color: var(--primary);
+    font-family: var(--font-utility);
+    font-size: 0.62rem;
+    min-height: 36px;
+    padding: 0 2px;
+    text-transform: uppercase;
+  }
+}
+
+.preview-board {
+  aspect-ratio: 1;
+  box-shadow: 0 12px 28px rgb(1 16 23 / 24%);
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+
+  ::ng-deep cg-board {
+    background: conic-gradient(
+        var(--board-dark) 25%,
+        var(--board-light) 0 50%,
+        var(--board-dark) 0 75%,
+        var(--board-light) 0
+      )
+      0 0 / 25% 25%;
+  }
+
+  ::ng-deep cg-board square.move-dest {
+    background: radial-gradient(circle, rgb(23 36 44 / 62%) 0 22%, transparent 23%);
+  }
+
+  ::ng-deep cg-board square.oc.move-dest {
+    background: radial-gradient(
+      circle,
+      transparent 0 72%,
+      rgb(23 36 44 / 62%) 73% 86%,
+      transparent 87%
+    );
+  }
+
+  ::ng-deep cg-board square.last-move {
+    background-color: rgb(217 154 61 / 34%);
+  }
+}
+
+.chessground-host {
+  height: 100%;
+  width: 100%;
+}
+
+.preview-classification {
+  background: #416361;
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  color: var(--paper);
+  font-family: var(--font-utility);
+  font-size: clamp(0.48rem, 1.2vw, 0.68rem);
+  font-weight: 700;
+  padding: 3px 5px;
+  pointer-events: none;
+  position: absolute;
+  text-transform: uppercase;
+  white-space: nowrap;
+  z-index: 12;
+}

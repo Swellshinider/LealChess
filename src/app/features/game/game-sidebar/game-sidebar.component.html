@@ -1,40 +1,39 @@
 <aside class="sidebar" aria-label="Game controls">
   <section
-    class="status-card"
+    class="game-panel"
     [class.error]="state().engineStatus === 'error'"
     [attr.role]="state().engineStatus === 'error' ? 'alert' : 'status'"
     [attr.aria-busy]="state().engineStatus === 'loading'"
     aria-atomic="true"
   >
-    <div class="status-kicker">
-      <span class="status-dot" aria-hidden="true"></span>
-      {{ state().phase === 'game-over' ? 'Game over' : 'Match status' }}
-    </div>
-    <h1>{{ statusTitle() }}</h1>
-    <p>{{ statusDetail() }}</p>
-    @if (state().engineStatus === 'error') {
-      <button class="retry" type="button" (click)="controller.retryEngine()">Retry engine</button>
-    }
-    @if (state().pendingPremove) {
-      <button class="text-action" type="button" (click)="controller.cancelPremove()">
-        Cancel premove
-      </button>
-    }
-    @if (state().canClaimDraw && state().isPlayerTurn) {
-      <button class="claim" type="button" (click)="controller.claimDraw()">Claim draw</button>
-    }
-  </section>
-
-  <section class="history-card">
-    <header>
-      <h2>Score sheet</h2>
-      <span>{{ state().moves.length }} plies</span>
+    <header class="panel-status">
+      <span>{{ state().phase === 'game-over' ? 'Game over' : 'Play Stockfish' }}</span>
+      <h1>{{ statusTitle() }}</h1>
+      @if (showStatusDetail()) {
+        <p>{{ statusDetail() }}</p>
+      }
+      @if (state().engineStatus === 'error') {
+        <button class="status-action" type="button" (click)="controller.retryEngine()">
+          Retry engine
+        </button>
+      }
+      @if (state().pendingPremove) {
+        <button class="status-action" type="button" (click)="controller.cancelPremove()">
+          Cancel premove
+        </button>
+      }
+      @if (state().canClaimDraw && state().isPlayerTurn) {
+        <button class="status-action" type="button" (click)="controller.claimDraw()">
+          Claim draw
+        </button>
+      }
     </header>
-    <app-move-history [moves]="state().moves" />
-  </section>
 
-  <section class="controls-card">
-    <div class="primary-actions">
+    <div class="history-card">
+      <app-move-history [moves]="state().moves" />
+    </div>
+
+    <div class="controls-card" aria-label="Game actions">
       <button type="button" class="new" (click)="newGameRequested.emit($event)">New game</button>
       <button
         type="button"
@@ -43,8 +42,6 @@
       >
         Restart
       </button>
-    </div>
-    <div class="secondary-actions">
       <button type="button" (click)="controller.flipBoard()">Flip board</button>
       <button
         type="button"

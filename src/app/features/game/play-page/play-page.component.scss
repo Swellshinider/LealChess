@@ -13,41 +13,13 @@
 
 .app-frame {
   --play-padding: clamp(14px, 2vw, 28px);
-  --toolbar-height: 22px;
-  --workspace-gap: 12px;
 
   container-type: inline-size;
-  display: grid;
   flex: 1 1 auto;
-  gap: var(--workspace-gap);
-  grid-template-rows: var(--toolbar-height) minmax(0, 1fr);
   height: 100%;
   min-width: 0;
   overflow: auto;
   padding: var(--play-padding);
-}
-
-.play-toolbar {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-  margin: 0 auto;
-  max-width: 1280px;
-  min-height: var(--toolbar-height);
-  width: 100%;
-
-  p {
-    color: var(--primary);
-    font-family: var(--font-utility);
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
-    margin: 0;
-    text-transform: uppercase;
-  }
-}
-
-.new-game-compact {
-  display: none;
 }
 
 .game-layout {
@@ -66,33 +38,21 @@
 
 .board-column {
   align-self: center;
-  display: grid;
-  grid-template-columns: 5px 1fr;
+  display: flex;
+  flex-direction: column;
   margin: auto;
   max-width: 820px;
-  width: min(
-    100%,
-    calc(
-      100dvh - var(--play-padding) - var(--play-padding) - var(--toolbar-height) - var(
-          --workspace-gap
-        ) -
-        94px
-    )
-  );
+  width: min(100%, calc(100dvh - var(--play-padding) - var(--play-padding) - 84px));
 }
 
 .player-strip {
   align-items: center;
   color: var(--paper);
   display: flex;
-  gap: 10px;
-  grid-column: 2;
-  min-height: 47px;
-  padding: 7px 2px;
-
-  &.opponent {
-    order: -1;
-  }
+  gap: 9px;
+  min-height: 42px;
+  padding: 5px 2px;
+  position: relative;
 
   strong,
   small {
@@ -111,6 +71,19 @@
     font-size: 0.66rem;
     text-transform: capitalize;
   }
+
+  &::after {
+    background: transparent;
+    border-radius: 999px;
+    content: '';
+    height: 6px;
+    margin-left: auto;
+    width: 6px;
+  }
+
+  &.active::after {
+    background: var(--primary);
+  }
 }
 
 .avatar {
@@ -123,66 +96,29 @@
   font-family: var(--font-display);
   font-size: 0.72rem;
   font-weight: 700;
-  height: 33px;
+  height: 30px;
   justify-content: center;
-  width: 33px;
+  width: 30px;
 
   &.bot {
     color: var(--amber);
   }
 }
 
-.thinking-label,
-.your-turn {
+.thinking-label {
+  color: var(--amber);
   font-family: var(--font-utility);
   font-size: 0.67rem;
   margin-left: auto;
   text-transform: uppercase;
 }
 
-.thinking-label {
-  color: var(--amber);
-}
-
-.your-turn {
-  color: var(--paper);
-}
-
-.turn-rail {
-  background: rgb(255 255 255 / 8%);
-  border-radius: 2px;
-  grid-column: 1;
-  margin-right: 5px;
-
-  &.opponent {
-    grid-row: 1 / 3;
-  }
-
-  &.player {
-    grid-row: 3 / 5;
-  }
-
-  &.active {
-    background: var(--primary);
-    box-shadow: none;
-  }
-
-  &.thinking {
-    animation: rail-pulse 0.9s ease-in-out infinite alternate;
-  }
+.player-strip.opponent:has(.thinking-label)::after {
+  display: none;
 }
 
 app-chess-board {
-  grid-column: 2;
-}
-
-@keyframes rail-pulse {
-  from {
-    opacity: 0.55;
-  }
-  to {
-    opacity: 1;
-  }
+  display: block;
 }
 
 @container (max-width: 900px) {
@@ -200,15 +136,6 @@ app-chess-board {
     display: block;
     height: auto;
     margin-top: 18px;
-  }
-
-  .new-game-compact {
-    background: var(--surface-container);
-    border: 1px solid var(--outline-variant);
-    color: var(--paper);
-    display: block;
-    min-height: 42px;
-    padding: 0 14px;
   }
 }
 
@@ -232,15 +159,5 @@ app-chess-board {
     min-height: calc(100dvh - 64px);
     overflow: visible;
     padding: 12px;
-  }
-
-  .play-toolbar {
-    margin-bottom: 10px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .turn-rail.thinking {
-    animation: none;
   }
 }

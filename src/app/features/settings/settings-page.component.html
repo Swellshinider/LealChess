@@ -151,20 +151,13 @@
           </label>
         </div>
 
-        <div class="preview-wrap">
-          <p>Live preview</p>
-          <div class="preview-board" [attr.data-board-theme]="preferences().boardTheme">
-            <div #boardHost class="chessground-host" aria-label="Static board preview"></div>
-            @if (preferences().showMoveClassifications) {
-              <span
-                class="preview-classification"
-                [class.black-orientation]="preferences().orientation === 'black'"
-              >
-                Book
-              </span>
-            }
-          </div>
-        </div>
+        <app-settings-preview-board
+          [boardTheme]="preferences().boardTheme"
+          [orientation]="preferences().orientation"
+          [showLegalMoves]="preferences().showLegalMoves"
+          [showMoveClassifications]="preferences().showMoveClassifications"
+          [soundEnabled]="preferences().soundEnabled"
+        />
       </div>
     </section>
 
