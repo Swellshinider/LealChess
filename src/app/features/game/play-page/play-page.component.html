@@ -1,65 +1,60 @@
-<div class="app-frame" [class.is-restored]="state().restored">
-  <header class="play-toolbar">
-    <p>Play the position</p>
-    <button class="new-game-compact" type="button" (click)="openNewGame($event)">New game</button>
-  </header>
+<div class="play-shell">
+  <app-side-navigation />
+  <div class="app-frame">
+    <header class="play-toolbar">
+      <p>Play the position</p>
+      <button class="new-game-compact" type="button" (click)="openNewGame($event)">New game</button>
+    </header>
 
-  @if (state().restored) {
-    <button class="restore-banner" type="button" (click)="controller.dismissRestored()">
-      <span>Previous game restored</span>
-      <span aria-hidden="true">×</span>
-      <span class="sr-only">Dismiss restored game message</span>
-    </button>
-  }
+    <main class="game-layout" [attr.data-theme]="state().preferences.boardTheme">
+      <section class="board-column" aria-label="Chess game">
+        <div
+          class="turn-rail opponent"
+          [class.active]="state().phase === 'active' && state().turn !== state().playerColor"
+          [class.thinking]="state().engineStatus === 'thinking'"
+          aria-hidden="true"
+        ></div>
+        <div class="player-strip opponent">
+          <span class="avatar bot" aria-hidden="true">SF</span>
+          <span>
+            <strong>Stockfish</strong>
+            <small>{{ state().difficulty }}</small>
+          </span>
+          @if (state().engineStatus === 'thinking') {
+            <span class="thinking-label">Thinking<span aria-hidden="true">…</span></span>
+          }
+        </div>
 
-  <main class="game-layout" [attr.data-theme]="state().preferences.boardTheme">
-    <section class="board-column" aria-label="Chess game">
-      <div
-        class="turn-rail opponent"
-        [class.active]="state().phase === 'active' && state().turn !== state().playerColor"
-        [class.thinking]="state().engineStatus === 'thinking'"
-        aria-hidden="true"
-      ></div>
-      <div class="player-strip opponent">
-        <span class="avatar bot" aria-hidden="true">SF</span>
-        <span>
-          <strong>Stockfish</strong>
-          <small>{{ state().difficulty }}</small>
-        </span>
-        @if (state().engineStatus === 'thinking') {
-          <span class="thinking-label">Thinking<span aria-hidden="true">…</span></span>
-        }
-      </div>
+        <app-chess-board />
 
-      <app-chess-board />
+        <div
+          class="turn-rail player"
+          [class.active]="state().phase === 'active' && state().turn === state().playerColor"
+          aria-hidden="true"
+        ></div>
+        <div class="player-strip">
+          <span class="avatar human" aria-hidden="true">You</span>
+          <span>
+            <strong>You</strong>
+            <small>Playing {{ state().playerColor }}</small>
+          </span>
+          @if (state().isPlayerTurn) {
+            <span class="your-turn">Your move</span>
+          }
+        </div>
+      </section>
 
-      <div
-        class="turn-rail player"
-        [class.active]="state().phase === 'active' && state().turn === state().playerColor"
-        aria-hidden="true"
-      ></div>
-      <div class="player-strip">
-        <span class="avatar human" aria-hidden="true">You</span>
-        <span>
-          <strong>You</strong>
-          <small>Playing {{ state().playerColor }}</small>
-        </span>
-        @if (state().isPlayerTurn) {
-          <span class="your-turn">Your move</span>
-        }
-      </div>
-    </section>
+      <app-game-sidebar (newGameRequested)="openNewGame($event)" />
+    </main>
 
-    <app-game-sidebar (newGameRequested)="openNewGame($event)" />
-  </main>
-
-  <div class="sr-only" aria-live="polite" aria-atomic="true">{{ state().announcement }}</div>
-  <div class="sr-only" aria-live="assertive" aria-atomic="true">
-    @if (state().engineError) {
-      {{ state().engineError }}
-    } @else if (state().result) {
-      {{ state().result?.label }}
-    }
+    <div class="sr-only" aria-live="polite" aria-atomic="true">{{ state().announcement }}</div>
+    <div class="sr-only" aria-live="assertive" aria-atomic="true">
+      @if (state().engineError) {
+        {{ state().engineError }}
+      } @else if (state().result) {
+        {{ state().result?.label }}
+      }
+    </div>
   </div>
 </div>
 

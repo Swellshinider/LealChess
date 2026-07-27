@@ -8,8 +8,8 @@ test.beforeEach(async ({ page }) => {
 
 test('starts as White, supports click moves, premoves, annotations, and restoration', async ({
   page,
-}) => {
-  await startGame(page, 'White', 'Advanced');
+}, testInfo) => {
+  await startGame(page, 'White', 'Expert');
   await expect(page.locator('coords.files coord').nth(0)).toHaveCSS('color', 'rgb(255, 255, 255)');
   await expect(page.locator('coords.files coord').nth(1)).toHaveCSS('color', 'rgb(23, 36, 44)');
   await expect(page.locator('coords.ranks coord').nth(0)).toHaveCSS('color', 'rgb(255, 255, 255)');
@@ -37,8 +37,14 @@ test('starts as White, supports click moves, premoves, annotations, and restorat
   await expect(page.locator('svg.cg-shapes')).toBeAttached();
 
   await page.reload();
-  await expect(page.getByText('Previous game restored')).toBeVisible();
   await expect(page.locator('.history li')).toHaveCount(2);
+  await expect(page.getByText('Previous game restored')).toHaveCount(0);
+  await expect(
+    page.locator('[aria-live]').filter({ hasText: /restored previous game/i }),
+  ).toHaveCount(0);
+  if (testInfo.project.name === 'chromium') {
+    await assertNoOuterWorkspaceOverflow(page);
+  }
 });
 
 test('starts as Black, receives an opening move, changes difficulty, and resigns', async ({
@@ -144,6 +150,57 @@ test('completes a checkmate flow from a restored position', async ({ page }) => 
   await clickSquare(page, 'e2');
   await clickSquare(page, 'e4');
   await expect(page.locator('.history')).toContainText('e4');
+});
+
+test('keeps expanded board settings visible while move history scrolls', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'Single desktop flex geometry check');
+  await startGame(page, 'White', 'Casual');
+  await clickSquare(page, 'e2');
+  await clickSquare(page, 'e4');
+  await expect(page.locator('.history li')).toHaveCount(1, { timeout: 15_000 });
+
+  await page.getByRole('button', { name: /Board & feedback/ }).click();
+  await expect(page.getByText('Legal move dots')).toBeVisible();
+
+  await page.locator('.history ol').evaluate((list) => {
+    const row = list.querySelector('li')!;
+    for (let index = 0; index < 40; index += 1) {
+      list.append(row.cloneNode(true));
+    }
+  });
+
+  const geometry = await page.evaluate(() => {
+    const sidebar = document.querySelector<HTMLElement>('.sidebar')!.getBoundingClientRect();
+    const history = document.querySelector<HTMLElement>('.history')!;
+    const controls = document.querySelector<HTMLElement>('.controls-card')!.getBoundingClientRect();
+    const settingsElement = document.querySelector<HTMLElement>('.settings-card')!;
+    const settings = settingsElement.getBoundingClientRect();
+    const finalSetting = document
+      .querySelector<HTMLElement>('#board-theme')!
+      .getBoundingClientRect();
+
+    return {
+      controlsBottom: controls.bottom,
+      finalSettingBottom: finalSetting.bottom,
+      historyClientHeight: history.clientHeight,
+      historyScrollHeight: history.scrollHeight,
+      settingsBottom: settings.bottom,
+      settingsClientHeight: settingsElement.clientHeight,
+      settingsScrollHeight: settingsElement.scrollHeight,
+      settingsTop: settings.top,
+      sidebarBottom: sidebar.bottom,
+      viewportHeight: window.innerHeight,
+    };
+  });
+
+  expect(geometry.historyScrollHeight).toBeGreaterThan(geometry.historyClientHeight);
+  expect(geometry.controlsBottom).toBeLessThanOrEqual(geometry.settingsTop + 1);
+  expect(geometry.settingsScrollHeight).toBeLessThanOrEqual(geometry.settingsClientHeight);
+  expect(geometry.finalSettingBottom).toBeLessThanOrEqual(geometry.settingsBottom + 1);
+  expect(geometry.settingsBottom).toBeLessThanOrEqual(geometry.sidebarBottom + 1);
+  expect(geometry.sidebarBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
 });
 
 test('keeps the board primary on a mobile viewport', async ({ page }, testInfo) => {
@@ -264,10 +321,10 @@ async function seedGame(page: Page, fen: string, playerColor: 'white' | 'black')
     { storedFen: fen, storedPgn: pgn, color: playerColor },
   );
   await page.reload();
-  await expect(page.getByText('Previous game restored')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Your move' })).toBeVisible({
     timeout: 20_000,
   });
+  await expect(page.getByText('Previous game restored')).toHaveCount(0);
   await expect(page.locator('cg-board')).toBeVisible();
   await settleLayout(page);
 }
@@ -302,4 +359,36 @@ async function assertNoSeriousA11yViolations(page: Page) {
       (violation) => violation.impact === 'critical' || violation.impact === 'serious',
     ),
   ).toEqual([]);
+}
+
+async function assertNoOuterWorkspaceOverflow(page: Page) {
+  const geometry = await page.evaluate(() => {
+    const scrollingElement = document.scrollingElement!;
+    const frame = document.querySelector<HTMLElement>('.app-frame')!;
+    const board = document.querySelector<HTMLElement>('.board-column')!.getBoundingClientRect();
+    const controls = document
+      .querySelector<HTMLElement>('app-game-sidebar')!
+      .getBoundingClientRect();
+
+    return {
+      documentHeight: scrollingElement.scrollHeight,
+      documentWidth: scrollingElement.scrollWidth,
+      frameHeight: frame.scrollHeight,
+      frameWidth: frame.scrollWidth,
+      clientHeight: scrollingElement.clientHeight,
+      clientWidth: scrollingElement.clientWidth,
+      frameClientHeight: frame.clientHeight,
+      frameClientWidth: frame.clientWidth,
+      boardBottom: board.bottom,
+      controlsBottom: controls.bottom,
+      viewportHeight: window.innerHeight,
+    };
+  });
+
+  expect(geometry.documentHeight).toBeLessThanOrEqual(geometry.clientHeight + 1);
+  expect(geometry.documentWidth).toBeLessThanOrEqual(geometry.clientWidth + 1);
+  expect(geometry.frameHeight).toBeLessThanOrEqual(geometry.frameClientHeight + 1);
+  expect(geometry.frameWidth).toBeLessThanOrEqual(geometry.frameClientWidth + 1);
+  expect(geometry.boardBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
+  expect(geometry.controlsBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
 }

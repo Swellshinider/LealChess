@@ -1,19 +1,28 @@
 :host {
-  min-width: 0;
+  height: 100%;
+  min-height: 0;
 }
 
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  height: min(calc(100dvh - 71px), 800px);
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+
+  > :not(.history-card) {
+    flex: 0 0 auto;
+  }
 }
 
 section {
-  background: var(--paper);
-  border: 1px solid rgb(255 255 255 / 18%);
-  border-radius: 10px 3px 10px 3px;
-  color: var(--night);
+  background: var(--carbon);
+  border-color: rgb(200 213 207 / 18%) var(--surface-lowest) var(--surface-lowest)
+    rgb(200 213 207 / 18%);
+  border-radius: 4px 0 4px 0;
+  border-style: solid;
+  border-width: 1px;
+  color: var(--paper);
 }
 
 .status-card {
@@ -31,7 +40,7 @@ section {
   }
 
   p {
-    color: #586660;
+    color: var(--mist);
     font-size: 0.8rem;
     margin: 0;
   }
@@ -40,7 +49,7 @@ section {
 .status-kicker,
 .eyebrow {
   align-items: center;
-  color: #56645e;
+  color: var(--primary);
   display: flex;
   font-family: var(--font-utility);
   font-size: 0.63rem;
@@ -50,7 +59,7 @@ section {
 }
 
 .status-dot {
-  background: var(--teal);
+  background: var(--primary);
   border-radius: 99px;
   height: 7px;
   width: 7px;
@@ -61,7 +70,7 @@ section {
 .retry {
   background: transparent;
   border: 0;
-  color: #315f61;
+  color: var(--primary);
   font-size: 0.75rem;
   font-weight: 700;
   margin: 10px 12px 0 0;
@@ -71,14 +80,15 @@ section {
 
 .history-card {
   display: flex;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   flex-direction: column;
-  min-height: 180px;
+  min-height: 0;
   overflow: hidden;
 
   header {
     align-items: center;
-    border-bottom: 1px solid #d9dfdc;
+    background: var(--surface-container-highest);
+    border-bottom: 1px solid var(--outline-variant);
     display: flex;
     justify-content: space-between;
     padding: 12px 16px;
@@ -91,7 +101,7 @@ section {
   }
 
   header span {
-    color: #586660;
+    color: var(--mist);
     font-family: var(--font-utility);
     font-size: 0.64rem;
     text-transform: uppercase;
@@ -101,6 +111,7 @@ section {
 app-move-history {
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .controls-card {
@@ -108,7 +119,7 @@ app-move-history {
 
   > label,
   .settings-body > label:not(.switch) {
-    color: #586660;
+    color: var(--mist);
     display: block;
     font-size: 0.72rem;
     font-weight: 700;
@@ -119,12 +130,13 @@ app-move-history {
 select {
   appearance: none;
   background:
-    linear-gradient(45deg, transparent 50%, #5f6f68 50%) calc(100% - 17px) 50% / 5px 5px no-repeat,
-    linear-gradient(135deg, #5f6f68 50%, transparent 50%) calc(100% - 12px) 50% / 5px 5px no-repeat,
-    #fff;
-  border: 1px solid #cbd3d0;
-  border-radius: 6px;
-  color: var(--night);
+    linear-gradient(45deg, transparent 50%, var(--mist) 50%) calc(100% - 17px) 50% / 5px 5px
+      no-repeat,
+    linear-gradient(135deg, var(--mist) 50%, transparent 50%) calc(100% - 12px) 50% / 5px 5px
+      no-repeat,
+    var(--surface-lowest);
+  border: 1px solid var(--outline-variant);
+  color: var(--paper);
   font: inherit;
   min-height: 42px;
   padding: 0 35px 0 11px;
@@ -139,22 +151,21 @@ select {
   margin-top: 9px;
 
   button {
-    background: #fff;
-    border: 1px solid #cbd3d0;
-    border-radius: 6px;
-    color: var(--night);
+    background: var(--surface-low);
+    border: 1px solid var(--outline-variant);
+    color: var(--paper);
     min-height: 42px;
     padding: 0 10px;
   }
 
   .new {
-    background: var(--teal);
-    border-color: var(--teal);
-    color: #fff;
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--on-primary);
   }
 
   .resign {
-    color: #8d3e38;
+    color: #ffb4ab;
   }
 }
 
@@ -166,7 +177,7 @@ select {
   align-items: center;
   background: transparent;
   border: 0;
-  color: var(--night);
+  color: var(--paper);
   display: flex;
   font-weight: 700;
   justify-content: space-between;
@@ -176,7 +187,7 @@ select {
 }
 
 .settings-body {
-  border-top: 1px solid #d9dfdc;
+  border-top: 1px solid var(--outline-variant);
   padding: 10px 14px 14px;
 }
 
@@ -212,7 +223,7 @@ select {
   }
 
   p {
-    color: #586660;
+    color: var(--mist);
     font-size: 0.84rem;
   }
 
@@ -224,18 +235,23 @@ select {
   }
 
   button {
-    background: #fff;
-    border: 1px solid #cbd3d0;
-    border-radius: 6px;
-    color: var(--night);
+    background: var(--surface-low);
+    border: 1px solid var(--outline-variant);
+    color: var(--paper);
     min-height: 42px;
     padding: 0 13px;
+  }
+
+  section > div button:first-child {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--night);
   }
 
   .danger {
     background: var(--danger);
     border-color: var(--danger);
-    color: #fff;
+    color: var(--paper);
   }
 }
 
@@ -244,12 +260,13 @@ button:disabled {
   opacity: 0.45;
 }
 
-@media (max-width: 880px) {
+@container (max-width: 900px) {
   .sidebar {
     height: auto;
   }
 
   .history-card {
+    flex: 1 1 auto;
     max-height: 260px;
   }
 }

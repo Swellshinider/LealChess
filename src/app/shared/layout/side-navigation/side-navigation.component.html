@@ -1,0 +1,152 @@
+<nav id="primary-navigation" class="desktop-navigation" aria-label="Primary navigation">
+  <div class="brand-block">
+    <a class="brand" routerLink="/" aria-label="LealChess home" data-tooltip="LealChess">
+      <img class="brand-logo" src="/favicon.svg" alt="" />
+      <span class="brand-copy nav-copy">
+        <strong>LealChess</strong>
+        <span>Play. Study. Improve.</span>
+      </span>
+    </a>
+    <button
+      class="rail-toggle"
+      type="button"
+      aria-controls="primary-navigation"
+      [attr.aria-expanded]="navigation.expanded()"
+      [attr.aria-label]="navigation.expanded() ? 'Collapse navigation' : 'Expand navigation'"
+      [attr.data-tooltip]="navigation.expanded() ? 'Collapse navigation' : 'Expand navigation'"
+      (click)="navigation.toggleExpanded()"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9 6 3 12l6 6M21 6l-6 6 6 6" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="route-links">
+    <a
+      routerLink="/"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      aria-label="Play"
+      data-tooltip="Play"
+    >
+      <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M7 8h10a4 4 0 0 1 3.8 5.3l-1.2 3.6a2 2 0 0 1-3.2.9L14 16h-4l-2.4 1.8a2 2 0 0 1-3.2-.9l-1.2-3.6A4 4 0 0 1 7 8Z"
+        />
+        <path d="M7 11v4M5 13h4M16 12h.01M18 14h.01" />
+      </svg>
+      <span class="nav-copy">Play</span>
+    </a>
+    <a routerLink="/learn" routerLinkActive="active" aria-label="Learn" data-tooltip="Learn">
+      <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="m3 9 9-5 9 5-9 5-9-5Z" />
+        <path d="M7 12v5l5 3 5-3v-5M21 10v6" />
+      </svg>
+      <span class="nav-copy">Learn</span>
+    </a>
+  </div>
+
+  <div class="utility-links" aria-label="Unavailable navigation">
+    <span
+      class="placeholder"
+      role="link"
+      aria-disabled="true"
+      aria-label="Settings, unavailable"
+      data-tooltip="Settings"
+    >
+      <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="3" />
+        <path
+          d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"
+        />
+      </svg>
+      <span class="nav-copy">Settings</span>
+    </span>
+    <span
+      class="placeholder"
+      role="link"
+      aria-disabled="true"
+      aria-label="Help, unavailable"
+      data-tooltip="Help"
+    >
+      <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M9.8 9a2.4 2.4 0 1 1 3.7 2c-.9.6-1.5 1-1.5 2M12 17h.01" />
+      </svg>
+      <span class="nav-copy">Help</span>
+    </span>
+  </div>
+</nav>
+
+<header class="mobile-header">
+  <a class="mobile-brand" routerLink="/">LealChess</a>
+  <button
+    type="button"
+    aria-controls="mobile-navigation-drawer"
+    [attr.aria-expanded]="navigation.mobileOpen()"
+    aria-label="Open navigation"
+    (click)="navigation.openMobile()"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  </button>
+</header>
+
+@if (navigation.mobileOpen()) {
+  <button
+    class="drawer-backdrop"
+    type="button"
+    aria-label="Close navigation"
+    (click)="navigation.closeMobile()"
+  ></button>
+  <section
+    id="mobile-navigation-drawer"
+    appModalFocus
+    class="mobile-drawer"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Navigation menu"
+    tabindex="-1"
+    (modalDismissed)="navigation.closeMobile()"
+  >
+    <div class="drawer-heading">
+      <a routerLink="/" (click)="navigation.closeMobile()">
+        <strong>LealChess</strong>
+        <span>Play. Study. Improve.</span>
+      </a>
+      <button
+        type="button"
+        data-modal-initial
+        aria-label="Close navigation"
+        (click)="navigation.closeMobile()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m6 6 12 12M18 6 6 18" />
+        </svg>
+      </button>
+    </div>
+    <nav aria-label="Mobile primary navigation">
+      <a
+        routerLink="/"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        (click)="navigation.closeMobile()"
+      >
+        Play
+      </a>
+      <a routerLink="/learn" routerLinkActive="active" (click)="navigation.closeMobile()">
+        Learn
+      </a>
+    </nav>
+    <div class="drawer-placeholders">
+      <span role="link" aria-disabled="true" aria-label="Settings, unavailable">
+        Settings <small>Unavailable</small>
+      </span>
+      <span role="link" aria-disabled="true" aria-label="Help, unavailable">
+        Help <small>Unavailable</small>
+      </span>
+    </div>
+  </section>
+}

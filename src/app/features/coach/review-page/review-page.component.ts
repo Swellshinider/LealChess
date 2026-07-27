@@ -18,6 +18,7 @@ import type { Dests, Key } from '@lichess-org/chessground/types';
 import { Chess, type Square } from 'chess.js';
 import type { ChessColor } from '../../../shared/chess/chess.types';
 import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
+import { SideNavigationComponent } from '../../../shared/layout/side-navigation/side-navigation.component';
 import {
   STARTING_FEN,
   type BoardTheme,
@@ -51,7 +52,7 @@ type PuzzleStatus = 'ready' | 'incorrect' | 'correct' | 'revealed';
 
 @Component({
   selector: 'app-review-page',
-  imports: [ModalFocusDirective, RouterLink],
+  imports: [ModalFocusDirective, RouterLink, SideNavigationComponent],
   templateUrl: './review-page.component.html',
   styleUrl: './review-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

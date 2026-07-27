@@ -1,263 +1,263 @@
-<main class="learn-page">
-  <header class="hero">
-    <p class="eyebrow">Your games, made useful</p>
-    <h1>Your chess coach</h1>
-    <p class="lead">Your best lessons are already in your games.</p>
-    <p>
-      Review positions from your own games. Your training plan will be built from your real play.
-    </p>
-  </header>
+<div class="learn-shell">
+  <app-side-navigation />
+  <main class="learn-page">
+    <header class="hero">
+      <h1>Learn and Improve</h1>
+    </header>
 
-  <section class="import-panel" aria-labelledby="import-heading">
-    <div class="section-heading">
-      <div>
-        <p class="folio">Import desk · 01</p>
-        <h2 id="import-heading">Find learning moments</h2>
+    <section class="import-panel" aria-labelledby="import-heading">
+      <div class="section-heading">
+        <div>
+          <p class="folio">Import desk · 01</p>
+          <h2 id="import-heading">Find learning moments</h2>
+        </div>
+        <span>Chess.com + Lichess</span>
       </div>
-      <span>Chess.com + Lichess</span>
-    </div>
 
-    <form
-      [formGroup]="form"
-      [attr.aria-busy]="coach.loading()"
-      aria-describedby="import-form-help"
-      (ngSubmit)="importGames()"
-    >
-      <label>
-        Chess.com username
-        <input
-          formControlName="chessComUsername"
-          autocomplete="username"
-          placeholder="Username"
-          [attr.aria-invalid]="usernameError()"
-        />
-      </label>
-      <label>
-        Lichess username
-        <input
-          formControlName="lichessUsername"
-          autocomplete="username"
-          placeholder="Username"
-          [attr.aria-invalid]="usernameError()"
-        />
-      </label>
-      <label>
-        Games per platform
-        <input formControlName="maxGames" type="number" min="1" max="100" />
-      </label>
-      <label>
-        Speed
-        <select formControlName="speed">
-          <option value="any">Any</option>
-          <option value="bullet">Bullet</option>
-          <option value="blitz">Blitz</option>
-          <option value="rapid">Rapid</option>
-          <option value="classical-daily">Classical / Daily</option>
-        </select>
-      </label>
-      <button type="submit" [disabled]="coach.loading()">
-        {{ coach.loading() ? 'Importing…' : 'Import your games' }}
-      </button>
-    </form>
-    <p id="import-form-help" class="form-help">
-      Enter either username. Imports run separately, so one platform can still succeed if the other
-      is unavailable.
-    </p>
-    @if (usernameError()) {
-      <p class="field-error" role="alert">Enter a Chess.com or Lichess username.</p>
-    }
-    @if (form.controls.maxGames.invalid && form.controls.maxGames.touched) {
-      <p class="field-error">Choose between 1 and 100 games per platform.</p>
-    }
-
-    <div class="platform-statuses">
-      @for (
-        status of [coach.statuses()['chess-com'], coach.statuses().lichess];
-        track status.platform
-      ) {
-        <article
-          class="platform-status"
-          [attr.data-state]="status.state"
-          [attr.role]="status.state === 'error' ? 'alert' : 'status'"
-          [attr.aria-busy]="status.state === 'loading'"
-          aria-atomic="true"
-        >
-          <div>
-            <strong>{{ status.platform === 'chess-com' ? 'Chess.com' : 'Lichess' }}</strong>
-            <span>{{ status.state }}</span>
-          </div>
-          <p>{{ status.message }}</p>
-          @if (status.recovery) {
-            <p class="recovery">{{ status.recovery }}</p>
-          }
-          @if (status.canRetry) {
-            <button type="button" (click)="retry(status.platform)">
-              Retry {{ status.platform === 'chess-com' ? 'Chess.com' : 'Lichess' }}
-            </button>
-          }
-        </article>
+      <form
+        [formGroup]="form"
+        [attr.aria-busy]="coach.loading()"
+        aria-describedby="import-form-help"
+        (ngSubmit)="importGames()"
+      >
+        <label>
+          Chess.com username
+          <input
+            formControlName="chessComUsername"
+            autocomplete="username"
+            placeholder="Username"
+            [attr.aria-invalid]="usernameError()"
+          />
+        </label>
+        <label>
+          Lichess username
+          <input
+            formControlName="lichessUsername"
+            autocomplete="username"
+            placeholder="Username"
+            [attr.aria-invalid]="usernameError()"
+          />
+        </label>
+        <label>
+          Games per platform
+          <input formControlName="maxGames" type="number" min="1" max="100" />
+        </label>
+        <label>
+          Speed
+          <select formControlName="speed">
+            <option value="any">Any</option>
+            <option value="bullet">Bullet</option>
+            <option value="blitz">Blitz</option>
+            <option value="rapid">Rapid</option>
+            <option value="classical-daily">Classical / Daily</option>
+          </select>
+        </label>
+        <button type="submit" [disabled]="coach.loading()">
+          {{ coach.loading() ? 'Importing…' : 'Import your games' }}
+        </button>
+      </form>
+      <p id="import-form-help" class="form-help">
+        Enter either username. Imports run separately, so one platform can still succeed if the
+        other is unavailable.
+      </p>
+      @if (usernameError()) {
+        <p class="field-error" role="alert">Enter a Chess.com or Lichess username.</p>
       }
-    </div>
-  </section>
+      @if (form.controls.maxGames.invalid && form.controls.maxGames.touched) {
+        <p class="field-error">Choose between 1 and 100 games per platform.</p>
+      }
 
-  <section class="ledger-summary" aria-labelledby="summary-heading">
-    <div class="section-heading">
-      <div>
-        <p class="folio">Study ledger · 02</p>
-        <h2 id="summary-heading">Your imported record</h2>
-      </div>
-      <span>{{ coach.summary().total }} games</span>
-    </div>
-    <dl class="totals">
-      <div>
-        <dt>Total</dt>
-        <dd>{{ coach.summary().total }}</dd>
-      </div>
-      <div>
-        <dt>Wins</dt>
-        <dd>{{ coach.summary().wins }}</dd>
-      </div>
-      <div>
-        <dt>Draws</dt>
-        <dd>{{ coach.summary().draws }}</dd>
-      </div>
-      <div>
-        <dt>Losses</dt>
-        <dd>{{ coach.summary().losses }}</dd>
-      </div>
-    </dl>
-    <div class="split-record">
-      <p>
-        <strong>As White</strong>
-        {{ coach.summary().asWhite.wins }}W · {{ coach.summary().asWhite.draws }}D ·
-        {{ coach.summary().asWhite.losses }}L
-      </p>
-      <p>
-        <strong>As Black</strong>
-        {{ coach.summary().asBlack.wins }}W · {{ coach.summary().asBlack.draws }}D ·
-        {{ coach.summary().asBlack.losses }}L
-      </p>
-    </div>
-    @if (coach.summary().topOpenings.length) {
-      <ol class="openings" aria-label="Most played openings">
-        @for (opening of coach.summary().topOpenings; track opening.name) {
-          <li>
-            <span>{{ opening.eco }} {{ opening.name }}</span>
-            <strong>{{ opening.count }}</strong>
-          </li>
-        }
-      </ol>
-    }
-  </section>
-
-  <section class="study-priorities" aria-labelledby="priorities-heading">
-    <div class="section-heading">
-      <div>
-        <p class="folio">Coach's margin</p>
-        <h2 id="priorities-heading">Study priorities</h2>
-      </div>
-      <span>{{ coach.completedAnalyses().length }} analyzed games</span>
-    </div>
-    @if (coach.priorities().length) {
-      <ol>
-        @for (priority of coach.priorities(); track priority.category) {
-          <li>
-            <span class="priority-rank">{{ $index + 1 }}</span>
+      <div class="platform-statuses">
+        @for (
+          status of [coach.statuses()['chess-com'], coach.statuses().lichess];
+          track status.platform
+        ) {
+          <article
+            class="platform-status"
+            [attr.data-state]="status.state"
+            [attr.role]="status.state === 'error' ? 'alert' : 'status'"
+            [attr.aria-busy]="status.state === 'loading'"
+            aria-atomic="true"
+          >
             <div>
-              <h3>{{ categoryLabel(priority.category) }}</h3>
-              <p>{{ priority.advice }}</p>
+              <strong>{{ status.platform === 'chess-com' ? 'Chess.com' : 'Lichess' }}</strong>
+              <span>{{ status.state }}</span>
             </div>
-            <strong>{{ priority.moments }} moments<br />{{ priority.games }} games</strong>
-          </li>
-        }
-      </ol>
-    } @else {
-      <div class="priority-empty">
-        <p>
-          Analyze at least two games to reveal patterns that repeat across your play. The summary is
-          generated locally from move categories, not by an AI service.
-        </p>
-      </div>
-    }
-  </section>
-
-  <section class="games-ledger" aria-labelledby="games-heading">
-    <div class="section-heading">
-      <div>
-        <p class="folio">Game archive · 03</p>
-        <h2 id="games-heading">Review your games</h2>
-      </div>
-    </div>
-    @if (!coach.games().length) {
-      @if (coach.hasFailures()) {
-        <div class="empty-state failed-import">
-          <span aria-hidden="true">!</span>
-          <h3>No games were added</h3>
-          <p>
-            Follow the recovery step in the import desk, then retry only the platform that failed.
-            Your saved study data has not changed.
-          </p>
-        </div>
-      } @else {
-        <div class="empty-state">
-          <span aria-hidden="true">♙</span>
-          <h3>Your study ledger is ready</h3>
-          <p>Import recent games to begin reviewing positions from your own play.</p>
-        </div>
-      }
-    } @else {
-      <div class="game-list">
-        @for (game of coach.games(); track game.key) {
-          <article>
-            <div class="game-index">{{ $index + 1 < 10 ? '0' : '' }}{{ $index + 1 }}</div>
-            <div class="players">
-              <p>
-                <span class="piece" aria-hidden="true">♔</span>
-                <strong>{{ game.white.username }}</strong>
-                <span>{{ game.white.rating ?? '—' }}</span>
-              </p>
-              <p>
-                <span class="piece" aria-hidden="true">♚</span>
-                <strong>{{ game.black.username }}</strong>
-                <span>{{ game.black.rating ?? '—' }}</span>
-              </p>
-            </div>
-            <div class="result">
-              <strong>{{ resultLabel(game) }}</strong>
-              <span>{{ game.platform === 'chess-com' ? 'Chess.com' : 'Lichess' }}</span>
-            </div>
-            <div class="metadata">
-              <p>{{ formatDate(game.endTime) }} · {{ game.speed }} · {{ game.timeControl }}</p>
-              <p>{{ game.opening?.eco }} {{ game.opening?.name ?? 'Opening not recorded' }}</p>
-            </div>
-            <div class="review-action">
-              @if (game.parseStatus === 'ready') {
-                @if (analysisFor(game); as analysis) {
-                  <span class="analysis-status" [attr.data-status]="analysis.status">
-                    {{ analysisLabel(analysis) }}
-                  </span>
-                }
-                <a [routerLink]="reviewLink(game)">
-                  {{ analysisFor(game)?.status === 'complete' ? 'Review analysis' : 'Open review' }}
-                  <span aria-hidden="true">→</span>
-                </a>
-              } @else {
-                <div class="unavailable-game">
-                  <strong>Replay unavailable</strong>
-                  <p>{{ game.parseError }}</p>
-                  <p>Make the game public if possible, then import this profile again.</p>
-                  @if (game.pgn) {
-                    <details>
-                      <summary>View the PGN that could not be replayed</summary>
-                      <pre>{{ game.pgn }}</pre>
-                    </details>
-                  }
-                </div>
-              }
-            </div>
+            <p>{{ status.message }}</p>
+            @if (status.recovery) {
+              <p class="recovery">{{ status.recovery }}</p>
+            }
+            @if (status.canRetry) {
+              <button type="button" (click)="retry(status.platform)">
+                Retry {{ status.platform === 'chess-com' ? 'Chess.com' : 'Lichess' }}
+              </button>
+            }
           </article>
         }
       </div>
-    }
-  </section>
-</main>
+    </section>
+
+    <section class="ledger-summary" aria-labelledby="summary-heading">
+      <div class="section-heading">
+        <div>
+          <p class="folio">Study ledger · 02</p>
+          <h2 id="summary-heading">Your imported record</h2>
+        </div>
+        <span>{{ coach.summary().total }} games</span>
+      </div>
+      <dl class="totals">
+        <div>
+          <dt>Total</dt>
+          <dd>{{ coach.summary().total }}</dd>
+        </div>
+        <div>
+          <dt>Wins</dt>
+          <dd>{{ coach.summary().wins }}</dd>
+        </div>
+        <div>
+          <dt>Draws</dt>
+          <dd>{{ coach.summary().draws }}</dd>
+        </div>
+        <div>
+          <dt>Losses</dt>
+          <dd>{{ coach.summary().losses }}</dd>
+        </div>
+      </dl>
+      <div class="split-record">
+        <p>
+          <strong>As White</strong>
+          {{ coach.summary().asWhite.wins }}W · {{ coach.summary().asWhite.draws }}D ·
+          {{ coach.summary().asWhite.losses }}L
+        </p>
+        <p>
+          <strong>As Black</strong>
+          {{ coach.summary().asBlack.wins }}W · {{ coach.summary().asBlack.draws }}D ·
+          {{ coach.summary().asBlack.losses }}L
+        </p>
+      </div>
+      @if (coach.summary().topOpenings.length) {
+        <ol class="openings" aria-label="Most played openings">
+          @for (opening of coach.summary().topOpenings; track opening.name) {
+            <li>
+              <span>{{ opening.eco }} {{ opening.name }}</span>
+              <strong>{{ opening.count }}</strong>
+            </li>
+          }
+        </ol>
+      }
+    </section>
+
+    <section class="study-priorities" aria-labelledby="priorities-heading">
+      <div class="section-heading">
+        <div>
+          <p class="folio">Coach's margin</p>
+          <h2 id="priorities-heading">Study priorities</h2>
+        </div>
+        <span>{{ coach.completedAnalyses().length }} analyzed games</span>
+      </div>
+      @if (coach.priorities().length) {
+        <ol>
+          @for (priority of coach.priorities(); track priority.category) {
+            <li>
+              <span class="priority-rank">{{ $index + 1 }}</span>
+              <div>
+                <h3>{{ categoryLabel(priority.category) }}</h3>
+                <p>{{ priority.advice }}</p>
+              </div>
+              <strong>{{ priority.moments }} moments<br />{{ priority.games }} games</strong>
+            </li>
+          }
+        </ol>
+      } @else {
+        <div class="priority-empty">
+          <p>
+            Analyze at least two games to reveal patterns that repeat across your play. The summary
+            is generated locally from move categories, not by an AI service.
+          </p>
+        </div>
+      }
+    </section>
+
+    <section class="games-ledger" aria-labelledby="games-heading">
+      <div class="section-heading">
+        <div>
+          <p class="folio">Game archive · 03</p>
+          <h2 id="games-heading">Review your games</h2>
+        </div>
+      </div>
+      @if (!coach.games().length) {
+        @if (coach.hasFailures()) {
+          <div class="empty-state failed-import">
+            <span aria-hidden="true">!</span>
+            <h3>No games were added</h3>
+            <p>
+              Follow the recovery step in the import desk, then retry only the platform that failed.
+              Your saved study data has not changed.
+            </p>
+          </div>
+        } @else {
+          <div class="empty-state">
+            <span aria-hidden="true">♙</span>
+            <h3>Your study ledger is ready</h3>
+            <p>Import recent games to begin reviewing positions from your own play.</p>
+          </div>
+        }
+      } @else {
+        <div class="game-list">
+          @for (game of coach.games(); track game.key) {
+            <article>
+              <div class="game-index">{{ $index + 1 < 10 ? '0' : '' }}{{ $index + 1 }}</div>
+              <div class="players">
+                <p>
+                  <span class="piece" aria-hidden="true">♔</span>
+                  <strong>{{ game.white.username }}</strong>
+                  <span>{{ game.white.rating ?? '—' }}</span>
+                </p>
+                <p>
+                  <span class="piece" aria-hidden="true">♚</span>
+                  <strong>{{ game.black.username }}</strong>
+                  <span>{{ game.black.rating ?? '—' }}</span>
+                </p>
+              </div>
+              <div class="result">
+                <strong>{{ resultLabel(game) }}</strong>
+                <span>{{ game.platform === 'chess-com' ? 'Chess.com' : 'Lichess' }}</span>
+              </div>
+              <div class="metadata">
+                <p>{{ formatDate(game.endTime) }} · {{ game.speed }} · {{ game.timeControl }}</p>
+                <p>{{ game.opening?.eco }} {{ game.opening?.name ?? 'Opening not recorded' }}</p>
+              </div>
+              <div class="review-action">
+                @if (game.parseStatus === 'ready') {
+                  @if (analysisFor(game); as analysis) {
+                    <span class="analysis-status" [attr.data-status]="analysis.status">
+                      {{ analysisLabel(analysis) }}
+                    </span>
+                  }
+                  <a [routerLink]="reviewLink(game)">
+                    {{
+                      analysisFor(game)?.status === 'complete' ? 'Review analysis' : 'Open review'
+                    }}
+                    <span aria-hidden="true">→</span>
+                  </a>
+                } @else {
+                  <div class="unavailable-game">
+                    <strong>Replay unavailable</strong>
+                    <p>{{ game.parseError }}</p>
+                    <p>Make the game public if possible, then import this profile again.</p>
+                    @if (game.pgn) {
+                      <details>
+                        <summary>View the PGN that could not be replayed</summary>
+                        <pre>{{ game.pgn }}</pre>
+                      </details>
+                    }
+                  </div>
+                }
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+  </main>
+</div>

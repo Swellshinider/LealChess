@@ -3,13 +3,14 @@ import type { OnInit } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import type { ChessColor } from '../../../shared/chess/chess.types';
+import { SideNavigationComponent } from '../../../shared/layout/side-navigation/side-navigation.component';
 import { CoachImportService } from '../data/coach-import.service';
 import type { ChessPlatform, GameAnalysis, ImportedGame, SpeedFilter } from '../domain/coach.types';
 import { categoryLabel, learnerColorForGame } from '../analysis/analysis-rules';
 
 @Component({
   selector: 'app-learn-page',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, SideNavigationComponent],
   templateUrl: './learn-page.component.html',
   styleUrl: './learn-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
