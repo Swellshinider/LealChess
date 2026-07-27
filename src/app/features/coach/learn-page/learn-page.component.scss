@@ -18,27 +18,15 @@
 }
 
 .hero {
-  border-left: 4px solid var(--primary);
-  margin-bottom: 36px;
-  max-width: 760px;
-  padding-left: clamp(18px, 3vw, 34px);
+  margin-bottom: 20px;
 
   h1 {
     color: var(--paper);
     font-family: var(--font-display);
-    font-size: clamp(3rem, 8vw, 6rem);
-    letter-spacing: -0.02em;
-    line-height: 0.86;
-    margin: 8px 0 18px;
-  }
-
-  p {
-    color: var(--mist);
-  }
-
-  .lead {
-    color: var(--paper);
-    font-size: clamp(1.15rem, 2vw, 1.45rem);
+    font-size: clamp(1.8rem, 3vw, 2.35rem);
+    letter-spacing: -0.01em;
+    line-height: 1;
+    margin: 0;
   }
 }
 
@@ -491,9 +479,5 @@ form {
 
   .learn-page {
     padding: 30px 12px 48px;
-  }
-
-  .hero h1 {
-    font-size: clamp(3rem, 13vw, 3.75rem);
   }
 }

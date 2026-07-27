@@ -7,12 +7,37 @@ test('collapses the desktop panel, preserves the choice, and navigates between w
   await page.goto('/learn');
 
   const navigation = page.locator('#primary-navigation');
+  const brandCopy = navigation.locator('.brand-copy');
+  const logo = navigation.locator('.brand-logo');
+  const playLink = navigation.getByRole('link', { name: 'Play' });
+  await expect(page.getByRole('heading', { name: 'Learn and Improve' })).toBeVisible();
+  await expect(logo).toBeVisible();
+  await expect(brandCopy).toBeVisible();
   await expect(page.getByRole('button', { name: 'Collapse navigation' })).toBeVisible();
   await expect.poll(async () => (await navigation.boundingBox())!.width).toBeGreaterThan(200);
 
   await page.getByRole('button', { name: 'Collapse navigation' }).click();
   await expect(page.getByRole('button', { name: 'Expand navigation' })).toBeVisible();
   await expect.poll(async () => (await navigation.boundingBox())!.width).toBeLessThan(100);
+  await expect(logo).toBeVisible();
+  await expect(brandCopy).toBeHidden();
+
+  const brandBlock = (await navigation.locator('.brand-block').boundingBox())!;
+  const expandButton = (await page
+    .getByRole('button', { name: 'Expand navigation' })
+    .boundingBox())!;
+  expect(expandButton.y).toBeGreaterThanOrEqual(brandBlock.y);
+  expect(expandButton.y + expandButton.height).toBeLessThanOrEqual(
+    brandBlock.y + brandBlock.height,
+  );
+  expect(
+    Math.abs(expandButton.x + expandButton.width / 2 - (brandBlock.x + brandBlock.width / 2)),
+  ).toBeLessThanOrEqual(2);
+
+  await playLink.hover();
+  await expect
+    .poll(() => playLink.evaluate((element) => getComputedStyle(element, '::after').opacity))
+    .toBe('1');
 
   await page.reload();
   await expect(page.getByRole('button', { name: 'Expand navigation' })).toBeVisible();
@@ -56,6 +81,7 @@ test('adapts Play from a landscape tablet desk to a portrait board-first stack',
   const landscapeBoard = (await board.boundingBox())!;
   const landscapeControls = (await controls.boundingBox())!;
   expect(landscapeControls.x).toBeGreaterThan(landscapeBoard.x + landscapeBoard.width - 2);
+  await expectWorkspaceToFitViewport(page);
 
   await page.setViewportSize({ width: 768, height: 1024 });
   await expect
@@ -66,3 +92,35 @@ test('adapts Play from a landscape tablet desk to a portrait board-first stack',
     })
     .toBe(true);
 });
+
+async function expectWorkspaceToFitViewport(page: import('@playwright/test').Page) {
+  const geometry = await page.evaluate(() => {
+    const scrollingElement = document.scrollingElement!;
+    const frame = document.querySelector<HTMLElement>('.app-frame')!;
+    const board = document.querySelector<HTMLElement>('.board-column')!.getBoundingClientRect();
+    const controls = document
+      .querySelector<HTMLElement>('app-game-sidebar')!
+      .getBoundingClientRect();
+
+    return {
+      documentHeight: scrollingElement.scrollHeight,
+      documentWidth: scrollingElement.scrollWidth,
+      frameHeight: frame.scrollHeight,
+      frameWidth: frame.scrollWidth,
+      clientHeight: scrollingElement.clientHeight,
+      clientWidth: scrollingElement.clientWidth,
+      frameClientHeight: frame.clientHeight,
+      frameClientWidth: frame.clientWidth,
+      boardBottom: board.bottom,
+      controlsBottom: controls.bottom,
+      viewportHeight: window.innerHeight,
+    };
+  });
+
+  expect(geometry.documentHeight).toBeLessThanOrEqual(geometry.clientHeight + 1);
+  expect(geometry.documentWidth).toBeLessThanOrEqual(geometry.clientWidth + 1);
+  expect(geometry.frameHeight).toBeLessThanOrEqual(geometry.frameClientHeight + 1);
+  expect(geometry.frameWidth).toBeLessThanOrEqual(geometry.frameClientWidth + 1);
+  expect(geometry.boardBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
+  expect(geometry.controlsBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
+}

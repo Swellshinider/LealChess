@@ -1,28 +1,40 @@
 :host {
   display: block;
-  min-height: 100%;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 .play-shell {
   display: flex;
-  min-height: 100dvh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .app-frame {
+  --play-padding: clamp(14px, 2vw, 28px);
+  --toolbar-height: 22px;
+  --workspace-gap: 12px;
+
   container-type: inline-size;
+  display: grid;
   flex: 1 1 auto;
-  height: 100dvh;
+  gap: var(--workspace-gap);
+  grid-template-rows: var(--toolbar-height) minmax(0, 1fr);
+  height: 100%;
   min-width: 0;
   overflow: auto;
-  padding: clamp(14px, 2vw, 28px);
+  padding: var(--play-padding);
 }
 
 .play-toolbar {
   align-items: center;
   display: flex;
   justify-content: space-between;
-  margin: 0 auto 12px;
+  margin: 0 auto;
   max-width: 1280px;
+  min-height: var(--toolbar-height);
+  width: 100%;
 
   p {
     color: var(--primary);
@@ -38,21 +50,6 @@
   display: none;
 }
 
-.restore-banner {
-  align-items: center;
-  background: var(--amber);
-  border: 0;
-  color: var(--night);
-  display: flex;
-  font-weight: 700;
-  gap: 24px;
-  justify-content: space-between;
-  margin: 0 auto 12px;
-  padding: 9px 12px;
-  max-width: 1280px;
-  width: 100%;
-}
-
 .game-layout {
   --desk-width: clamp(280px, 26cqw, 336px);
 
@@ -60,9 +57,11 @@
   display: grid;
   gap: clamp(14px, 2cqw, 26px);
   grid-template-columns: minmax(0, 1fr) var(--desk-width);
+  height: 100%;
   margin: 0 auto;
   max-width: 1280px;
-  min-height: calc(100dvh - 76px);
+  min-height: 0;
+  width: 100%;
 }
 
 .board-column {
@@ -71,7 +70,15 @@
   grid-template-columns: 5px 1fr;
   margin: auto;
   max-width: 820px;
-  width: min(100%, calc(100dvh - 154px));
+  width: min(
+    100%,
+    calc(
+      100dvh - var(--play-padding) - var(--play-padding) - var(--toolbar-height) - var(
+          --workspace-gap
+        ) -
+        94px
+    )
+  );
 }
 
 .player-strip {
@@ -181,6 +188,7 @@ app-chess-board {
 @container (max-width: 900px) {
   .game-layout {
     display: block;
+    height: auto;
     min-height: 0;
   }
 
@@ -190,6 +198,7 @@ app-chess-board {
 
   app-game-sidebar {
     display: block;
+    height: auto;
     margin-top: 18px;
   }
 
@@ -204,11 +213,21 @@ app-chess-board {
 }
 
 @media (max-width: 767px) {
+  :host {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
   .play-shell {
     display: block;
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
   }
 
   .app-frame {
+    display: block;
     height: auto;
     min-height: calc(100dvh - 64px);
     overflow: visible;

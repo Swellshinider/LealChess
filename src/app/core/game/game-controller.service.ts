@@ -294,10 +294,6 @@ export class GameController {
     void this.persistence.savePreferences(preferences);
   }
 
-  dismissRestored(): void {
-    this.patchState({ restored: false });
-  }
-
   unlockSound(): void {
     this.sound.unlock();
   }
@@ -353,7 +349,7 @@ export class GameController {
         phase: restoredGame ? (restoredGame.result ? 'game-over' : 'active') : 'setup',
         engineStatus: 'ready',
         restored: restoredGame !== null,
-        announcement: restoredGame ? 'Restored previous game.' : 'Stockfish is ready.',
+        announcement: restoredGame ? '' : 'Stockfish is ready.',
         preferences: restored.preferences,
       });
       if (restoredGame && !restoredGame.result) {

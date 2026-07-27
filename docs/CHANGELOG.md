@@ -11,6 +11,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Redesigned Play, Learn, and Review as responsive training-desk workspaces with collapsible
   desktop and tablet navigation and an accessible mobile drawer.
+- Show the LealChess logo and contextual tooltips in the collapsed navigation rail.
+- Simplified the Learn workspace introduction to a compact page title.
+- Resume saved games without displaying a restoration notice.
+
+### Fixed
+
+- Fit the Play board and game controls within desktop landscape viewports without page-level
+  scrollbars.
+- Keep long move histories contained when Board & feedback is expanded.
 
 ## [Unreleased] - 24-07-2026
 

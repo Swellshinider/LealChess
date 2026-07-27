@@ -1,12 +1,18 @@
 :host {
-  min-width: 0;
+  height: 100%;
+  min-height: 0;
 }
 
 .sidebar {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  height: min(calc(100dvh - 58px), 840px);
+  height: 100%;
+  min-height: 0;
+
+  > :not(.history-card) {
+    flex: 0 0 auto;
+  }
 }
 
 section {
@@ -74,9 +80,9 @@ section {
 
 .history-card {
   display: flex;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   flex-direction: column;
-  min-height: 180px;
+  min-height: 0;
   overflow: hidden;
 
   header {
@@ -105,6 +111,7 @@ section {
 app-move-history {
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .controls-card {
@@ -259,6 +266,7 @@ button:disabled {
   }
 
   .history-card {
+    flex: 1 1 auto;
     max-height: 260px;
   }
 }

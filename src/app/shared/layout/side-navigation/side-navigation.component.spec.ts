@@ -25,6 +25,11 @@ describe('SideNavigationComponent', () => {
     const host = fixture.nativeElement as HTMLElement;
 
     expect(host.querySelectorAll('a[href]').length).toBe(4);
+    expect(host.querySelector<HTMLImageElement>('.brand-logo')?.getAttribute('src')).toBe(
+      '/favicon.svg',
+    );
+    expect(host.querySelector('[data-tooltip="Play"]')).not.toBeNull();
+    expect(host.querySelector('[data-tooltip="Learn"]')).not.toBeNull();
     expect(host.querySelector('[aria-label="Settings, unavailable"]')).not.toBeNull();
     expect(host.querySelector('[aria-label="Help, unavailable"]')).not.toBeNull();
 

@@ -17,7 +17,7 @@
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  overflow: hidden;
+  overflow: visible;
   position: sticky;
   top: 0;
   width: 100%;
@@ -32,10 +32,17 @@
 }
 
 .brand {
+  align-items: center;
   color: var(--primary, #a5cecc);
-  display: block;
+  display: flex;
+  gap: 12px;
+  position: relative;
   text-decoration: none;
   white-space: nowrap;
+}
+
+.brand-copy {
+  min-width: 0;
 
   strong,
   span {
@@ -56,6 +63,12 @@
     letter-spacing: 0.04em;
     margin-top: 8px;
   }
+}
+
+.brand-logo {
+  flex: 0 0 44px;
+  height: 44px;
+  width: 44px;
 }
 
 .rail-toggle {
@@ -84,14 +97,13 @@
     display: none;
   }
 
-  .brand strong {
-    font-size: 1rem;
-    writing-mode: vertical-rl;
+  .brand {
+    justify-content: center;
   }
 
   .brand-block {
-    min-height: 150px;
-    padding-inline: 23px;
+    min-height: 122px;
+    padding-inline: 14px;
   }
 
   .rail-toggle {
@@ -101,6 +113,38 @@
 
     svg {
       transform: rotate(180deg);
+    }
+  }
+
+  [data-tooltip] {
+    &::after {
+      background: var(--surface-container-highest, #27373f);
+      border: 1px solid var(--outline-variant, #404848);
+      color: var(--paper);
+      content: attr(data-tooltip);
+      font-family: var(--font-utility);
+      font-size: 0.68rem;
+      font-weight: 500;
+      left: calc(100% + 12px);
+      letter-spacing: 0.02em;
+      opacity: 0;
+      padding: 7px 9px;
+      pointer-events: none;
+      position: absolute;
+      text-transform: none;
+      top: 50%;
+      transform: translate(4px, -50%);
+      transition:
+        opacity 120ms ease,
+        transform 120ms ease;
+      white-space: nowrap;
+      z-index: 100;
+    }
+
+    &:hover::after,
+    &:focus-visible::after {
+      opacity: 1;
+      transform: translate(0, -50%);
     }
   }
 }
@@ -123,6 +167,7 @@
   gap: 14px;
   min-height: 50px;
   padding: 0 14px;
+  position: relative;
   text-decoration: none;
   text-transform: uppercase;
   white-space: nowrap;
@@ -347,7 +392,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   :host,
-  .rail-toggle svg {
+  .rail-toggle svg,
+  [data-tooltip]::after {
     transition: none;
   }
 }
