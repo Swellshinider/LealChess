@@ -7,6 +7,7 @@ import type {
   MoveRecord,
   PendingPremove,
 } from '../game/game.types';
+import type { SpeedFilter } from '../../features/coach/domain/coach.types';
 
 export const PERSISTENCE_SCHEMA_VERSION = 1;
 
@@ -28,6 +29,20 @@ export interface RestoredState {
   game: PersistedGame | null;
   preferences: GamePreferences;
 }
+
+export interface ImportPreferences {
+  chessComUsername: string;
+  lichessUsername: string;
+  maxGames: number;
+  speed: SpeedFilter;
+}
+
+export const DEFAULT_IMPORT_PREFERENCES: ImportPreferences = {
+  chessComUsername: '',
+  lichessUsername: '',
+  maxGames: 20,
+  speed: 'any',
+};
 
 export interface PersistencePort {
   restore(): Promise<RestoredState>;

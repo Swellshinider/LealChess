@@ -20,6 +20,16 @@ describe('parseAnalysisInfo', () => {
     });
   });
 
+  it('parses WDL expected points and MultiPV ranks', () => {
+    expect(
+      parseAnalysisInfo('info depth 14 multipv 2 score cp 18 wdl 410 500 90 pv g1f3 g8f6'),
+    ).toMatchObject({
+      multiPv: 2,
+      expectedPoints: 0.66,
+      principalVariation: ['g1f3', 'g8f6'],
+    });
+  });
+
   it('ignores malformed and unrelated lines', () => {
     expect(parseAnalysisInfo('bestmove e2e4')).toBeUndefined();
     expect(parseAnalysisInfo('info depth twelve score cp 20')).toBeUndefined();

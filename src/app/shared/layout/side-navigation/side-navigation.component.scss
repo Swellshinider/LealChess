@@ -157,6 +157,7 @@
 }
 
 .route-links a,
+.utility-links a,
 .placeholder {
   align-items: center;
   border: 1px solid transparent;
@@ -173,7 +174,8 @@
   white-space: nowrap;
 }
 
-.route-links a {
+.route-links a,
+.utility-links a {
   &:hover {
     background: var(--surface-container-high, #1c2c34);
     color: var(--paper);

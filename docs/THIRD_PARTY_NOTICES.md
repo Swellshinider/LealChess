@@ -10,6 +10,9 @@ LealChess includes or depends on the following open-source software:
   Source: <https://github.com/jhlywa/chess.js>
 - **idb** — ISC, © Jake Archibald and contributors.
   Source: <https://github.com/jakearchibald/idb>
+- **Lichess chess openings** — CC0-1.0, the lichess.org contributors. A compact derived position
+  index is bundled for live opening-move classification.
+  Source: <https://github.com/lichess-org/chess-openings>
 - **Atkinson Hyperlegible**, **Barlow Condensed**, and **IBM Plex Mono** — SIL Open Font License
   1.1. Font files are bundled locally through Fontsource.
   Source: <https://fontsource.org>

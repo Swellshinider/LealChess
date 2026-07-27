@@ -27,6 +27,51 @@
   width: 100%;
 }
 
+.live-classification {
+  background: var(--surface-lowest);
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  color: var(--paper);
+  font-family: var(--font-utility);
+  font-size: clamp(0.48rem, 1.2vw, 0.7rem);
+  font-weight: 700;
+  padding: 3px 6px;
+  pointer-events: none;
+  position: absolute;
+  text-transform: uppercase;
+  transform: translate(-12%, 28%);
+  z-index: 8;
+
+  &[data-phase='analyzing'] {
+    opacity: 0.82;
+  }
+
+  &[data-classification='book'],
+  &[data-classification='brilliant'],
+  &[data-classification='great'],
+  &[data-classification='best'] {
+    background: #315f5d;
+  }
+
+  &[data-classification='excellent'],
+  &[data-classification='good'] {
+    background: #416361;
+  }
+
+  &[data-classification='inaccuracy'] {
+    background: #8a6b27;
+  }
+
+  &[data-classification='mistake'],
+  &[data-classification='miss'] {
+    background: #9a572f;
+  }
+
+  &[data-classification='blunder'] {
+    background: var(--danger);
+  }
+}
+
 :host ::ng-deep cg-board {
   background: conic-gradient(
       var(--board-dark) 25%,
@@ -107,16 +152,6 @@
 
 :host ::ng-deep cg-board square.current-premove {
   background-color: rgb(217 154 61 / 35%);
-}
-
-[data-board-theme='classic'] {
-  --board-light: #d8c3a1;
-  --board-dark: #8b6547;
-}
-
-[data-board-theme='high-contrast'] {
-  --board-light: #f4f5f5;
-  --board-dark: #416773;
 }
 
 .promotion-backdrop {

@@ -7,8 +7,19 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased] - 27-07-2026
 
+### Added
+
+- A focused LealChess launch page and a Settings workspace for account imports, board preferences,
+  live previews, and confirmed local-data removal.
+- Three additional board palettes: Rosewood, Green felt, and Blue steel.
+- Optional live Stockfish move classifications for player moves, including opening-book,
+  best-move, missed-win, and accuracy feedback.
+
 ### Changed
 
+- Moved Play to `/play`, account importing from Learn to Settings, and Board & feedback controls
+  out of the active game.
+- Simplified Learn into a saved-study dashboard with a Settings prompt when no games are available.
 - Redesigned Play, Learn, and Review as responsive training-desk workspaces with collapsible
   desktop and tablet navigation and an accessible mobile drawer.
 - Show the LealChess logo and contextual tooltips in the collapsed navigation rail.

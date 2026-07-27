@@ -37,6 +37,42 @@
   text-rendering: optimizeLegibility;
 }
 
+[data-board-theme='tournament'],
+[data-theme='tournament'] {
+  --board-light: #c8d5cf;
+  --board-dark: #527a78;
+}
+
+[data-board-theme='classic'],
+[data-theme='classic'] {
+  --board-light: #d8c3a1;
+  --board-dark: #8b6547;
+}
+
+[data-board-theme='high-contrast'],
+[data-theme='high-contrast'] {
+  --board-light: #f4f5f5;
+  --board-dark: #416773;
+}
+
+[data-board-theme='rosewood'],
+[data-theme='rosewood'] {
+  --board-light: #e8d8bc;
+  --board-dark: #8a4752;
+}
+
+[data-board-theme='green-felt'],
+[data-theme='green-felt'] {
+  --board-light: #d9e1c3;
+  --board-dark: #55745b;
+}
+
+[data-board-theme='blue-steel'],
+[data-theme='blue-steel'] {
+  --board-light: #c9d8e2;
+  --board-dark: #4c657a;
+}
+
 * {
   box-sizing: border-box;
 }

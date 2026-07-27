@@ -187,16 +187,6 @@ header {
     opacity: 1;
   }
 
-  &[data-board-theme='classic'] {
-    --board-light: #d8c3a1;
-    --board-dark: #8b6547;
-  }
-
-  &[data-board-theme='high-contrast'] {
-    --board-light: #f4f5f5;
-    --board-dark: #416773;
-  }
-
   ::ng-deep cg-board square.last-move {
     background-color: rgb(217 154 61 / 34%);
   }

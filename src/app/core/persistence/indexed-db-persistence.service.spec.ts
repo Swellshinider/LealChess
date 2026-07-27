@@ -2,8 +2,9 @@ import 'fake-indexeddb/auto';
 import { TestBed } from '@angular/core/testing';
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { DEFAULT_PREFERENCES } from '../game/game.types';
+import { DEFAULT_PREFERENCES, type GamePreferences } from '../game/game.types';
 import { IndexedDbPersistenceService } from './indexed-db-persistence.service';
+import { LealChessDatabaseService } from './leal-chess-database.service';
 import { PERSISTENCE_SCHEMA_VERSION, type PersistedGame } from './persistence.types';
 
 const game: PersistedGame = {
@@ -57,5 +58,25 @@ describe('IndexedDbPersistenceService', () => {
     const restored = await repository.restore();
     expect(restored.game).toBeNull();
     expect(restored.preferences).toEqual(DEFAULT_PREFERENCES);
+  });
+
+  it('normalizes older preferences field by field', async () => {
+    const repository = TestBed.inject(IndexedDbPersistenceService);
+    const database = await TestBed.inject(LealChessDatabaseService).open();
+    const legacyPreferences = {
+      soundEnabled: false,
+      showLegalMoves: false,
+      premovesEnabled: true,
+      boardTheme: 'rosewood',
+      orientation: 'black',
+      difficulty: 'advanced',
+    } as unknown as GamePreferences;
+    await database.put('state', { key: 'preferences', value: legacyPreferences });
+
+    const restored = await repository.restore();
+    expect(restored.preferences).toEqual({
+      ...legacyPreferences,
+      showMoveClassifications: false,
+    });
   });
 });

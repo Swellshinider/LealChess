@@ -14,7 +14,7 @@ const pgn = `[Event "Imported game"]
 test.beforeEach(async ({ page }) => {
   await mockChessCom(page);
   await mockLichess(page);
-  await page.goto('/learn');
+  await page.goto('/settings');
 });
 
 test('imports both platforms, persists and deduplicates games, then replays moves', async ({
@@ -22,18 +22,21 @@ test('imports both platforms, persists and deduplicates games, then replays move
 }) => {
   await page.getByLabel('Chess.com username').fill('Learner');
   await page.getByLabel('Lichess username').fill('Learner');
-  await page.getByRole('button', { name: 'Import your games' }).click();
+  await page.getByRole('button', { name: 'Import games' }).click();
 
   await expect(page.getByText('Added 1 game.')).toHaveCount(2);
+  await page.goto('/learn');
   await expect(page.locator('.game-list article')).toHaveCount(2);
   await expect(page.locator('.game-list').getByText("King's Pawn Game")).toHaveCount(2);
 
   await page.reload();
   await expect(page.locator('.game-list article')).toHaveCount(2);
+  await page.goto('/settings');
   await expect(page.getByLabel('Chess.com username')).toHaveValue('Learner');
 
-  await page.getByRole('button', { name: 'Import your games' }).click();
+  await page.getByRole('button', { name: 'Import games' }).click();
   await expect(page.getByText(/No new games were added/)).toHaveCount(2);
+  await page.goto('/learn');
   await expect(page.locator('.game-list article')).toHaveCount(2);
   await expect
     .poll(() =>
@@ -113,7 +116,9 @@ test('analyzes locally, caches the result, and opens a missed position', async (
   test.skip(testInfo.project.name !== 'chromium', 'Real analysis worker smoke test');
   test.setTimeout(45_000);
   await page.getByLabel('Lichess username').fill('Learner');
-  await page.getByRole('button', { name: 'Import your games' }).click();
+  await page.getByRole('button', { name: 'Import games' }).click();
+  await expect(page.getByText('Added 1 game.')).toBeVisible();
+  await page.goto('/learn');
   await page.getByRole('link', { name: /Open review/ }).click();
 
   await page.getByRole('button', { name: 'Analyze game' }).click();
@@ -149,10 +154,11 @@ test('keeps a successful platform import when the other platform fails', async (
   );
   await page.getByLabel('Chess.com username').fill('Learner');
   await page.getByLabel('Lichess username').fill('Learner');
-  await page.getByRole('button', { name: 'Import your games' }).click();
+  await page.getByRole('button', { name: 'Import games' }).click();
 
   await expect(page.getByText(/Lichess is limiting requests/)).toBeVisible();
   await expect(page.getByText('Added 1 game.')).toBeVisible();
+  await page.goto('/learn');
   await expect(page.locator('.game-list article')).toHaveCount(1);
 });
 
@@ -162,11 +168,10 @@ test('explains invalid users and restricted game exports', async ({ page }) => {
     route.fulfill({ status: 404, body: 'Not found' }),
   );
   await page.getByLabel('Chess.com username').fill('MissingPlayer');
-  await page.getByRole('button', { name: 'Import your games' }).click();
+  await page.getByRole('button', { name: 'Import games' }).click();
 
   await expect(page.getByRole('alert')).toContainText('We could not find that Chess.com username.');
   await expect(page.getByText(/Check the spelling, update the username/)).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'No games were added' })).toBeVisible();
 
   await page.unroute('**/lichess.org/api/**');
   await page.route('**/lichess.org/api/**', (route) => {
@@ -177,7 +182,7 @@ test('explains invalid users and restricted game exports', async ({ page }) => {
   });
   await page.getByLabel('Chess.com username').fill('');
   await page.getByLabel('Lichess username').fill('Learner');
-  await page.getByRole('button', { name: 'Import your games' }).click();
+  await page.getByRole('button', { name: 'Import games' }).click();
 
   await expect(
     page.locator('.platform-status[data-state="error"]').filter({ hasText: 'Lichess' }),
@@ -205,11 +210,12 @@ test('keeps identified unavailable games and reports malformed export records', 
     return json(route, { username: 'Learner' });
   });
   await page.getByLabel('Lichess username').fill('Learner');
-  await page.getByRole('button', { name: 'Import your games' }).click();
+  await page.getByRole('button', { name: 'Import games' }).click();
 
   await expect(page.getByText(/Added 2 games/)).toBeVisible();
   await expect(page.getByText(/2 games cannot be replayed yet/)).toBeVisible();
   await expect(page.getByText(/1 game could not be identified and was skipped/)).toBeVisible();
+  await page.goto('/learn');
   await expect(page.locator('.unavailable-game > strong')).toHaveCount(2);
   await expect(page.locator('.game-list article')).toHaveCount(2);
 });
@@ -217,7 +223,7 @@ test('keeps identified unavailable games and reports malformed export records', 
 test('announces import validation and has no serious accessibility violations', async ({
   page,
 }) => {
-  await page.getByRole('button', { name: 'Import your games' }).click();
+  await page.getByRole('button', { name: 'Import games' }).click();
   await expect(page.getByRole('alert')).toHaveText('Enter a Chess.com or Lichess username.');
   await assertNoSeriousA11yViolations(page);
 });

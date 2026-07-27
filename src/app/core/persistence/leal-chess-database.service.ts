@@ -6,7 +6,7 @@ import type {
   ImportedProfile,
 } from '../../features/coach/domain/coach.types';
 import type { GamePreferences } from '../game/game.types';
-import type { PersistedGame } from './persistence.types';
+import type { ImportPreferences, PersistedGame } from './persistence.types';
 
 export const LEAL_CHESS_DATABASE_NAME = 'leal-chess';
 export const LEAL_CHESS_DATABASE_VERSION = 3;
@@ -14,9 +14,11 @@ export const PROFILE_KEYS_INDEX = 'by-profile-key';
 
 export interface LealChessDatabase extends DBSchema {
   state: {
-    key: 'active-game' | 'preferences';
+    key: 'active-game' | 'preferences' | 'import-preferences';
     value:
-      { key: 'active-game'; value: PersistedGame } | { key: 'preferences'; value: GamePreferences };
+      | { key: 'active-game'; value: PersistedGame }
+      | { key: 'preferences'; value: GamePreferences }
+      | { key: 'import-preferences'; value: ImportPreferences };
   };
   coachProfiles: {
     key: ImportedProfile['platform'];
