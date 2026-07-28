@@ -62,33 +62,6 @@ test('starts as Black, shows its chosen difficulty, and resigns', async ({ page 
   await expect(page.getByRole('heading', { name: 'You resigned' })).toBeVisible();
 });
 
-test('shows enabled move classifications and clears them for restarted and new games', async ({
-  page,
-}) => {
-  await expect(page.locator('.live-classification')).toHaveCount(0);
-  await page.goto('/settings');
-  await page.getByLabel(/Move classifications/).check();
-  await page.goto('/play');
-  await startGame(page, 'White', 'Casual');
-  await clickSquare(page, 'e2');
-  await clickSquare(page, 'e4');
-  await expect(page.locator('.live-classification')).toHaveText('Book');
-
-  await page.getByRole('button', { name: 'Restart', exact: true }).click();
-  await page.getByRole('button', { name: 'Restart game' }).click();
-  await expect(page.locator('.history li')).toHaveCount(0);
-  await expect(page.locator('.live-classification')).toHaveCount(0);
-  await expect(page.locator('cg-board')).toBeVisible();
-  await settleLayout(page);
-
-  await clickSquare(page, 'e2');
-  await clickSquare(page, 'e4');
-  await expect(page.locator('.live-classification')).toHaveText('Book');
-  await page.getByRole('button', { name: 'New game' }).first().click();
-  await startGame(page, 'White', 'Casual');
-  await expect(page.locator('.live-classification')).toHaveCount(0);
-});
-
 test('supports drag-to-move and cancels a premove that becomes illegal', async ({ page }) => {
   await startGame(page, 'White', 'Advanced');
   await dragSquare(page, 'e2', 'e4');

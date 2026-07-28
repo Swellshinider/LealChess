@@ -107,42 +107,21 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   await page.goto('/settings');
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
   await expect(page.getByLabel(/Mute sounds/)).not.toBeChecked();
-  await expect(page.getByLabel(/Move classifications/)).not.toBeChecked();
 
-  await page.getByLabel(/Move classifications/).check();
   await clickSettingsSquare(page, 'e2');
   await expect(page.locator('square.move-dest')).toHaveCount(2);
   await clickSettingsSquare(page, 'e4');
   await expect(page.getByText('Black to move', { exact: true })).toBeVisible();
-  await expect(page.locator('.preview-classification')).toHaveText('Good');
-  await expect
-    .poll(() =>
-      page.locator('.preview-classification').evaluate((badge) => {
-        const board = badge.closest('.preview-board')!.getBoundingClientRect();
-        const bounds = badge.getBoundingClientRect();
-        const zIndex = Number(getComputedStyle(badge).zIndex);
-        return (
-          zIndex > 2 &&
-          bounds.left >= board.left &&
-          bounds.top >= board.top &&
-          bounds.right <= board.right &&
-          bounds.bottom <= board.bottom
-        );
-      }),
-    )
-    .toBe(true);
 
   await clickSettingsSquare(page, 'e7');
   await clickSettingsSquare(page, 'e5');
   await expect(page.getByText('White to move', { exact: true })).toBeVisible();
 
   await page.getByRole('button', { name: 'Reset board' }).click();
-  await expect(page.locator('.preview-classification')).toHaveCount(0);
   await expect(page.locator('square.last-move')).toHaveCount(0);
   await page.getByLabel('Board palette').selectOption('rosewood');
   await expect(page.locator('.preview-board')).toHaveAttribute('data-board-theme', 'rosewood');
   await page.reload();
-  await expect(page.getByLabel(/Move classifications/)).toBeChecked();
   await expect(page.getByLabel('Board palette')).toHaveValue('rosewood');
 
   await page.getByRole('button', { name: 'Clear all data' }).first().click();
@@ -150,7 +129,6 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   await page.getByRole('button', { name: 'Clear all data' }).last().click();
   await expect(page).toHaveURL(/\/$/);
   await page.goto('/settings');
-  await expect(page.getByLabel(/Move classifications/)).not.toBeChecked();
   await expect(page.getByLabel('Board palette')).toHaveValue('tournament');
 });
 

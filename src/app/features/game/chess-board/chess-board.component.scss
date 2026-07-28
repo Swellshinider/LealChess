@@ -22,51 +22,6 @@
   width: 100%;
 }
 
-.live-classification {
-  background: var(--surface-lowest);
-  border: 1px solid var(--primary);
-  border-radius: 4px;
-  color: var(--paper);
-  font-family: var(--font-utility);
-  font-size: clamp(0.48rem, 1.2vw, 0.7rem);
-  font-weight: 700;
-  padding: 3px 6px;
-  pointer-events: none;
-  position: absolute;
-  text-transform: uppercase;
-  white-space: nowrap;
-  z-index: 12;
-
-  &[data-phase='analyzing'] {
-    opacity: 0.82;
-  }
-
-  &[data-classification='book'],
-  &[data-classification='brilliant'],
-  &[data-classification='great'],
-  &[data-classification='best'] {
-    background: #315f5d;
-  }
-
-  &[data-classification='excellent'],
-  &[data-classification='good'] {
-    background: #416361;
-  }
-
-  &[data-classification='inaccuracy'] {
-    background: #8a6b27;
-  }
-
-  &[data-classification='mistake'],
-  &[data-classification='miss'] {
-    background: #9a572f;
-  }
-
-  &[data-classification='blunder'] {
-    background: var(--danger);
-  }
-}
-
 :host ::ng-deep cg-board {
   background: conic-gradient(
       var(--board-dark) 25%,

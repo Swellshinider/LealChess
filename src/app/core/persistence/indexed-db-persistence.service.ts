@@ -119,10 +119,6 @@ export class IndexedDbPersistenceService implements PersistencePort {
         typeof record['premovesEnabled'] === 'boolean'
           ? record['premovesEnabled']
           : DEFAULT_PREFERENCES.premovesEnabled,
-      showMoveClassifications:
-        typeof record['showMoveClassifications'] === 'boolean'
-          ? record['showMoveClassifications']
-          : DEFAULT_PREFERENCES.showMoveClassifications,
       boardTheme: this.isBoardTheme(record['boardTheme'])
         ? record['boardTheme']
         : DEFAULT_PREFERENCES.boardTheme,

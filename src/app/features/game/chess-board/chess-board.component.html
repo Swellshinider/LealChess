@@ -12,24 +12,6 @@
     remain available from the keyboard.
   </p>
 
-  @if (
-    state().preferences.showMoveClassifications &&
-    classification().phase !== 'idle' &&
-    classification().gameId === state().gameId &&
-    classification().square
-  ) {
-    <div
-      class="live-classification"
-      [attr.data-phase]="classification().phase"
-      [attr.data-classification]="classification().classification"
-      [attr.style]="classificationPosition(classification().square!)"
-      role="status"
-      aria-live="polite"
-    >
-      {{ classification().phase === 'analyzing' ? 'Analyzing…' : classification().label }}
-    </div>
-  }
-
   @if (promotion(); as pending) {
     <div
       appModalFocus

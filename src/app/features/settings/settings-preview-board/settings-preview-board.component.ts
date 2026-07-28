@@ -15,7 +15,6 @@ import type { Config } from '@lichess-org/chessground/config';
 import type { Dests, Key } from '@lichess-org/chessground/types';
 import type { BoardTheme, ChessColor } from '../../../core/game/game.types';
 import { SoundService, type SoundEvent } from '../../../core/sound/sound.service';
-import { boardOverlayPosition } from '../../../shared/chess/board-overlay-position';
 
 @Component({
   selector: 'app-settings-preview-board',
@@ -30,11 +29,9 @@ export class SettingsPreviewBoardComponent implements AfterViewInit, OnDestroy {
   readonly boardTheme = input.required<BoardTheme>();
   readonly orientation = input.required<ChessColor>();
   readonly showLegalMoves = input.required<boolean>();
-  readonly showMoveClassifications = input.required<boolean>();
   readonly soundEnabled = input.required<boolean>();
 
   protected readonly turn = signal<ChessColor>('white');
-  protected readonly classificationSquare = signal<Square | null>(null);
   private readonly sound = inject(SoundService);
   private chess = new Chess();
   private api: Api | null = null;
@@ -45,7 +42,6 @@ export class SettingsPreviewBoardComponent implements AfterViewInit, OnDestroy {
     effect(() => {
       this.orientation();
       this.showLegalMoves();
-      this.showMoveClassifications();
       this.sound.setEnabled(this.soundEnabled());
       this.syncBoard();
     });
@@ -73,13 +69,8 @@ export class SettingsPreviewBoardComponent implements AfterViewInit, OnDestroy {
   protected resetBoard(): void {
     this.chess = new Chess();
     this.lastMove = null;
-    this.classificationSquare.set(null);
     this.turn.set('white');
     this.syncBoard();
-  }
-
-  protected classificationPosition(square: Square): string {
-    return boardOverlayPosition(square, this.orientation());
   }
 
   private createConfig(): Config {
@@ -118,7 +109,6 @@ export class SettingsPreviewBoardComponent implements AfterViewInit, OnDestroy {
     try {
       const move = this.chess.move({ from: source, to: destination, promotion });
       this.lastMove = [source, destination];
-      this.classificationSquare.set(destination);
       this.turn.set(this.chess.turn() === 'w' ? 'white' : 'black');
       this.playMoveSound(move);
     } catch {

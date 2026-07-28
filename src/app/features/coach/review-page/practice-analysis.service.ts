@@ -6,7 +6,7 @@ import type {
   PositionAnalysisResult,
 } from '../../../core/engine/analysis-engine.types';
 import type { MoveInput, PromotionPiece } from '../../../core/game/game.types';
-import { isOpeningPosition } from '../../game/live-analysis/opening-index';
+import { isOpeningPosition } from '../analysis/opening-index';
 import { classifyReviewMove } from '../analysis/review-classification';
 import { moveToUci } from '../analysis/analysis-rules';
 import type { ImportedMove } from '../domain/coach.types';

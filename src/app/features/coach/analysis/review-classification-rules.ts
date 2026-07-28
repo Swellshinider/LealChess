@@ -1,16 +1,6 @@
-export type LiveMoveClassification =
-  | 'book'
-  | 'brilliant'
-  | 'great'
-  | 'best'
-  | 'excellent'
-  | 'good'
-  | 'inaccuracy'
-  | 'mistake'
-  | 'miss'
-  | 'blunder';
+import type { ReviewMoveClassification } from '../domain/coach.types';
 
-export interface ClassificationInput {
+export interface ReviewClassificationInput {
   book: boolean;
   playedBestMove: boolean;
   bestExpectedPoints: number;
@@ -19,7 +9,9 @@ export interface ClassificationInput {
   soundSacrifice: boolean;
 }
 
-export function classifyLiveMove(input: ClassificationInput): LiveMoveClassification {
+export function classifyReviewMoveQuality(
+  input: ReviewClassificationInput,
+): ReviewMoveClassification {
   const epsilon = 1e-9;
   if (input.book) return 'book';
   const loss = Math.max(0, input.bestExpectedPoints - input.playedExpectedPoints);
@@ -46,8 +38,4 @@ export function classifyLiveMove(input: ClassificationInput): LiveMoveClassifica
   if (loss <= 0.1 + epsilon) return 'inaccuracy';
   if (loss <= 0.2 + epsilon) return 'mistake';
   return 'blunder';
-}
-
-export function classificationLabel(classification: LiveMoveClassification): string {
-  return classification.charAt(0).toUpperCase() + classification.slice(1);
 }

@@ -18,14 +18,4 @@
     {{ orientation() }} orientation. {{ turn() }} to move. Move pieces for either side to preview
     your board settings.
   </p>
-  @if (showMoveClassifications() && classificationSquare(); as square) {
-    <span
-      class="preview-classification"
-      [attr.style]="classificationPosition(square)"
-      role="status"
-      aria-label="Move classification preview: Good"
-    >
-      Good
-    </span>
-  }
 </div>

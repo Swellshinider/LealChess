@@ -63,9 +63,6 @@ describe('SettingsPreviewBoardComponent', () => {
     afterMove?.('e2', 'e4', { premove: false });
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Black to move');
-    expect(fixture.nativeElement.querySelector('.preview-classification')?.textContent).toContain(
-      'Good',
-    );
     expect(sound.play).toHaveBeenCalledWith('move');
 
     afterMove?.('e7', 'e5', { premove: false });
@@ -77,7 +74,6 @@ describe('SettingsPreviewBoardComponent', () => {
     reset.click();
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('White to move');
-    expect(fixture.nativeElement.querySelector('.preview-classification')).toBeNull();
     expect(lastBoardConfig().lastMove).toBeUndefined();
   });
 
@@ -123,7 +119,6 @@ async function createFixture(sound: {
   fixture.componentRef.setInput('boardTheme', 'tournament');
   fixture.componentRef.setInput('orientation', 'white');
   fixture.componentRef.setInput('showLegalMoves', true);
-  fixture.componentRef.setInput('showMoveClassifications', true);
   fixture.componentRef.setInput('soundEnabled', true);
   fixture.detectChanges();
   return fixture;

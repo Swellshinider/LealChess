@@ -17,8 +17,6 @@ import type { Square } from 'chess.js';
 import { GameController } from '../../../core/game/game-controller.service';
 import type { MoveInput, PromotionPiece } from '../../../core/game/game.types';
 import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
-import { boardOverlayPosition } from '../../../shared/chess/board-overlay-position';
-import { LiveMoveAnalysisService } from '../live-analysis/live-move-analysis.service';
 
 interface PendingPromotion {
   move: Omit<MoveInput, 'promotion'>;
@@ -36,11 +34,9 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy {
   @ViewChild('boardHost', { static: true }) private boardHost!: ElementRef<HTMLElement>;
 
   private readonly controller = inject(GameController);
-  private readonly liveAnalysis = inject(LiveMoveAnalysisService);
   protected readonly promotion = signal<PendingPromotion | null>(null);
   protected readonly promotionPieces: readonly PromotionPiece[] = ['q', 'r', 'b', 'n'];
   protected readonly state = this.controller.state;
-  protected readonly classification = this.liveAnalysis.state;
   private api: Api | null = null;
   private shapes: DrawShape[] = [];
   private redrawFrame: number | null = null;
@@ -121,10 +117,6 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy {
 
   protected pieceLabel(piece: PromotionPiece): string {
     return { q: 'Queen', r: 'Rook', b: 'Bishop', n: 'Knight' }[piece];
-  }
-
-  protected classificationPosition(square: string): string {
-    return boardOverlayPosition(square, this.state().orientation);
   }
 
   private createConfig(): Config {

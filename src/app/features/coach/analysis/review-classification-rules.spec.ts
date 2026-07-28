@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { classifyLiveMove, type ClassificationInput } from './move-classification';
+import {
+  classifyReviewMoveQuality,
+  type ReviewClassificationInput,
+} from './review-classification-rules';
 
-const base: ClassificationInput = {
+const base: ReviewClassificationInput = {
   book: false,
   playedBestMove: false,
   bestExpectedPoints: 0.65,
@@ -10,11 +13,11 @@ const base: ClassificationInput = {
   soundSacrifice: false,
 };
 
-describe('classifyLiveMove', () => {
+describe('classifyReviewMoveQuality', () => {
   it('uses the special-classification precedence', () => {
-    expect(classifyLiveMove({ ...base, book: true })).toBe('book');
+    expect(classifyReviewMoveQuality({ ...base, book: true })).toBe('book');
     expect(
-      classifyLiveMove({
+      classifyReviewMoveQuality({
         ...base,
         playedBestMove: true,
         soundSacrifice: true,
@@ -22,15 +25,15 @@ describe('classifyLiveMove', () => {
       }),
     ).toBe('brilliant');
     expect(
-      classifyLiveMove({
+      classifyReviewMoveQuality({
         ...base,
         playedBestMove: true,
         secondBestExpectedPoints: 0.55,
       }),
     ).toBe('great');
-    expect(classifyLiveMove({ ...base, playedBestMove: true })).toBe('best');
+    expect(classifyReviewMoveQuality({ ...base, playedBestMove: true })).toBe('best');
     expect(
-      classifyLiveMove({
+      classifyReviewMoveQuality({
         ...base,
         bestExpectedPoints: 0.7,
         playedExpectedPoints: 0.55,
@@ -49,7 +52,7 @@ describe('classifyLiveMove', () => {
     [0.200_001, 'blunder'],
   ] as const)('classifies an expected-points loss of %s as %s', (loss, expected) => {
     expect(
-      classifyLiveMove({
+      classifyReviewMoveQuality({
         ...base,
         bestExpectedPoints: 0.65,
         playedExpectedPoints: 0.65 - loss,

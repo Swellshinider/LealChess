@@ -1,8 +1,8 @@
 import { Chess, type Color, type PieceSymbol } from 'chess.js';
 import type { PositionAnalysisResult } from '../../../core/engine/analysis-engine.types';
-import { classifyLiveMove } from '../../game/live-analysis/move-classification';
 import type { ImportedMove, ReviewMoveClassification } from '../domain/coach.types';
 import { moveToUci } from './analysis-rules';
+import { classifyReviewMoveQuality } from './review-classification-rules';
 
 export function classifyReviewMove(
   move: ImportedMove,
@@ -14,7 +14,7 @@ export function classifyReviewMove(
   const playedExpectedPoints = expectedPoints(played);
   const secondBest = best.variations?.find((variation) => variation.rank === 2);
 
-  return classifyLiveMove({
+  return classifyReviewMoveQuality({
     book,
     playedBestMove: best.bestMove ? moveToUci(best.bestMove) === move.uci : false,
     bestExpectedPoints,
