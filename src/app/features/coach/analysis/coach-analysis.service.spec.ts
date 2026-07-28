@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto';
 import { TestBed } from '@angular/core/testing';
 import { IDBFactory } from 'fake-indexeddb';
+import { Chess, type Square } from 'chess.js';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   ANALYSIS_ENGINE_PORT,
@@ -42,22 +43,28 @@ class FakeAnalysisEngine implements AnalysisEnginePort {
       });
     }
     const played = request.searchMove;
+    const bestMove = played ?? this.bestMove(request.fen);
     return Promise.resolve({
-      bestMove:
-        played === 'e2e3'
-          ? { from: 'e2', to: 'e3' }
-          : this.requests.length === 1
-            ? { from: 'e2', to: this.matchFirst ? 'e3' : 'e4' }
-            : { from: 'g1', to: 'f3' },
+      bestMove: {
+        from: bestMove.slice(0, 2) as Square,
+        to: bestMove.slice(2, 4) as Square,
+      },
       evaluation: {
         score: { kind: 'centipawn', value: played ? -100 : 30 },
         depth: 14,
       },
-      principalVariation: [played ?? (this.requests.length === 1 ? 'e2e4' : 'g1f3')],
+      principalVariation: [bestMove],
     });
   }
 
   destroy(): void {}
+
+  private bestMove(fen: string): string {
+    const chess = new Chess(fen);
+    if (chess.get('e2')?.color === 'w') return this.matchFirst ? 'e2e3' : 'e2e4';
+    if (chess.turn() === 'b') return 'e7e5';
+    return 'g1f3';
+  }
 }
 
 describe('CoachAnalysisService', () => {
@@ -74,7 +81,7 @@ describe('CoachAnalysisService', () => {
     });
   });
 
-  it('analyzes only learner moves and reuses the best evaluation for a matching move', async () => {
+  it('stores every review move while preserving learner-only training moves', async () => {
     const service = TestBed.inject(CoachAnalysisService);
     const game = importedGame();
     await service.load(game, 'white');
@@ -84,13 +91,29 @@ describe('CoachAnalysisService', () => {
       'best',
       'e2e3',
       'best',
+      'best',
+    ]);
+    expect(engine.requests.filter((request) => !request.searchMove)).toEqual([
+      expect.objectContaining({ multiPv: 2 }),
+      expect.objectContaining({ multiPv: 2 }),
+      expect.objectContaining({ multiPv: 2 }),
     ]);
     expect(service.analysis()).toMatchObject({
       status: 'complete',
       totalUserMoves: 2,
       moves: [
-        { ply: 1, classification: 'mistake', category: 'opening' },
-        { ply: 3, classification: 'good', centipawnLoss: 0 },
+        {
+          ply: 1,
+          classification: 'mistake',
+          reviewClassification: 'book',
+          category: 'opening',
+        },
+        { ply: 3, classification: 'good', reviewClassification: 'best', centipawnLoss: 0 },
+      ],
+      reviewMoves: [
+        { ply: 1, reviewClassification: 'book' },
+        { ply: 2, reviewClassification: 'book' },
+        { ply: 3, reviewClassification: 'best' },
       ],
     });
     await expect(TestBed.inject(CoachRepositoryService).analysis(game.key)).resolves.toMatchObject({
@@ -110,15 +133,15 @@ describe('CoachAnalysisService', () => {
     service.cancel();
     await cancelledRun;
 
-    expect(service.state()).toMatchObject({ phase: 'partial', completed: 1, total: 2 });
+    expect(service.state()).toMatchObject({ phase: 'partial', completed: 1, total: 3 });
     await expect(TestBed.inject(CoachRepositoryService).analysis(game.key)).resolves.toMatchObject({
       status: 'partial',
       moves: [{ ply: 1 }],
     });
 
     await service.analyze(game, 'white');
-    expect(service.state()).toMatchObject({ phase: 'complete', completed: 2, total: 2 });
-    expect(engine.requests).toHaveLength(3);
+    expect(service.state()).toMatchObject({ phase: 'complete', completed: 3, total: 3 });
+    expect(engine.requests).toHaveLength(4);
   });
 
   it('exposes engine startup before analysis progress begins', async () => {

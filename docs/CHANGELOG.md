@@ -6,6 +6,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 28-07-2026
+
+### Added
+
+- Full move-quality labels and a color-coded progress rail for imported-game analysis.
+- Legal two-sided Practice exploration with persistent board annotations and explicit reset controls.
+
+### Changed
+
+- Simplified game reviews into a board-first workspace with compact player identities, contextual
+  engine details, and responsive controls.
+
+### Fixed
+
+- Keep Review board coordinates visible and the desktop workspace within the viewport.
+- Classify complete opening lines as Book and include opponent moves in game-review analysis.
+
 ## [Unreleased] - 27-07-2026
 
 ### Added
