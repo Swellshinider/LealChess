@@ -157,8 +157,7 @@
 }
 
 .route-links a,
-.utility-links a,
-.placeholder {
+.utility-links a {
   align-items: center;
   border: 1px solid transparent;
   color: var(--mist);
@@ -204,11 +203,6 @@
   border-top: 1px solid var(--outline-variant, #404848);
   margin-top: auto;
   padding-bottom: 22px;
-}
-
-.placeholder {
-  cursor: not-allowed;
-  opacity: 0.52;
 }
 
 .mobile-header,
@@ -365,29 +359,6 @@
     svg {
       height: 18px;
       width: 18px;
-    }
-  }
-
-  .drawer-placeholders {
-    border-top: 1px solid var(--outline-variant, #404848);
-    display: grid;
-    gap: 8px;
-    margin-top: auto;
-    padding: 18px 30px 28px;
-
-    span {
-      color: var(--mist);
-      display: flex;
-      font-family: var(--font-utility);
-      font-size: 0.72rem;
-      justify-content: space-between;
-      opacity: 0.5;
-      padding-block: 8px;
-      text-transform: uppercase;
-    }
-
-    small {
-      font-size: 0.55rem;
     }
   }
 }

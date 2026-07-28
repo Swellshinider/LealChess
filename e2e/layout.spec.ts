@@ -90,17 +90,29 @@ test('adapts Play from a landscape tablet desk to a portrait board-first stack',
     .toBe(true);
 });
 
-test('launches each workspace from the landing page and redirects unknown routes home', async ({
-  page,
-}) => {
+test('launches each workspace and provides project help', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'LealChess' })).toBeVisible();
   await expect(page.getByRole('link', { name: /Play/ })).toHaveAttribute('href', '/play');
   await expect(page.getByRole('link', { name: /Learn/ })).toHaveAttribute('href', '/learn');
   await expect(page.getByRole('link', { name: /Settings/ })).toHaveAttribute('href', '/settings');
 
+  await page.goto('/help');
+  await expect(page.getByRole('heading', { name: 'Help' })).toBeVisible();
+  await expect(page.getByText('v0.1.0-beta', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Swellshinider/LealChess' })).toHaveAttribute(
+    'href',
+    'https://github.com/Swellshinider/LealChess',
+  );
+});
+
+test('keeps unknown routes visible and offers a route home', async ({ page }) => {
   await page.goto('/not-a-route');
+  await expect(page).toHaveURL(/\/not-a-route$/);
+  await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
+  await page.getByRole('link', { name: 'Go to home' }).click();
   await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('heading', { name: 'LealChess' })).toBeVisible();
 });
 
 test('previews and persists board preferences, then clears LealChess data', async ({ page }) => {

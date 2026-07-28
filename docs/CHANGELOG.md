@@ -11,6 +11,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- A Help page with release and repository details, plus a dedicated recovery page for unknown URLs.
 - Completed Stockfish games can be archived, opened directly in Review, and analyzed automatically.
 - Archived LealChess, Chess.com, and Lichess games can be deleted with their saved analysis.
 - Full move-quality labels and a color-coded progress rail for imported-game analysis.
@@ -23,6 +24,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Opened the Help page into a quieter, more spacious layout that makes better use of wide screens.
 - Simplified game reviews into a board-first workspace with compact player identities, contextual
   engine details, and responsive controls.
 - Simplified Explorer into a viewport-fitting board-first workspace with restrained controls and an
