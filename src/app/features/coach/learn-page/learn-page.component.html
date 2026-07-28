@@ -179,12 +179,14 @@
               <article [attr.data-outcome]="outcome(game)">
                 <div class="players">
                   <p>
-                    <span class="piece" aria-hidden="true">♔</span>
+                    <span class="piece piece-white" title="White pieces" aria-hidden="true">♙</span>
+                    <span class="sr-only">White:</span>
                     <strong>{{ game.white.username }}</strong>
                     <span>{{ game.white.rating ?? '—' }}</span>
                   </p>
                   <p>
-                    <span class="piece" aria-hidden="true">♚</span>
+                    <span class="piece piece-black" title="Black pieces" aria-hidden="true">♟</span>
+                    <span class="sr-only">Black:</span>
                     <strong>{{ game.black.username }}</strong>
                     <span>{{ game.black.rating ?? '—' }}</span>
                   </p>

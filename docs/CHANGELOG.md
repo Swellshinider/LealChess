@@ -38,6 +38,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Fit the Play board and game controls within desktop landscape viewports without page-level
   scrollbars.
 - Keep long move histories contained when Board & feedback is expanded.
+- Make White and Black player markers immediately distinguishable in the imported game list.
 
 ## [Unreleased] - 24-07-2026
 

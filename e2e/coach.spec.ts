@@ -124,6 +124,14 @@ test('shows rating progress and filters the game archive', async ({ page }) => {
   await expect(page.locator('.game-list article[data-outcome="win"]')).toHaveCount(1);
   await expect(page.locator('.game-list article[data-outcome="draw"]')).toHaveCount(1);
   await expect(page.locator('.game-list article[data-outcome="loss"]')).toHaveCount(1);
+  const whitePiece = page.locator('.game-list article').first().locator('.piece-white');
+  const blackPiece = page.locator('.game-list article').first().locator('.piece-black');
+  await expect(whitePiece).toHaveText('♙');
+  await expect(whitePiece).toHaveCSS('color', 'rgb(237, 240, 236)');
+  await expect(whitePiece).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await expect(blackPiece).toHaveText('♟');
+  await expect(blackPiece).toHaveCSS('color', 'rgb(1, 16, 23)');
+  await expect(blackPiece).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
 
   await page.getByRole('combobox', { name: 'Result', exact: true }).selectOption('loss');
   await expect(page.locator('.game-list article')).toHaveCount(1);

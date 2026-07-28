@@ -343,13 +343,32 @@
 
 .players {
   p {
+    align-items: center;
+    display: flex;
     margin: 2px 0;
   }
 
   .piece {
-    color: var(--amber);
-    display: inline-block;
-    width: 21px;
+    align-items: center;
+    display: inline-flex;
+    flex: 0 0 23px;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.35rem;
+    height: 23px;
+    justify-content: center;
+    line-height: 1;
+    margin-right: 8px;
+    width: 23px;
+  }
+
+  .piece-white {
+    color: var(--paper);
+  }
+
+  .piece-black {
+    color: var(--surface-lowest);
+    paint-order: stroke fill;
+    -webkit-text-stroke: 0.7px var(--mist);
   }
 
   strong {
