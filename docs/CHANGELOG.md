@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD024 (MD024/no-duplicate-heading: Multiple headings with the same content)-->
 # Changelog
 
 All notable changes to this project will be documented in this file.
