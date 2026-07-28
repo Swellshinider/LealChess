@@ -15,6 +15,7 @@
   @if (
     state().preferences.showMoveClassifications &&
     classification().phase !== 'idle' &&
+    classification().gameId === state().gameId &&
     classification().square
   ) {
     <div
