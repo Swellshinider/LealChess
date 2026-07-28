@@ -14,6 +14,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Three additional board palettes: Rosewood, Green felt, and Blue steel.
 - Optional live Stockfish move classifications for player moves, including opening-book,
   best-move, missed-win, and accuracy feedback.
+- Platform-specific rating trends and result, platform, speed, and date filters for imported games.
 
 ### Changed
 
@@ -23,6 +24,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Moved Play to `/play`, account importing from Learn to Settings, and Board & feedback controls
   out of the active game.
 - Simplified Learn into a saved-study dashboard with a Settings prompt when no games are available.
+- Focused Learn around progress and study priorities, with color-coded win, loss, and draw rows and
+  secondary record details kept out of the main reading path.
 - Redesigned Play, Learn, and Review as responsive training-desk workspaces with collapsible
   desktop and tablet navigation and an accessible mobile drawer.
 - Show the LealChess logo and contextual tooltips in the collapsed navigation rail.
@@ -35,6 +38,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Fit the Play board and game controls within desktop landscape viewports without page-level
   scrollbars.
 - Keep long move histories contained when Board & feedback is expanded.
+- Make White and Black player markers immediately distinguishable in the imported game list.
 
 ## [Unreleased] - 24-07-2026
 
