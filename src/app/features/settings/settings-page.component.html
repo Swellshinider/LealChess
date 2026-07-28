@@ -123,17 +123,6 @@
               (change)="updateBoolean('premovesEnabled', $event)"
             />
           </label>
-          <label class="switch-row">
-            <span>
-              <strong>Move classifications</strong>
-              <small>Grade your moves while you play.</small>
-            </span>
-            <input
-              type="checkbox"
-              [checked]="preferences().showMoveClassifications"
-              (change)="updateBoolean('showMoveClassifications', $event)"
-            />
-          </label>
           <label class="select-row">
             <span>Board palette</span>
             <select [value]="preferences().boardTheme" (change)="updateTheme($event)">
@@ -155,7 +144,6 @@
           [boardTheme]="preferences().boardTheme"
           [orientation]="preferences().orientation"
           [showLegalMoves]="preferences().showLegalMoves"
-          [showMoveClassifications]="preferences().showMoveClassifications"
           [soundEnabled]="preferences().soundEnabled"
         />
       </div>

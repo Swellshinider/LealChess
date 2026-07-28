@@ -67,6 +67,7 @@ describe('IndexedDbPersistenceService', () => {
       soundEnabled: false,
       showLegalMoves: false,
       premovesEnabled: true,
+      showMoveClassifications: true,
       boardTheme: 'rosewood',
       orientation: 'black',
       difficulty: 'advanced',
@@ -75,8 +76,12 @@ describe('IndexedDbPersistenceService', () => {
 
     const restored = await repository.restore();
     expect(restored.preferences).toEqual({
-      ...legacyPreferences,
-      showMoveClassifications: false,
+      soundEnabled: false,
+      showLegalMoves: false,
+      premovesEnabled: true,
+      boardTheme: 'rosewood',
+      orientation: 'black',
+      difficulty: 'advanced',
     });
   });
 });

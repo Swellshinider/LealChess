@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { ANALYSIS_ENGINE_PORT } from '../../../core/engine/analysis-engine.types';
 import type { ChessColor } from '../../../shared/chess/chess.types';
-import { openingBookPlyCount } from '../../game/live-analysis/opening-index';
+import { openingBookPlyCount } from './opening-index';
 import { CoachRepositoryService } from '../data/coach-repository.service';
 import type { GameAnalysis, ImportedGame, MoveAnalysis } from '../domain/coach.types';
 import {

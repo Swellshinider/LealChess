@@ -94,10 +94,7 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
     void this.coach.retry(platform);
   }
 
-  protected updateBoolean(
-    key: 'showLegalMoves' | 'premovesEnabled' | 'showMoveClassifications',
-    event: Event,
-  ): void {
+  protected updateBoolean(key: 'showLegalMoves' | 'premovesEnabled', event: Event): void {
     this.savePreferences({ [key]: (event.target as HTMLInputElement).checked });
   }
 

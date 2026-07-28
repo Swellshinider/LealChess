@@ -78,19 +78,3 @@
   height: 100%;
   width: 100%;
 }
-
-.preview-classification {
-  background: #416361;
-  border: 1px solid var(--primary);
-  border-radius: 4px;
-  color: var(--paper);
-  font-family: var(--font-utility);
-  font-size: clamp(0.48rem, 1.2vw, 0.68rem);
-  font-weight: 700;
-  padding: 3px 5px;
-  pointer-events: none;
-  position: absolute;
-  text-transform: uppercase;
-  white-space: nowrap;
-  z-index: 12;
-}

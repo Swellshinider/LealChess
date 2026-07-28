@@ -52,7 +52,6 @@ export interface GamePreferences {
   soundEnabled: boolean;
   showLegalMoves: boolean;
   premovesEnabled: boolean;
-  showMoveClassifications: boolean;
   boardTheme: BoardTheme;
   orientation: ChessColor;
   difficulty: DifficultyId;
@@ -91,7 +90,6 @@ export const DEFAULT_PREFERENCES: GamePreferences = {
   soundEnabled: true,
   showLegalMoves: true,
   premovesEnabled: true,
-  showMoveClassifications: false,
   boardTheme: 'tournament',
   orientation: 'white',
   difficulty: 'casual',

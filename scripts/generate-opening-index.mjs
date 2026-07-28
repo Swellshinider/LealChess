@@ -31,7 +31,7 @@ export const OPENING_POSITION_DATA = \`${[...positions].sort().join('\n')}\`;
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const outputPath = resolve(
   scriptDirectory,
-  '../src/app/features/game/live-analysis/opening-positions.generated.ts',
+  '../src/app/features/coach/analysis/opening-positions.generated.ts',
 );
 await writeFile(outputPath, output, 'utf8');
 console.log(`Wrote ${positions.size} opening positions to ${outputPath}`);

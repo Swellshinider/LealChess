@@ -22,9 +22,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Simplified game reviews into a board-first workspace with compact player identities, contextual
   engine details, and responsive controls.
 
+### Removed
+
+- Live move classifications from Play and the related Settings control and preview.
+
 ### Fixed
 
-- Clear stale move-classification badges when restarting or starting a new game.
 - Keep Review board coordinates visible and the desktop workspace within the viewport.
 - Classify complete opening lines as Book and include opponent moves in game-review analysis.
 
