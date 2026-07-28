@@ -1,0 +1,67 @@
+<section class="practice-tree" aria-labelledby="practice-tree-heading">
+  <div class="tree-heading">
+    <div>
+      <span>Explored moves</span>
+      <h3 id="practice-tree-heading">Your variations</h3>
+    </div>
+    <small>Select a move, then play to branch.</small>
+  </div>
+
+  <div class="tree-score" role="tree" aria-label="Practice variations">
+    <button
+      type="button"
+      class="start-node"
+      role="treeitem"
+      [class.current]="isSelected(session.rootId)"
+      [attr.aria-current]="isSelected(session.rootId) ? 'step' : null"
+      (click)="nodeSelected.emit(session.rootId)"
+    >
+      Start
+    </button>
+
+    <ng-template #branch let-parentId>
+      @for (child of children(parentId); track child.id) {
+        <div
+          class="tree-branch"
+          role="group"
+          [class.side-variation]="!$first"
+          [class.selected-line]="isOnSelectedLine(child.id)"
+        >
+          <span class="branch-mark" aria-hidden="true">{{ $first ? '›' : '(' }}</span>
+          <span class="move-number">{{ moveNumber(child.ply) }}</span>
+          <button
+            type="button"
+            role="treeitem"
+            [class.current]="isSelected(child.id)"
+            [attr.data-classification]="child.assessment?.classification ?? null"
+            [attr.aria-current]="isSelected(child.id) ? 'step' : null"
+            [attr.aria-label]="child.san + ', ' + classificationLabel(child)"
+            (click)="nodeSelected.emit(child.id)"
+          >
+            <span>{{ child.san }}</span>
+            @if (child.assessment; as assessment) {
+              <i>{{ classificationLabel(child) }}</i>
+              @if (assessment.provisional) {
+                <small>depth {{ assessment.depth }}</small>
+              }
+            } @else if (child.analysisError) {
+              <i>Unavailable</i>
+            } @else {
+              <i>Analyzing</i>
+            }
+          </button>
+          @if (child.children.length) {
+            <ng-container
+              *ngTemplateOutlet="branch; context: { $implicit: child.id }"
+            ></ng-container>
+          }
+          @if (!$first) {
+            <span class="branch-mark" aria-hidden="true">)</span>
+          }
+        </div>
+      }
+    </ng-template>
+
+    <ng-container *ngTemplateOutlet="branch; context: { $implicit: session.rootId }"></ng-container>
+  </div>
+</section>

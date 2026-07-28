@@ -174,7 +174,7 @@ test('analyzes locally, caches the result, and opens a missed position', async (
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'Real analysis worker smoke test');
-  test.setTimeout(60_000);
+  test.setTimeout(90_000);
   await page.getByLabel('Lichess username').fill('Learner');
   await page.getByRole('button', { name: 'Import games' }).click();
   await expect(page.getByText('Added 1 game.')).toBeVisible();
@@ -205,14 +205,35 @@ test('analyzes locally, caches the result, and opens a missed position', async (
   await page.keyboard.press('ArrowRight');
   await expect(practiceTab).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByText(/Move a piece for/)).toHaveCount(0);
+  const previousPosition = page.getByRole('button', { name: 'Previous position' });
+  const nextPosition = page.getByRole('button', { name: 'Next position' });
+  await expect(previousPosition).toBeDisabled();
+  await nextPosition.click();
+  await expect(previousPosition).toBeEnabled();
+  await expect(page.getByText(/Replaying the opponent’s last move/)).toHaveCount(0);
+  await expect(page.locator('.review-board square.last-move')).toHaveCount(2);
+  await previousPosition.click();
+  await expect(previousPosition).toBeDisabled();
   await moveReviewPiece(page, 'a2', 'a3');
-  await expect(page.getByText('Another idea.')).toBeVisible();
+  await expect(page.locator('.practice-classification')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: 'Three ways forward' })).toBeVisible();
+  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(3);
   await moveReviewPiece(page, 'b8', 'c6');
-  await expect(page.getByText('2 moves explored')).toBeVisible();
+  await expect(page.getByText('2 moves across your variations')).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.getByRole('treeitem', { name: 'Start' }).click();
+  await moveReviewPiece(page, 'c2', 'c4');
+  await expect(page.getByText('3 moves across your variations')).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByRole('treeitem', { name: /^a3,/ })).toBeVisible();
+  await expect(page.getByRole('treeitem', { name: /^c4,/ })).toBeVisible();
+  await expect(page.locator('.candidate-lines li')).toHaveCount(3, { timeout: 15_000 });
   await drawReviewArrow(page, 'c2', 'c4');
-  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(1);
+  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(4);
   await page.getByRole('button', { name: 'Reset' }).click();
-  await expect(page.getByText('2 moves explored')).toHaveCount(0);
+  await expect(page.getByText(/moves across your variations/)).toHaveCount(0);
   await page.getByRole('button', { name: 'Reveal move' }).focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(1);

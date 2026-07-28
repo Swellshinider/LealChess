@@ -650,15 +650,17 @@ app-review-page {
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
-    justify-content: center;
+    gap: 12px;
+    justify-content: flex-start;
     min-height: 0;
-    padding: clamp(18px, 3cqw, 28px);
+    overflow: auto;
+    padding: clamp(15px, 2.2cqw, 22px);
 
     h2 {
       font-family: var(--font-display);
-      font-size: clamp(1.8rem, 3cqw, 2.3rem);
+      font-size: clamp(1.55rem, 2.6cqw, 2rem);
       line-height: 0.95;
-      margin: 5px 0 12px;
+      margin: 4px 0 8px;
     }
   }
 
@@ -680,11 +682,19 @@ app-review-page {
     }
   }
 
+  .opponent-replay {
+    color: var(--primary);
+    display: block;
+    font-family: var(--font-utility);
+    font-size: 0.54rem;
+    margin-top: 6px;
+  }
+
   .puzzle-feedback {
     border-left: 3px solid var(--primary-container);
     display: grid;
     gap: 4px;
-    margin: 22px 0;
+    margin: 0;
     padding: 9px 12px;
 
     &[data-status='incorrect'] {
@@ -708,16 +718,119 @@ app-review-page {
       font-family: var(--font-utility);
       font-size: 0.55rem;
     }
+
+    .practice-analysis-error {
+      color: #f2b0aa;
+    }
+
+    button {
+      justify-self: start;
+    }
+  }
+
+  .candidate-lines {
+    border-bottom: 1px solid rgb(200 213 207 / 14%);
+    border-top: 1px solid rgb(200 213 207 / 14%);
+    padding: 10px 0;
+
+    ol {
+      display: grid;
+      gap: 4px;
+      list-style: none;
+      margin: 8px 0 0;
+      padding: 0;
+    }
+
+    li {
+      align-items: center;
+      display: grid;
+      gap: 7px;
+      grid-template-columns: 16px 18px 46px minmax(0, 1fr);
+      min-height: 28px;
+
+      > span:last-child {
+        color: var(--mist);
+        font-family: var(--font-utility);
+        font-size: 0.55rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      strong {
+        color: var(--paper);
+        font-family: var(--font-utility);
+        font-size: 0.58rem;
+      }
+    }
+  }
+
+  .candidate-heading {
+    align-items: end;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+
+    span,
+    small {
+      color: var(--mist);
+      font-family: var(--font-utility);
+      font-size: 0.5rem;
+    }
+
+    span {
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    h3 {
+      color: var(--paper);
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      line-height: 1;
+      margin: 2px 0 0;
+    }
+
+    small {
+      text-align: right;
+    }
+  }
+
+  .candidate-rank {
+    color: var(--amber);
+    font-family: var(--font-utility);
+    font-size: 0.55rem;
+    text-align: center;
+  }
+
+  .candidate-rule {
+    background: #4f8d78;
+    border-radius: 999px;
+    display: block;
+    width: 18px;
+  }
+
+  .terminal-position {
+    border-bottom: 1px solid rgb(200 213 207 / 14%);
+    color: var(--mist);
+    font-size: 0.72rem;
+    margin: 0;
+    padding-bottom: 12px;
   }
 
   .practice-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+    margin-top: auto;
+
+    button {
+      flex: 1 1 120px;
+    }
   }
 
   .practice-help {
-    margin-top: 14px;
+    margin-top: 0;
   }
 
   .promotion-backdrop {

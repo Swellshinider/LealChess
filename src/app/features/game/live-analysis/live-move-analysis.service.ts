@@ -36,13 +36,12 @@ export class LiveMoveAnalysisService {
       const state = this.controller.state();
       const move = state.moves.at(-1);
       const key = move ? `${state.gameId}:${move.ply}` : '';
-      if (
-        !state.preferences.showMoveClassifications ||
-        !move ||
-        move.color !== state.playerColor ||
-        key === this.lastMoveKey
-      ) {
-        if (!state.preferences.showMoveClassifications) this.cancel();
+      if (!state.preferences.showMoveClassifications || !move) {
+        this.lastMoveKey = '';
+        this.cancel();
+        return;
+      }
+      if (move.color !== state.playerColor || key === this.lastMoveKey) {
         return;
       }
       this.lastMoveKey = key;
