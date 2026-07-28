@@ -1,30 +1,37 @@
 :host {
   display: block;
-  min-height: 100dvh;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 .help-shell {
   display: flex;
-  min-height: 100dvh;
+  height: 100dvh;
 }
 
 .help-page {
-  background: linear-gradient(135deg, rgb(82 122 120 / 8%), transparent 38%), var(--surface-lowest);
+  background: var(--surface-lowest);
   flex: 1 1 auto;
   min-width: 0;
   overflow: auto;
-  padding: clamp(36px, 7vw, 88px) clamp(20px, 6vw, 80px);
+  padding: clamp(44px, 6vh, 72px) clamp(32px, 6vw, 96px);
 }
 
 .help-content {
   display: grid;
-  gap: clamp(42px, 6vw, 70px);
+  gap: clamp(58px, 8vh, 100px);
+  grid-template-rows: auto 1fr auto;
   margin: 0 auto;
-  max-width: 880px;
+  max-width: 1440px;
+  min-height: 100%;
+  width: 100%;
 }
 
 header {
-  max-width: 700px;
+  align-items: end;
+  column-gap: clamp(60px, 10vw, 160px);
+  display: grid;
+  grid-template-columns: minmax(220px, 0.65fr) minmax(420px, 1.35fr);
 }
 
 .eyebrow,
@@ -51,18 +58,18 @@ h3 {
 }
 
 h1 {
-  font-size: clamp(3rem, 8vw, 5.2rem);
+  font-size: clamp(3.8rem, 7vw, 6.4rem);
   letter-spacing: -0.035em;
-  line-height: 0.88;
-  margin-bottom: 20px;
+  line-height: 0.82;
+  margin-bottom: 0;
 }
 
 .introduction {
   color: var(--mist);
-  font-size: clamp(1rem, 2vw, 1.18rem);
+  font-size: clamp(1.05rem, 1.6vw, 1.28rem);
   line-height: 1.65;
   margin-bottom: 0;
-  max-width: 650px;
+  max-width: 720px;
 }
 
 h2 {
@@ -71,26 +78,31 @@ h2 {
   margin-bottom: 22px;
 }
 
-section > p:last-child {
+.help-main {
+  align-items: center;
+  display: grid;
+  gap: clamp(64px, 10vw, 150px);
+  grid-template-columns: minmax(0, 1.7fr) minmax(270px, 0.65fr);
+}
+
+.privacy {
+  max-width: 380px;
+}
+
+.privacy > p:last-child {
   color: var(--mist);
   line-height: 1.65;
   margin-bottom: 0;
-  max-width: 660px;
 }
 
 .capabilities {
   display: grid;
+  gap: clamp(28px, 4vw, 64px);
   grid-template-columns: repeat(3, 1fr);
 }
 
 .capabilities article {
-  border-left: 1px solid var(--outline-variant);
-  padding: 2px clamp(16px, 3vw, 28px);
-
-  &:first-child {
-    border-left: 0;
-    padding-left: 0;
-  }
+  max-width: 250px;
 }
 
 .capabilities h3 {
@@ -107,24 +119,16 @@ section > p:last-child {
 }
 
 .project-record {
-  background: var(--surface-low);
+  border-top: 1px solid var(--outline-variant);
   display: grid;
-  grid-template-columns: 0.75fr 1.6fr 0.75fr;
+  gap: clamp(28px, 5vw, 80px);
+  grid-template-columns: 0.8fr 1.5fr 0.8fr;
   margin: 0;
-  padding: 18px 22px;
+  padding-top: 20px;
 }
 
 .project-record div {
   min-width: 0;
-  padding: 0 20px;
-
-  &:first-child {
-    padding-left: 0;
-  }
-
-  &:last-child {
-    padding-right: 0;
-  }
 }
 
 .project-record dt {
@@ -149,48 +153,63 @@ section > p:last-child {
   text-underline-offset: 4px;
 }
 
+@media (max-width: 1100px) {
+  .help-content {
+    gap: 60px;
+    grid-template-rows: auto;
+  }
+
+  header {
+    align-items: start;
+    gap: 28px;
+    grid-template-columns: 1fr;
+  }
+
+  .help-main {
+    align-items: start;
+    gap: 56px;
+    grid-template-columns: 1fr;
+  }
+
+  .privacy {
+    max-width: 660px;
+  }
+}
+
 @media (max-width: 767px) {
+  :host {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
   .help-shell {
     display: block;
+    height: auto;
+    min-height: 100dvh;
   }
 
   .help-page {
     min-height: calc(100dvh - 64px);
-    padding: 42px 20px 50px;
+    padding: 48px 20px 52px;
   }
 
   .help-content {
-    gap: 42px;
+    gap: 56px;
   }
 
   .capabilities {
+    gap: 28px;
     grid-template-columns: 1fr;
   }
 
-  .capabilities article,
-  .capabilities article:first-child {
-    border-left: 0;
-    border-top: 1px solid var(--outline-variant);
-    padding: 18px 0;
-  }
-
-  .capabilities article:last-child {
-    padding-bottom: 0;
+  .capabilities article {
+    max-width: 420px;
   }
 
   .project-record {
+    gap: 20px;
     grid-template-columns: 1fr;
-    padding: 8px 18px;
-  }
-
-  .project-record div,
-  .project-record div:first-child,
-  .project-record div:last-child {
-    border-top: 1px solid var(--outline-variant);
-    padding: 14px 0;
-  }
-
-  .project-record div:first-child {
-    border-top: 0;
+    padding-top: 20px;
   }
 }

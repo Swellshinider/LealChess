@@ -24,6 +24,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Opened the Help page into a quieter, more spacious layout that makes better use of wide screens.
 - Simplified game reviews into a board-first workspace with compact player identities, contextual
   engine details, and responsive controls.
 - Simplified Explorer into a viewport-fitting board-first workspace with restrained controls and an
