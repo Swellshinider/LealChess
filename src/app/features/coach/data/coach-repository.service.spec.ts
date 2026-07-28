@@ -2,7 +2,9 @@ import 'fake-indexeddb/auto';
 import { TestBed } from '@angular/core/testing';
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { ImportedGame, ImportedProfile } from '../domain/coach.types';
+import { LealChessDatabaseService } from '../../../core/persistence/leal-chess-database.service';
+import { PERSISTENCE_SCHEMA_VERSION } from '../../../core/persistence/persistence.types';
+import type { GameAnalysis, ImportedGame, ImportedProfile } from '../domain/coach.types';
 import { CoachRepositoryService } from './coach-repository.service';
 
 const profile: ImportedProfile = {
@@ -88,6 +90,72 @@ describe('CoachRepositoryService', () => {
       'lichess:game-1',
     ]);
   });
+
+  it('loads local games without requiring an imported profile', async () => {
+    const repository = TestBed.inject(CoachRepositoryService);
+    await repository.saveLocalGame(localGame());
+
+    expect((await repository.gamesForActiveProfiles()).map((item) => item.key)).toEqual([
+      'local:local-game',
+    ]);
+  });
+
+  it('deletes a game, its analysis, and the matching completed local game state', async () => {
+    const repository = TestBed.inject(CoachRepositoryService);
+    const database = await TestBed.inject(LealChessDatabaseService).open();
+    const local = localGame();
+    await repository.saveLocalGame(local);
+    await repository.saveAnalysis(analysis(local.key));
+    await database.put('state', {
+      key: 'active-game',
+      value: {
+        schemaVersion: PERSISTENCE_SCHEMA_VERSION,
+        gameId: local.platformGameId,
+        pgn: '',
+        fen: '',
+        moves: [],
+        playerColor: 'white',
+        orientation: 'white',
+        difficulty: 'casual',
+        pendingPremove: null,
+        result: { winner: 'white', reason: 'checkmate', label: 'White wins' },
+        updatedAt: '2026-07-28T12:00:00.000Z',
+      },
+    });
+
+    await repository.deleteGame(local);
+
+    await expect(repository.game('local', local.platformGameId)).resolves.toBeUndefined();
+    await expect(repository.analysis(local.key)).resolves.toBeUndefined();
+    await expect(database.get('state', 'active-game')).resolves.toBeUndefined();
+  });
+
+  it('keeps active play state when deleting an imported game', async () => {
+    const repository = TestBed.inject(CoachRepositoryService);
+    const database = await TestBed.inject(LealChessDatabaseService).open();
+    const imported = game();
+    await repository.saveSuccessfulImport(profile, [imported]);
+    await database.put('state', {
+      key: 'active-game',
+      value: {
+        schemaVersion: PERSISTENCE_SCHEMA_VERSION,
+        gameId: 'active-local-game',
+        pgn: '',
+        fen: '',
+        moves: [],
+        playerColor: 'white',
+        orientation: 'white',
+        difficulty: 'casual',
+        pendingPremove: null,
+        result: null,
+        updatedAt: '2026-07-28T12:00:00.000Z',
+      },
+    });
+
+    await repository.deleteGame(imported);
+
+    await expect(database.get('state', 'active-game')).resolves.toBeDefined();
+  });
 });
 
 function game(): ImportedGame {
@@ -110,6 +178,35 @@ function game(): ImportedGame {
     profileKeys: ['lichess:learner'],
     firstImportedAt: '2026-07-24T12:00:00.000Z',
     lastImportedAt: '2026-07-24T12:00:00.000Z',
+  };
+}
+
+function localGame(): ImportedGame {
+  return {
+    ...game(),
+    key: 'local:local-game',
+    platform: 'local',
+    platformGameId: 'local-game',
+    white: { username: 'You' },
+    black: { username: 'Stockfish' },
+    rated: false,
+    profileKeys: [],
+    learnerColor: 'white',
+  };
+}
+
+function analysis(gameKey: string): GameAnalysis {
+  return {
+    importedGameKey: gameKey,
+    schemaVersion: 1,
+    sourceFingerprint: 'fingerprint',
+    engineVersion: 'test',
+    depth: 1,
+    learnerColor: 'white',
+    status: 'complete',
+    totalUserMoves: 0,
+    moves: [],
+    updatedAt: '2026-07-28T12:00:00.000Z',
   };
 }
 

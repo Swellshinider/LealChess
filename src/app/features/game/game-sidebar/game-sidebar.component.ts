@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { GameController } from '../../../core/game/game-controller.service';
 import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
 import { MoveHistoryComponent } from '../move-history/move-history.component';
@@ -15,6 +15,9 @@ type Confirmation = 'restart' | 'resign' | null;
 export class GameSidebarComponent {
   protected readonly controller = inject(GameController);
   readonly newGameRequested = output<Event>();
+  readonly reviewRequested = output<void>();
+  readonly reviewPending = input(false);
+  readonly reviewError = input<string | null>(null);
   protected readonly state = this.controller.state;
   protected readonly confirmation = signal<Confirmation>(null);
   private confirmationTrigger: HTMLElement | null = null;

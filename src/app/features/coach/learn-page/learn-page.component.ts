@@ -1,10 +1,18 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import type { OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import type { ElementRef, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
 import { SideNavigationComponent } from '../../../shared/layout/side-navigation/side-navigation.component';
 import { CoachImportService } from '../data/coach-import.service';
 import type { GameAnalysis, ImportedGame } from '../domain/coach.types';
-import type { ChessPlatform } from '../domain/coach.types';
+import type { GameSource } from '../domain/coach.types';
 import { categoryLabel } from '../analysis/analysis-rules';
 import {
   DEFAULT_LEARN_GAME_FILTERS,
@@ -18,14 +26,18 @@ import { RatingTrendComponent } from './rating-trend/rating-trend.component';
 
 @Component({
   selector: 'app-learn-page',
-  imports: [RatingTrendComponent, RouterLink, SideNavigationComponent],
+  imports: [ModalFocusDirective, RatingTrendComponent, RouterLink, SideNavigationComponent],
   templateUrl: './learn-page.component.html',
   styleUrl: './learn-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LearnPageComponent implements OnInit {
+  private readonly gamesHeading = viewChild<ElementRef<HTMLElement>>('gamesHeading');
   protected readonly coach = inject(CoachImportService);
   protected readonly filters = signal({ ...DEFAULT_LEARN_GAME_FILTERS });
+  protected readonly deleteCandidate = signal<ImportedGame | null>(null);
+  protected readonly deletePending = signal(false);
+  protected readonly deleteError = signal<string | null>(null);
   protected readonly filteredGames = computed(() =>
     filterAndSortGames(this.coach.games(), this.coach.profiles(), this.filters()),
   );
@@ -93,7 +105,7 @@ export class LearnPageComponent implements OnInit {
   protected setPlatformFilter(event: Event): void {
     this.filters.update((filters) => ({
       ...filters,
-      platform: (event.target as HTMLSelectElement).value as 'all' | ChessPlatform,
+      platform: (event.target as HTMLSelectElement).value as 'all' | GameSource,
     }));
   }
 
@@ -115,8 +127,10 @@ export class LearnPageComponent implements OnInit {
     this.filters.set({ ...DEFAULT_LEARN_GAME_FILTERS });
   }
 
-  protected platformLabel(platform: ChessPlatform): string {
-    return platform === 'chess-com' ? 'Chess.com' : 'Lichess';
+  protected platformLabel(platform: GameSource): string {
+    if (platform === 'chess-com') return 'Chess.com';
+    if (platform === 'lichess') return 'Lichess';
+    return 'LealChess';
   }
 
   protected speedLabel(speed: string): string {
@@ -126,5 +140,36 @@ export class LearnPageComponent implements OnInit {
       .join(' ');
   }
 
+  protected requestDelete(game: ImportedGame, event: Event): void {
+    this.deleteCandidate.set(game);
+    this.deleteError.set(null);
+    this.deleteTrigger = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+  }
+
+  protected closeDelete(): void {
+    if (this.deletePending()) return;
+    this.deleteCandidate.set(null);
+    this.deleteError.set(null);
+    requestAnimationFrame(() => this.deleteTrigger?.focus());
+  }
+
+  protected async confirmDelete(): Promise<void> {
+    const game = this.deleteCandidate();
+    if (!game || this.deletePending()) return;
+    this.deletePending.set(true);
+    this.deleteError.set(null);
+    try {
+      await this.coach.deleteGame(game);
+      this.deleteCandidate.set(null);
+      requestAnimationFrame(() => this.gamesHeading()?.nativeElement.focus());
+      this.deleteTrigger = null;
+    } catch {
+      this.deleteError.set('The game could not be deleted. Please try again.');
+    } finally {
+      this.deletePending.set(false);
+    }
+  }
+
   protected categoryLabel = categoryLabel;
+  private deleteTrigger: HTMLElement | null = null;
 }

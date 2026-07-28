@@ -17,6 +17,28 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/settings');
 });
 
+test('deletes an imported game and allows a later import to restore it', async ({ page }) => {
+  await page.getByLabel('Chess.com username').fill('Learner');
+  await page.getByRole('button', { name: 'Import games' }).click();
+  await expect(page.getByText('Added 1 game.')).toBeVisible();
+  await page.goto('/learn');
+
+  const game = page.locator('.game-list article');
+  await expect(game).toHaveCount(1);
+  await game.getByRole('button', { name: 'Delete' }).click();
+  const dialog = page.getByRole('alertdialog', { name: 'Delete this game?' });
+  await expect(dialog).toContainText('A later import may add it again.');
+  await assertNoSeriousA11yViolations(page);
+  await dialog.getByRole('button', { name: 'Delete game' }).click();
+  await expect(game).toHaveCount(0);
+
+  await page.goto('/settings');
+  await page.getByRole('button', { name: 'Import games' }).click();
+  await expect(page.getByText('Added 1 game.')).toBeVisible();
+  await page.goto('/learn');
+  await expect(page.locator('.game-list article')).toHaveCount(1);
+});
+
 test('imports both platforms, persists and deduplicates games, then replays moves', async ({
   page,
 }, testInfo) => {
@@ -412,6 +434,8 @@ async function drawReviewArrow(page: Page, from: string, to: string): Promise<vo
 
 async function moveReviewPiece(page: Page, from: string, to: string): Promise<void> {
   const reviewBoard = page.locator('.review-board cg-board');
+  await expect(reviewBoard).toBeVisible();
+  await reviewBoard.scrollIntoViewIfNeeded();
   const board = await reviewBoard.boundingBox();
   if (!board) throw new Error('Review board is not visible.');
   const point = (square: string) => ({

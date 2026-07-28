@@ -7,14 +7,14 @@
     } @else if (!game()) {
       <section class="not-found">
         <h1>Game not found</h1>
-        <p>This game is not in your local study ledger. Import it again, then retry.</p>
+        <p>This game is not in your local study ledger. Add it again, then retry.</p>
       </section>
     } @else {
       <main class="review-page">
         <header class="review-toolbar">
           <a class="back-link" routerLink="/learn" aria-label="Back to Learn">← Learn</a>
           <div class="game-meta">
-            <span>{{ game()?.platform === 'chess-com' ? 'Chess.com' : 'Lichess' }}</span>
+            <span>{{ sourceLabel() }}</span>
             <strong>{{ game()?.opening?.name ?? 'Opening not recorded' }}</strong>
             <small> {{ game()?.opening?.eco }} · {{ game()?.speed }} · {{ game()?.result }} </small>
           </div>

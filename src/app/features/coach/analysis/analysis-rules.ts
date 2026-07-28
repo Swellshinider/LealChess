@@ -137,6 +137,7 @@ export function learnerColorForGame(
   game: ImportedGame,
   profiles: ImportedProfile[],
 ): ChessColor | undefined {
+  if (game.learnerColor) return game.learnerColor;
   const profile = profiles.find((item) => item.platform === game.platform);
   if (!profile) return undefined;
   const username = profile.username.toLowerCase();

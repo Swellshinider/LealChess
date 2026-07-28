@@ -31,7 +31,12 @@
         </div>
       </section>
 
-      <app-game-sidebar (newGameRequested)="openNewGame($event)" />
+      <app-game-sidebar
+        [reviewPending]="reviewPending()"
+        [reviewError]="reviewError()"
+        (newGameRequested)="openNewGame($event)"
+        (reviewRequested)="reviewGame()"
+      />
     </main>
 
     <div class="sr-only" aria-live="polite" aria-atomic="true">{{ state().announcement }}</div>

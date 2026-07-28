@@ -3,6 +3,7 @@ import { LealChessDatabaseService } from '../../../core/persistence/leal-chess-d
 import type {
   ChessPlatform,
   GameAnalysis,
+  GameSource,
   ImportedGame,
   ImportedProfile,
 } from '../domain/coach.types';
@@ -22,21 +23,22 @@ export class CoachRepositoryService {
 
   async gamesForActiveProfiles(): Promise<ImportedGame[]> {
     const database = await this.database.open();
-    const profiles = await database.getAll('coachProfiles');
-    const collections = await Promise.all(
-      profiles.map((profile) =>
-        database.getAllFromIndex(
-          'importedGames',
-          'by-profile-key',
-          profileKey(profile.platform, profile.username),
-        ),
-      ),
+    const [profiles, games] = await Promise.all([
+      database.getAll('coachProfiles'),
+      database.getAll('importedGames'),
+    ]);
+    const activeProfileKeys = new Set(
+      profiles.map((profile) => profileKey(profile.platform, profile.username)),
     );
-    const unique = new Map(collections.flat().map((game) => [game.key, game]));
-    return [...unique.values()].sort((left, right) => right.endTime.localeCompare(left.endTime));
+    return games
+      .filter(
+        (game) =>
+          game.platform === 'local' || game.profileKeys.some((key) => activeProfileKeys.has(key)),
+      )
+      .sort((left, right) => right.endTime.localeCompare(left.endTime));
   }
 
-  async game(platform: ChessPlatform, gameId: string): Promise<ImportedGame | undefined> {
+  async game(platform: GameSource, gameId: string): Promise<ImportedGame | undefined> {
     return (await this.database.open()).get('importedGames', `${platform}:${gameId}`);
   }
 
@@ -50,6 +52,38 @@ export class CoachRepositoryService {
 
   async saveAnalysis(analysis: GameAnalysis): Promise<void> {
     await (await this.database.open()).put('gameAnalyses', analysis);
+  }
+
+  async saveLocalGame(game: ImportedGame): Promise<void> {
+    if (game.platform !== 'local') {
+      throw new Error('Only local games can be saved through this operation.');
+    }
+    const database = await this.database.open();
+    const existing = await database.get('importedGames', game.key);
+    await database.put('importedGames', {
+      ...game,
+      firstImportedAt: existing?.firstImportedAt ?? game.firstImportedAt,
+    });
+  }
+
+  async deleteGame(game: ImportedGame): Promise<void> {
+    const database = await this.database.open();
+    const transaction = database.transaction(
+      ['state', 'importedGames', 'gameAnalyses'],
+      'readwrite',
+    );
+    await Promise.all([
+      transaction.objectStore('importedGames').delete(game.key),
+      transaction.objectStore('gameAnalyses').delete(game.key),
+    ]);
+
+    if (game.platform === 'local') {
+      const activeGame = await transaction.objectStore('state').get('active-game');
+      if (activeGame?.key === 'active-game' && activeGame.value.gameId === game.platformGameId) {
+        await transaction.objectStore('state').delete('active-game');
+      }
+    }
+    await transaction.done;
   }
 
   async saveSuccessfulImport(
