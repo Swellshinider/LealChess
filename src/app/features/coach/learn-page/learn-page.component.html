@@ -5,60 +5,68 @@
       <h1>Learn and Improve</h1>
     </header>
 
-    <section class="ledger-summary" aria-labelledby="summary-heading">
-      <div class="section-heading">
-        <div>
-          <p class="folio">Study ledger · 02</p>
-          <h2 id="summary-heading">Your imported record</h2>
+    <section class="dashboard" aria-label="Learning overview">
+      <article class="progress-panel">
+        <app-rating-trend [series]="ratingSeries()" />
+      </article>
+
+      <aside class="record-panel" aria-labelledby="record-heading">
+        <div class="panel-heading">
+          <p>Your record</p>
+          <h2 id="record-heading">{{ coach.summary().total }} games</h2>
         </div>
-        <span>{{ coach.summary().total }} games</span>
-      </div>
-      <dl class="totals">
-        <div>
-          <dt>Total</dt>
-          <dd>{{ coach.summary().total }}</dd>
-        </div>
-        <div>
-          <dt>Wins</dt>
-          <dd>{{ coach.summary().wins }}</dd>
-        </div>
-        <div>
-          <dt>Draws</dt>
-          <dd>{{ coach.summary().draws }}</dd>
-        </div>
-        <div>
-          <dt>Losses</dt>
-          <dd>{{ coach.summary().losses }}</dd>
-        </div>
-      </dl>
-      <div class="split-record">
-        <p>
-          <strong>As White</strong>
-          {{ coach.summary().asWhite.wins }}W · {{ coach.summary().asWhite.draws }}D ·
-          {{ coach.summary().asWhite.losses }}L
-        </p>
-        <p>
-          <strong>As Black</strong>
-          {{ coach.summary().asBlack.wins }}W · {{ coach.summary().asBlack.draws }}D ·
-          {{ coach.summary().asBlack.losses }}L
-        </p>
-      </div>
-      @if (coach.summary().topOpenings.length) {
-        <ol class="openings" aria-label="Most played openings">
-          @for (opening of coach.summary().topOpenings; track opening.name) {
-            <li>
-              <span>{{ opening.eco }} {{ opening.name }}</span>
-              <strong>{{ opening.count }}</strong>
-            </li>
+        <dl class="totals">
+          <div data-outcome="win">
+            <dt>Wins</dt>
+            <dd>{{ coach.summary().wins }}</dd>
+          </div>
+          <div data-outcome="draw">
+            <dt>Draws</dt>
+            <dd>{{ coach.summary().draws }}</dd>
+          </div>
+          <div data-outcome="loss">
+            <dt>Losses</dt>
+            <dd>{{ coach.summary().losses }}</dd>
+          </div>
+        </dl>
+
+        <details class="record-details">
+          <summary>Record details</summary>
+          <div class="split-record">
+            <p>
+              <strong>As White</strong>
+              <span>
+                {{ coach.summary().asWhite.wins }}W · {{ coach.summary().asWhite.draws }}D ·
+                {{ coach.summary().asWhite.losses }}L
+              </span>
+            </p>
+            <p>
+              <strong>As Black</strong>
+              <span>
+                {{ coach.summary().asBlack.wins }}W · {{ coach.summary().asBlack.draws }}D ·
+                {{ coach.summary().asBlack.losses }}L
+              </span>
+            </p>
+          </div>
+          @if (coach.summary().topOpenings.length) {
+            <h3>Most played openings</h3>
+            <ol class="openings">
+              @for (opening of coach.summary().topOpenings; track opening.name) {
+                <li>
+                  <span>{{ opening.eco }} {{ opening.name }}</span>
+                  <strong>{{ opening.count }}</strong>
+                </li>
+              }
+            </ol>
           }
-        </ol>
-      }
+        </details>
+      </aside>
     </section>
 
     <section class="study-priorities" aria-labelledby="priorities-heading">
       <div class="section-heading">
         <div>
-          <p class="folio">Coach's margin</p>
+          <p>Coach's notes</p>
           <h2 id="priorities-heading">Study priorities</h2>
         </div>
         <span>{{ coach.completedAnalyses().length }} analyzed games</span>
@@ -89,9 +97,14 @@
     <section class="games-ledger" aria-labelledby="games-heading">
       <div class="section-heading">
         <div>
-          <p class="folio">Game archive · 03</p>
+          <p>Game archive</p>
           <h2 id="games-heading">Review your games</h2>
         </div>
+        @if (coach.games().length) {
+          <span aria-live="polite">
+            {{ filteredGames().length }} of {{ coach.games().length }} games
+          </span>
+        }
       </div>
       @if (!coach.games().length) {
         @if (coach.hasFailures()) {
@@ -112,60 +125,112 @@
           </div>
         }
       } @else {
-        <div class="game-list">
-          @for (game of coach.games(); track game.key) {
-            <article>
-              <div class="game-index">{{ $index + 1 < 10 ? '0' : '' }}{{ $index + 1 }}</div>
-              <div class="players">
-                <p>
-                  <span class="piece" aria-hidden="true">♔</span>
-                  <strong>{{ game.white.username }}</strong>
-                  <span>{{ game.white.rating ?? '—' }}</span>
-                </p>
-                <p>
-                  <span class="piece" aria-hidden="true">♚</span>
-                  <strong>{{ game.black.username }}</strong>
-                  <span>{{ game.black.rating ?? '—' }}</span>
-                </p>
-              </div>
-              <div class="result">
-                <strong>{{ resultLabel(game) }}</strong>
-                <span>{{ game.platform === 'chess-com' ? 'Chess.com' : 'Lichess' }}</span>
-              </div>
-              <div class="metadata">
-                <p>{{ formatDate(game.endTime) }} · {{ game.speed }} · {{ game.timeControl }}</p>
-                <p>{{ game.opening?.eco }} {{ game.opening?.name ?? 'Opening not recorded' }}</p>
-              </div>
-              <div class="review-action">
-                @if (game.parseStatus === 'ready') {
-                  @if (analysisFor(game); as analysis) {
-                    <span class="analysis-status" [attr.data-status]="analysis.status">
-                      {{ analysisLabel(analysis) }}
-                    </span>
-                  }
-                  <a [routerLink]="reviewLink(game)">
-                    {{
-                      analysisFor(game)?.status === 'complete' ? 'Review analysis' : 'Open review'
-                    }}
-                    <span aria-hidden="true">→</span>
-                  </a>
-                } @else {
-                  <div class="unavailable-game">
-                    <strong>Replay unavailable</strong>
-                    <p>{{ game.parseError }}</p>
-                    <p>Make the game public if possible, then import this profile again.</p>
-                    @if (game.pgn) {
-                      <details>
-                        <summary>View the PGN that could not be replayed</summary>
-                        <pre>{{ game.pgn }}</pre>
-                      </details>
-                    }
-                  </div>
-                }
-              </div>
-            </article>
+        <div class="filter-bar" aria-label="Filter imported games">
+          <label>
+            <span>Result</span>
+            <select [value]="filters().result" (change)="setResultFilter($event)">
+              <option value="all">All results</option>
+              <option value="win">Wins</option>
+              <option value="draw">Draws</option>
+              <option value="loss">Losses</option>
+            </select>
+          </label>
+          <label>
+            <span>Platform</span>
+            <select [value]="filters().platform" (change)="setPlatformFilter($event)">
+              <option value="all">All platforms</option>
+              <option value="chess-com">Chess.com</option>
+              <option value="lichess">Lichess</option>
+            </select>
+          </label>
+          <label>
+            <span>Speed</span>
+            <select [value]="filters().speed" (change)="setSpeedFilter($event)">
+              <option value="all">All speeds</option>
+              @for (speed of gameSpeeds(); track speed) {
+                <option [value]="speed">{{ speedLabel(speed) }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            <span>Order</span>
+            <select [value]="filters().sort" (change)="setSort($event)">
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+            </select>
+          </label>
+          @if (hasActiveFilters()) {
+            <button type="button" (click)="clearFilters()">Clear filters</button>
           }
         </div>
+
+        @if (!filteredGames().length) {
+          <div class="no-matches">
+            <span aria-hidden="true">◇</span>
+            <div>
+              <h3>No games match these filters</h3>
+              <p>Try another result, platform, or speed.</p>
+            </div>
+            <button type="button" (click)="clearFilters()">Clear filters</button>
+          </div>
+        } @else {
+          <div class="game-list">
+            @for (game of filteredGames(); track game.key) {
+              <article [attr.data-outcome]="outcome(game)">
+                <div class="players">
+                  <p>
+                    <span class="piece" aria-hidden="true">♔</span>
+                    <strong>{{ game.white.username }}</strong>
+                    <span>{{ game.white.rating ?? '—' }}</span>
+                  </p>
+                  <p>
+                    <span class="piece" aria-hidden="true">♚</span>
+                    <strong>{{ game.black.username }}</strong>
+                    <span>{{ game.black.rating ?? '—' }}</span>
+                  </p>
+                </div>
+                <div class="result">
+                  <strong>{{ resultLabel(game) }}</strong>
+                  <span>{{ platformLabel(game.platform) }}</span>
+                </div>
+                <div class="metadata">
+                  <p>
+                    {{ formatDate(game.endTime) }} · {{ speedLabel(game.speed) }} ·
+                    {{ game.timeControl }}
+                  </p>
+                  <p>{{ game.opening?.eco }} {{ game.opening?.name ?? 'Opening not recorded' }}</p>
+                </div>
+                <div class="review-action">
+                  @if (game.parseStatus === 'ready') {
+                    @if (analysisFor(game); as analysis) {
+                      <span class="analysis-status" [attr.data-status]="analysis.status">
+                        {{ analysisLabel(analysis) }}
+                      </span>
+                    }
+                    <a [routerLink]="reviewLink(game)">
+                      {{
+                        analysisFor(game)?.status === 'complete' ? 'Review analysis' : 'Open review'
+                      }}
+                      <span aria-hidden="true">→</span>
+                    </a>
+                  } @else {
+                    <div class="unavailable-game">
+                      <strong>Replay unavailable</strong>
+                      <p>{{ game.parseError }}</p>
+                      <p>Make the game public if possible, then import this profile again.</p>
+                      @if (game.pgn) {
+                        <details>
+                          <summary>View the PGN that could not be replayed</summary>
+                          <pre>{{ game.pgn }}</pre>
+                        </details>
+                      }
+                    </div>
+                  }
+                </div>
+              </article>
+            }
+          </div>
+        }
       }
     </section>
   </main>

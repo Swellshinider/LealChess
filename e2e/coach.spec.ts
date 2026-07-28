@@ -110,6 +110,41 @@ test('imports both platforms, persists and deduplicates games, then replays move
   await assertNoSeriousA11yViolations(page);
 });
 
+test('shows rating progress and filters the game archive', async ({ page }) => {
+  await expect(page.getByLabel('Chess.com username')).toBeEnabled();
+  await seedLearnDashboard(page);
+  await page.goto('/learn');
+
+  await expect(
+    page.getByRole('img', {
+      name: /Chess\.com rose by 60 points, from 1400 to 1460.*Lichess held steady/,
+    }),
+  ).toBeVisible();
+  await expect(page.locator('.game-list article')).toHaveCount(3);
+  await expect(page.locator('.game-list article[data-outcome="win"]')).toHaveCount(1);
+  await expect(page.locator('.game-list article[data-outcome="draw"]')).toHaveCount(1);
+  await expect(page.locator('.game-list article[data-outcome="loss"]')).toHaveCount(1);
+
+  await page.getByRole('combobox', { name: 'Result', exact: true }).selectOption('loss');
+  await expect(page.locator('.game-list article')).toHaveCount(1);
+  await expect(page.locator('.game-list article').first()).toContainText('BlitzOpponent');
+
+  await page.getByRole('combobox', { name: 'Result', exact: true }).selectOption('all');
+  await page.getByRole('combobox', { name: 'Platform', exact: true }).selectOption('lichess');
+  await page.getByRole('combobox', { name: 'Speed', exact: true }).selectOption('blitz');
+  await expect(page.locator('.game-list article')).toHaveCount(1);
+  await expect(page.locator('.game-list article').first()).toContainText('DrawOpponent');
+
+  await page.getByRole('button', { name: 'Clear filters' }).click();
+  await page.getByRole('combobox', { name: 'Order', exact: true }).selectOption('oldest');
+  await expect(page.locator('.game-list article').first()).toContainText('RapidOpponent');
+
+  await page.getByRole('combobox', { name: 'Result', exact: true }).selectOption('loss');
+  await page.getByRole('combobox', { name: 'Platform', exact: true }).selectOption('lichess');
+  await expect(page.getByRole('heading', { name: 'No games match these filters' })).toBeVisible();
+  await assertNoSeriousA11yViolations(page);
+});
+
 test('analyzes locally, caches the result, and opens a missed position', async ({
   page,
 }, testInfo) => {
@@ -341,6 +376,113 @@ async function seedBoardTheme(
     });
     database.close();
   }, boardTheme);
+}
+
+async function seedLearnDashboard(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('leal-chess');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const transaction = database.transaction(['coachProfiles', 'importedGames'], 'readwrite');
+    const profiles = transaction.objectStore('coachProfiles');
+    const games = transaction.objectStore('importedGames');
+    const importedAt = '2026-07-27T12:00:00.000Z';
+    const profile = (
+      platform: 'chess-com' | 'lichess',
+      username: string,
+    ): Record<string, unknown> => ({
+      platform,
+      username,
+      displayName: username,
+      profileUrl: '',
+      updatedAt: importedAt,
+    });
+    const game = (options: {
+      key: string;
+      platform: 'chess-com' | 'lichess';
+      date: string;
+      learner: string;
+      learnerColor: 'white' | 'black';
+      opponent: string;
+      rating: number;
+      result: string;
+      speed: string;
+    }): Record<string, unknown> => ({
+      key: options.key,
+      platform: options.platform,
+      platformGameId: options.key.split(':')[1],
+      platformUrl: '',
+      pgn: '',
+      variant: 'standard',
+      white:
+        options.learnerColor === 'white'
+          ? { username: options.learner, rating: options.rating }
+          : { username: options.opponent, rating: options.rating - 10 },
+      black:
+        options.learnerColor === 'black'
+          ? { username: options.learner, rating: options.rating }
+          : { username: options.opponent, rating: options.rating - 10 },
+      result: options.result,
+      speed: options.speed,
+      timeControl: options.speed === 'rapid' ? '600' : '180',
+      rated: true,
+      endTime: options.date,
+      moves: [],
+      parseStatus: 'ready',
+      profileKeys: [`${options.platform}:${options.learner.toLowerCase()}`],
+      firstImportedAt: importedAt,
+      lastImportedAt: importedAt,
+    });
+
+    profiles.put(profile('chess-com', 'Learner'));
+    profiles.put(profile('lichess', 'Student'));
+    games.put(
+      game({
+        key: 'chess-com:old-win',
+        platform: 'chess-com',
+        date: '2026-07-01T12:00:00.000Z',
+        learner: 'Learner',
+        learnerColor: 'white',
+        opponent: 'RapidOpponent',
+        rating: 1400,
+        result: '1-0',
+        speed: 'rapid',
+      }),
+    );
+    games.put(
+      game({
+        key: 'lichess:draw',
+        platform: 'lichess',
+        date: '2026-07-10T12:00:00.000Z',
+        learner: 'Student',
+        learnerColor: 'white',
+        opponent: 'DrawOpponent',
+        rating: 1600,
+        result: '1/2-1/2',
+        speed: 'blitz',
+      }),
+    );
+    games.put(
+      game({
+        key: 'chess-com:new-loss',
+        platform: 'chess-com',
+        date: '2026-07-20T12:00:00.000Z',
+        learner: 'Learner',
+        learnerColor: 'black',
+        opponent: 'BlitzOpponent',
+        rating: 1460,
+        result: '1-0',
+        speed: 'blitz',
+      }),
+    );
+    await new Promise<void>((resolve, reject) => {
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+    database.close();
+  });
 }
 
 async function assertNoSeriousA11yViolations(page: Page) {
