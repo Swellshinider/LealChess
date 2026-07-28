@@ -1,0 +1,36 @@
+app-explorer-page {
+  .explorer-board {
+    --coordinate-on-dark: #fff;
+    --coordinate-on-light: var(--night);
+  }
+
+  .explorer-board cg-board {
+    background: conic-gradient(
+        var(--board-dark) 25%,
+        var(--board-light) 0 50%,
+        var(--board-dark) 0 75%,
+        var(--board-light) 0
+      )
+      0 0 / 25% 25%;
+  }
+
+  .explorer-board .cg-wrap coords {
+    font-weight: 700;
+    opacity: 1;
+  }
+
+  .explorer-board.orientation-white .ranks :nth-child(odd),
+  .explorer-board.orientation-white .files :nth-child(odd),
+  .explorer-board.orientation-black .ranks :nth-child(even),
+  .explorer-board.orientation-black .files :nth-child(even) {
+    color: var(--coordinate-on-dark);
+    text-shadow: 0 1px 2px rgb(0 0 0 / 65%);
+  }
+
+  .explorer-board.orientation-white .ranks :nth-child(even),
+  .explorer-board.orientation-white .files :nth-child(even),
+  .explorer-board.orientation-black .ranks :nth-child(odd),
+  .explorer-board.orientation-black .files :nth-child(odd) {
+    color: var(--coordinate-on-light);
+  }
+}

@@ -1,4 +1,6 @@
 @use './app/features/coach/review-page/review-page.global';
+@use './app/features/explorer/explorer-page.global';
+@use './app/features/explorer/explorer-page.layout' as explorer-layout;
 
 @import '@fontsource/barlow-condensed/600.css';
 @import '@fontsource/barlow-condensed/700.css';

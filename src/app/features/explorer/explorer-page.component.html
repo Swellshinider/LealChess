@@ -1,0 +1,482 @@
+<div class="explorer-shell">
+  <app-side-navigation />
+
+  <main class="explorer-page">
+    <h1 class="sr-only">Explorer</h1>
+    <div class="workspace-toolbar">
+      <div class="workspace-actions" aria-label="Explorer actions">
+        <button type="button" (click)="openImport()">Import FEN or PGN</button>
+        @if (mode() === 'analysis') {
+          <button type="button" (click)="enterSetup()">Set up position</button>
+        }
+        <button type="button" (click)="flipBoard()">Flip board</button>
+        <button type="button" class="quiet-action" (click)="newAnalysis()">New analysis</button>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <section class="loading-workspace" aria-live="polite">
+        <span class="engine-pulse" aria-hidden="true"></span>
+        Restoring your analysis…
+      </section>
+    } @else {
+      <section class="analysis-workspace">
+        <div class="board-workbench" [class.setup-mode]="mode() === 'setup'">
+          @if (mode() === 'analysis') {
+            <div class="board-heading">
+              <strong>
+                @if (gameOverLabel(); as result) {
+                  {{ result }}
+                } @else {
+                  {{ turn() }} to move
+                }
+              </strong>
+            </div>
+
+            <div
+              class="evaluation-rail"
+              [class.flipped]="session().orientation === 'black'"
+              aria-label="White evaluation"
+            >
+              <div
+                class="evaluation-track"
+                [class.flipped]="session().orientation === 'black'"
+                aria-hidden="true"
+              >
+                <i [style.height.%]="evaluationPercent()"></i>
+                @if (evaluationLabel()) {
+                  <span
+                    class="evaluation-score"
+                    [class.top]="evaluationScoreAtTop()"
+                    [class.bottom]="!evaluationScoreAtTop()"
+                    [class.on-light]="evaluationFavorsWhite()"
+                  >
+                    {{ evaluationLabel() }}
+                  </span>
+                }
+              </div>
+            </div>
+          }
+
+          <div class="board-stage">
+            <div class="explorer-board-frame" [attr.data-board-theme]="boardTheme()">
+              <div
+                #boardHost
+                class="explorer-board"
+                role="img"
+                [attr.aria-label]="
+                  mode() === 'setup'
+                    ? 'Position setup chessboard'
+                    : 'Analysis chessboard, ' + turn() + ' to move'
+                "
+                aria-describedby="explorer-board-help"
+                (click)="handleBoardClick($event)"
+              ></div>
+            </div>
+            <p id="explorer-board-help" class="sr-only">
+              @if (mode() === 'setup') {
+                Select a piece, then click a square. Existing pieces can be dragged.
+              } @else {
+                Move either color. Right-drag to annotate; arrow keys navigate the selected line.
+              }
+            </p>
+          </div>
+
+          @if (mode() === 'analysis') {
+            <nav class="position-navigation" aria-label="Move navigation">
+              <button
+                type="button"
+                aria-label="Starting position"
+                [disabled]="selectedNode().id === session().rootId"
+                (click)="selectNode(session().rootId)"
+              >
+                |←
+              </button>
+              <button
+                type="button"
+                aria-label="Previous move"
+                [disabled]="!selectedNode().parentId"
+                (click)="selectParent()"
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                aria-label="Next move"
+                [disabled]="!selectedNode().children.length"
+                (click)="selectPrimaryChild()"
+              >
+                →
+              </button>
+            </nav>
+          }
+        </div>
+
+        <aside class="analysis-ledger" [attr.data-mode]="mode()">
+          @if (mode() === 'setup') {
+            <section class="setup-panel" aria-labelledby="setup-heading">
+              <div class="ledger-heading">
+                <h2 id="setup-heading">Position setup</h2>
+              </div>
+
+              <div class="piece-palette" aria-label="Piece palette">
+                @for (color of setupColors; track color) {
+                  <div>
+                    <span>{{ color === 'w' ? 'White' : 'Black' }}</span>
+                    <div>
+                      @for (piece of pieceTypes; track piece) {
+                        <button
+                          type="button"
+                          [class.selected]="setupToolSelected(color, piece)"
+                          [attr.aria-pressed]="setupToolSelected(color, piece)"
+                          [attr.aria-label]="
+                            'Place ' +
+                            (color === 'w' ? 'white ' : 'black ') +
+                            (piece === 'k'
+                              ? 'king'
+                              : piece === 'q'
+                                ? 'queen'
+                                : piece === 'r'
+                                  ? 'rook'
+                                  : piece === 'b'
+                                    ? 'bishop'
+                                    : piece === 'n'
+                                      ? 'knight'
+                                      : 'pawn')
+                          "
+                          (click)="selectSetupTool({ color: color, type: piece })"
+                        >
+                          {{ pieceSymbol(color, piece) }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+                <button
+                  type="button"
+                  class="eraser"
+                  [class.selected]="setupTool() === 'erase'"
+                  [attr.aria-pressed]="setupTool() === 'erase'"
+                  (click)="selectSetupTool('erase')"
+                >
+                  Erase piece
+                </button>
+              </div>
+
+              <div class="setup-fields">
+                <label>
+                  Side to move
+                  <select [value]="setup().turn" (change)="updateSetupTurn($event)">
+                    <option value="w">White</option>
+                    <option value="b">Black</option>
+                  </select>
+                </label>
+                <label>
+                  En-passant target
+                  <select [value]="setup().enPassant" (change)="updateEnPassant($event)">
+                    @for (square of enPassantSquares(); track square) {
+                      <option [value]="square">{{ square === '-' ? 'None' : square }}</option>
+                    }
+                  </select>
+                </label>
+              </div>
+
+              <fieldset>
+                <legend>Castling rights</legend>
+                <label>
+                  <input
+                    type="checkbox"
+                    [checked]="setup().castling.whiteKing"
+                    (change)="updateCastling('whiteKing', $event)"
+                  />
+                  White O-O
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    [checked]="setup().castling.whiteQueen"
+                    (change)="updateCastling('whiteQueen', $event)"
+                  />
+                  White O-O-O
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    [checked]="setup().castling.blackKing"
+                    (change)="updateCastling('blackKing', $event)"
+                  />
+                  Black O-O
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    [checked]="setup().castling.blackQueen"
+                    (change)="updateCastling('blackQueen', $event)"
+                  />
+                  Black O-O-O
+                </label>
+              </fieldset>
+
+              @if (!setupValid() || setupError()) {
+                <p class="setup-error" role="alert">
+                  {{ setupError() || 'Add both kings and resolve the position details.' }}
+                </p>
+              }
+
+              <div class="setup-utilities">
+                <button type="button" (click)="clearSetup()">Clear board</button>
+                <button type="button" (click)="resetSetup()">Starting position</button>
+              </div>
+              <div class="setup-actions">
+                <button type="button" (click)="cancelSetup()">Cancel</button>
+                <button
+                  type="button"
+                  class="primary-action"
+                  [disabled]="!setupValid()"
+                  (click)="useSetupPosition()"
+                >
+                  Analyze position
+                </button>
+              </div>
+            </section>
+          } @else {
+            <section class="engine-status" aria-live="polite">
+              <div>
+                <span
+                  class="engine-pulse"
+                  [class.active]="analysisKind() !== 'idle'"
+                  aria-hidden="true"
+                ></span>
+                <div>
+                  <small>Stockfish 18</small>
+                  <strong>{{ analysisMessage() }}</strong>
+                </div>
+              </div>
+              <span>Depth {{ selectedNode().candidateDepth ?? '—' }}</span>
+            </section>
+
+            @if (session().batch.total) {
+              <section class="batch-progress" aria-labelledby="batch-heading">
+                <div>
+                  <span id="batch-heading">PGN move review</span>
+                  <strong>{{ session().batch.completed }} / {{ session().batch.total }}</strong>
+                </div>
+                <div
+                  class="progress-track"
+                  role="progressbar"
+                  aria-label="PGN analysis progress"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  [attr.aria-valuenow]="batchProgress()"
+                >
+                  <i [style.width.%]="batchProgress()"></i>
+                </div>
+                @if (session().batch.status === 'running') {
+                  <button type="button" (click)="pauseBatch()">Pause PGN analysis</button>
+                } @else if (
+                  session().batch.status === 'paused' || session().batch.status === 'error'
+                ) {
+                  <button type="button" (click)="resumeBatch()">Resume PGN analysis</button>
+                }
+                @if (session().batch.error; as error) {
+                  <p role="alert">{{ error }}</p>
+                }
+              </section>
+            }
+
+            <section class="candidate-lines" aria-labelledby="candidate-heading">
+              <div class="ledger-heading">
+                <h2 id="candidate-heading">Lines</h2>
+                <small>White evaluation</small>
+              </div>
+              @if (selectedCandidates().length) {
+                <ol>
+                  @for (line of selectedCandidates(); track line.rank) {
+                    <li>
+                      <span class="candidate-rank">{{ line.rank }}</span>
+                      <strong>{{ candidateEvaluation(line) }}</strong>
+                      <span>{{ line.san.join(' ') }}</span>
+                    </li>
+                  }
+                </ol>
+              } @else if (gameOverLabel(); as result) {
+                <p class="terminal-position">{{ result }}. This line has ended.</p>
+              } @else {
+                <div class="line-skeleton" aria-hidden="true"><i></i><i></i><i></i></div>
+              }
+            </section>
+
+            <section class="variation-tree" aria-labelledby="variations-heading">
+              <div class="ledger-heading">
+                <h2 id="variations-heading">Moves</h2>
+                <small>{{ treeRows().length }} moves</small>
+              </div>
+              <div class="move-tree" role="tree" aria-label="Explorer variations">
+                <button
+                  type="button"
+                  role="treeitem"
+                  class="root-node"
+                  [class.current]="selectedNode().id === session().rootId"
+                  [attr.aria-current]="selectedNode().id === session().rootId ? 'step' : null"
+                  (click)="selectNode(session().rootId)"
+                >
+                  Start
+                </button>
+                @for (row of treeRows(); track row.node.id) {
+                  <button
+                    type="button"
+                    role="treeitem"
+                    class="move-node"
+                    [class.current]="selectedNode().id === row.node.id"
+                    [class.selected-line]="row.onSelectedLine"
+                    [attr.data-classification]="row.node.assessment?.classification ?? null"
+                    [attr.aria-current]="selectedNode().id === row.node.id ? 'step' : null"
+                    [attr.aria-label]="
+                      moveNumber(row.node) +
+                      ' ' +
+                      row.node.san +
+                      ', ' +
+                      classificationLabel(row.node.assessment?.classification)
+                    "
+                    [style.--branch-depth]="row.depth"
+                    (click)="selectNode(row.node.id)"
+                  >
+                    <span class="branch-rule" aria-hidden="true"></span>
+                    <small>{{ moveNumber(row.node) }}</small>
+                    <strong>{{ row.node.san }}</strong>
+                    <span
+                      class="move-badge"
+                      [attr.data-classification]="row.node.assessment?.classification ?? null"
+                    >
+                      {{ classificationLabel(row.node.assessment?.classification) }}
+                    </span>
+                    @if (row.node.assessment?.provisional) {
+                      <i>depth {{ row.node.assessment?.depth }}</i>
+                    }
+                  </button>
+                }
+              </div>
+            </section>
+
+            @if (selectedNode().analysisError; as error) {
+              <section class="analysis-error" role="alert">
+                <p>{{ error }}</p>
+                <button type="button" (click)="retrySelected()">Retry position</button>
+              </section>
+            }
+          }
+        </aside>
+      </section>
+    }
+  </main>
+</div>
+
+@if (importOpen()) {
+  <div
+    appModalFocus
+    class="modal-backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="import-heading"
+    tabindex="-1"
+    (modalDismissed)="closeImport()"
+  >
+    <section class="import-dialog">
+      <header>
+        <div>
+          <span>Load analysis</span>
+          <h2 id="import-heading">Import a position or game</h2>
+        </div>
+        <button type="button" aria-label="Close import" (click)="closeImport()">×</button>
+      </header>
+      <div class="import-tabs" role="tablist" aria-label="Import format">
+        <button
+          id="fen-tab"
+          type="button"
+          role="tab"
+          [attr.aria-selected]="importTab() === 'fen'"
+          aria-controls="import-panel"
+          (click)="chooseImportTab('fen')"
+        >
+          FEN
+        </button>
+        <button
+          id="pgn-tab"
+          type="button"
+          role="tab"
+          [attr.aria-selected]="importTab() === 'pgn'"
+          aria-controls="import-panel"
+          (click)="chooseImportTab('pgn')"
+        >
+          PGN
+        </button>
+      </div>
+      <div
+        id="import-panel"
+        role="tabpanel"
+        [attr.aria-labelledby]="importTab() === 'fen' ? 'fen-tab' : 'pgn-tab'"
+      >
+        <label for="import-value">
+          {{ importTab() === 'fen' ? 'Paste a complete FEN' : 'Paste a standard PGN' }}
+        </label>
+        <textarea
+          id="import-value"
+          data-modal-initial
+          [rows]="importTab() === 'fen' ? 3 : 12"
+          [value]="importValue()"
+          [placeholder]="
+            importTab() === 'fen'
+              ? 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+              : '1. e4 e5 2. Nf3 Nc6'
+          "
+          (input)="updateImportValue($event)"
+        ></textarea>
+      </div>
+      @if (importError(); as error) {
+        <p class="import-error" role="alert">{{ error }}</p>
+      }
+      <footer>
+        <button type="button" (click)="closeImport()">Cancel</button>
+        <button
+          type="button"
+          class="primary-action"
+          [disabled]="!importValue().trim()"
+          (click)="applyImport()"
+        >
+          {{ importTab() === 'fen' ? 'Load position' : 'Analyze game' }}
+        </button>
+      </footer>
+    </section>
+  </div>
+}
+
+@if (pendingPromotion()) {
+  <div
+    appModalFocus
+    class="modal-backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="promotion-heading"
+    tabindex="-1"
+    (modalDismissed)="cancelPromotion()"
+  >
+    <section class="promotion-dialog">
+      <h2 id="promotion-heading">Choose promotion</h2>
+      <div>
+        @for (piece of promotionPieces; track piece) {
+          <button
+            type="button"
+            [attr.data-modal-initial]="$first ? '' : null"
+            (click)="choosePromotion(piece)"
+          >
+            {{ pieceSymbol(turn() === 'white' ? 'w' : 'b', piece) }}
+            <span>{{
+              piece === 'q' ? 'Queen' : piece === 'r' ? 'Rook' : piece === 'b' ? 'Bishop' : 'Knight'
+            }}</span>
+          </button>
+        }
+      </div>
+      <button type="button" (click)="cancelPromotion()">Cancel</button>
+    </section>
+  </div>
+}

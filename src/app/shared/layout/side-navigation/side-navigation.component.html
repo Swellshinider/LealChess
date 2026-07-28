@@ -39,6 +39,18 @@
       </svg>
       <span class="nav-copy">Learn</span>
     </a>
+    <a
+      routerLink="/explorer"
+      routerLinkActive="active"
+      aria-label="Explorer"
+      data-tooltip="Explorer"
+    >
+      <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="8" />
+        <path d="m15.5 8.5-2.1 4.9-4.9 2.1 2.1-4.9 4.9-2.1Z" />
+      </svg>
+      <span class="nav-copy">Explorer</span>
+    </a>
   </div>
 
   <div class="utility-links">
@@ -124,6 +136,9 @@
       <a routerLink="/play" routerLinkActive="active" (click)="navigation.closeMobile()"> Play </a>
       <a routerLink="/learn" routerLinkActive="active" (click)="navigation.closeMobile()">
         Learn
+      </a>
+      <a routerLink="/explorer" routerLinkActive="active" (click)="navigation.closeMobile()">
+        Explorer
       </a>
       <a routerLink="/settings" routerLinkActive="active" (click)="navigation.closeMobile()">
         Settings

@@ -34,6 +34,14 @@ export const routes: Routes = [
     title: 'Learn | LealChess',
   },
   {
+    path: 'explorer',
+    loadComponent: () =>
+      import('./features/explorer/explorer-page.component').then(
+        (module) => module.ExplorerPageComponent,
+      ),
+    title: 'Explorer | LealChess',
+  },
+  {
     path: 'learn/review/:platform/:gameId',
     loadComponent: () =>
       import('./features/coach/review-page/review-page.component').then(

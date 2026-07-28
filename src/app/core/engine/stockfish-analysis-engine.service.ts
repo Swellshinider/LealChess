@@ -23,6 +23,7 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
   private initialized = false;
   private initializing: Promise<void> | null = null;
   private lifecycle = 0;
+  private idleWaiters: Array<() => void> = [];
   private active:
     | {
         resolve: (value: PositionAnalysisResult) => void;
@@ -30,11 +31,15 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
         infos: Map<number, UciAnalysisInfo>;
         abort?: () => void;
         signal?: AbortSignal;
+        cancelled?: boolean;
+        cancelTimeout?: ReturnType<typeof setTimeout>;
       }
     | undefined;
 
   async analyze(request: PositionAnalysisRequest): Promise<PositionAnalysisResult> {
     await this.initialize();
+    if (request.signal?.aborted) throw abortError();
+    if (this.active?.cancelled) await this.waitForIdle(request.signal);
     if (request.signal?.aborted) throw abortError();
     if (this.active) throw new Error('Stockfish analysis is already running.');
 
@@ -45,8 +50,13 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
 
     return new Promise<PositionAnalysisResult>((resolve, reject) => {
       const abort = () => {
+        if (!this.active || this.active.cancelled) return;
+        this.active.cancelled = true;
         this.post('stop');
-        this.finishActive(undefined, abortError());
+        this.active.cancelTimeout = setTimeout(
+          () => this.finishActive(undefined, abortError()),
+          2000,
+        );
       };
       this.active = {
         resolve,
@@ -131,6 +141,10 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
 
     const bestMove = parseBestMove(line);
     if (bestMove === undefined || !this.active) return;
+    if (this.active.cancelled) {
+      this.finishActive(undefined, abortError());
+      return;
+    }
     const infoResult = this.active.infos.get(1);
     if (!infoResult) {
       this.finishActive(undefined, new Error('Stockfish returned no evaluation.'));
@@ -160,7 +174,9 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
     const active = this.active;
     if (!active) return;
     this.active = undefined;
+    if (active.cancelTimeout) clearTimeout(active.cancelTimeout);
     if (active.abort) active.signal?.removeEventListener('abort', active.abort);
+    for (const resolve of this.idleWaiters.splice(0)) resolve();
     if (error) active.reject(error);
     else if (result) active.resolve(result);
   }
@@ -178,6 +194,22 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
       };
       this.waiters.push(waiter);
       send();
+    });
+  }
+
+  private waitForIdle(signal?: AbortSignal): Promise<void> {
+    if (!this.active) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const finish = () => {
+        signal?.removeEventListener('abort', abort);
+        resolve();
+      };
+      const abort = () => {
+        this.idleWaiters.splice(this.idleWaiters.indexOf(finish), 1);
+        reject(abortError());
+      };
+      this.idleWaiters.push(finish);
+      signal?.addEventListener('abort', abort, { once: true });
     });
   }
 

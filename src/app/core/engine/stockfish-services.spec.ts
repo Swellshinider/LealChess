@@ -35,6 +35,8 @@ class FakeStockfishWorker {
       });
     } else if (command.startsWith('go movetime') && this.mode !== 'manual') {
       queueMicrotask(() => this.message('bestmove e7e5'));
+    } else if (command === 'stop' && this.mode === 'manual') {
+      queueMicrotask(() => this.message('bestmove 0000'));
     }
   }
 
