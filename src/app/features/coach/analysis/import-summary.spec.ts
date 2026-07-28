@@ -53,4 +53,19 @@ describe('calculateImportSummary', () => {
     });
     expect(summary.topOpenings[0]).toMatchObject({ name: 'Sicilian Defense', count: 2 });
   });
+
+  it('includes local games using their explicit learner color', () => {
+    const local = {
+      ...game('chess-com:local', 'Stockfish', 'You', '0-1'),
+      key: 'local:game',
+      platform: 'local' as const,
+      learnerColor: 'black' as const,
+    };
+
+    expect(calculateImportSummary([local], {})).toMatchObject({
+      total: 1,
+      wins: 1,
+      asBlack: { wins: 1 },
+    });
+  });
 });

@@ -98,7 +98,7 @@
       <div class="section-heading">
         <div>
           <p>Game archive</p>
-          <h2 id="games-heading">Review your games</h2>
+          <h2 #gamesHeading id="games-heading" tabindex="-1">Review your games</h2>
         </div>
         @if (coach.games().length) {
           <span aria-live="polite">
@@ -120,12 +120,12 @@
           <div class="empty-state">
             <span aria-hidden="true">♙</span>
             <h3>Your study ledger is ready</h3>
-            <p>Connect Chess.com or Lichess in Settings, then import recent games to begin.</p>
+            <p>Play Stockfish or import games from Chess.com or Lichess to begin.</p>
             <a routerLink="/settings">Open Settings</a>
           </div>
         }
       } @else {
-        <div class="filter-bar" aria-label="Filter imported games">
+        <div class="filter-bar" aria-label="Filter games">
           <label>
             <span>Result</span>
             <select [value]="filters().result" (change)="setResultFilter($event)">
@@ -141,6 +141,7 @@
               <option value="all">All platforms</option>
               <option value="chess-com">Chess.com</option>
               <option value="lichess">Lichess</option>
+              <option value="local">LealChess</option>
             </select>
           </label>
           <label>
@@ -228,6 +229,9 @@
                       }
                     </div>
                   }
+                  <button type="button" class="delete-game" (click)="requestDelete(game, $event)">
+                    Delete
+                  </button>
                 </div>
               </article>
             }
@@ -236,4 +240,48 @@
       }
     </section>
   </main>
+
+  @if (deleteCandidate(); as game) {
+    <div class="delete-backdrop">
+      <section
+        appModalFocus
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-game-title"
+        aria-describedby="delete-game-description"
+        tabindex="-1"
+        (modalDismissed)="closeDelete()"
+      >
+        <span class="eyebrow">Remove from archive</span>
+        <h2 id="delete-game-title">Delete this game?</h2>
+        <p id="delete-game-description">
+          The game and its cached analysis will be removed from this device.
+          @if (game.platform !== 'local') {
+            A later import may add it again.
+          }
+        </p>
+        @if (deleteError()) {
+          <p class="delete-error" role="alert">{{ deleteError() }}</p>
+        }
+        <div class="delete-dialog-actions">
+          <button
+            type="button"
+            data-modal-initial
+            (click)="closeDelete()"
+            [disabled]="deletePending()"
+          >
+            Keep game
+          </button>
+          <button
+            type="button"
+            class="danger"
+            (click)="confirmDelete()"
+            [disabled]="deletePending()"
+          >
+            {{ deletePending() ? 'Deleting…' : 'Delete game' }}
+          </button>
+        </div>
+      </section>
+    </div>
+  }
 </div>

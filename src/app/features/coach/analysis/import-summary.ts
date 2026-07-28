@@ -19,11 +19,12 @@ export function calculateImportSummary(
   for (const game of games) {
     const username = usernames[game.platform]?.toLowerCase();
     const color: ChessColor | undefined =
-      game.white.username.toLowerCase() === username
+      game.learnerColor ??
+      (game.white.username.toLowerCase() === username
         ? 'white'
         : game.black.username.toLowerCase() === username
           ? 'black'
-          : undefined;
+          : undefined);
     if (!color) continue;
     const result = learnerResult(game.result, color);
     summary[result] += 1;

@@ -40,8 +40,8 @@ import {
 import { CoachAnalysisService } from '../analysis/coach-analysis.service';
 import { CoachRepositoryService } from '../data/coach-repository.service';
 import type {
-  ChessPlatform,
   EngineEvaluation,
+  GameSource,
   ImportedGame,
   MoveAnalysis,
   MoveClassification,
@@ -217,9 +217,9 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     const restored = await this.persistence.restore();
     this.sound.setEnabled(restored.preferences.soundEnabled);
     this.boardTheme.set(restored.preferences.boardTheme);
-    const platform = this.route.snapshot.paramMap.get('platform') as ChessPlatform | null;
+    const platform = this.route.snapshot.paramMap.get('platform') as GameSource | null;
     const gameId = this.route.snapshot.paramMap.get('gameId');
-    if ((platform === 'chess-com' || platform === 'lichess') && gameId) {
+    if ((platform === 'chess-com' || platform === 'lichess' || platform === 'local') && gameId) {
       const [game, profiles] = await Promise.all([
         this.repository.game(platform, gameId),
         this.repository.profiles(),
@@ -235,6 +235,12 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       }
     }
     this.loading.set(false);
+    if (
+      this.route.snapshot.queryParamMap.get('autoAnalyze') === 'true' &&
+      this.coachAnalysis.state().phase !== 'complete'
+    ) {
+      void this.analyze();
+    }
   }
 
   ngOnDestroy(): void {
@@ -499,6 +505,13 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     return state.phase === 'partial' || state.phase === 'error'
       ? 'Resume analysis'
       : 'Analyze game';
+  }
+
+  protected sourceLabel(): string {
+    const platform = this.game()?.platform;
+    if (platform === 'chess-com') return 'Chess.com';
+    if (platform === 'lichess') return 'Lichess';
+    return 'LealChess';
   }
 
   protected analysisProgress(): number {

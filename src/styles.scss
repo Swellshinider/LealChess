@@ -159,6 +159,106 @@ app-review-page {
   }
 }
 
+app-learn-page {
+  .review-action {
+    display: grid;
+    gap: 7px;
+    justify-items: end;
+  }
+
+  .delete-game {
+    background: transparent;
+    border: 0;
+    color: #dc8179;
+    font: inherit;
+    padding: 2px 0;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .delete-backdrop {
+    align-items: center;
+    background: rgb(10 17 21 / 72%);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    padding: 16px;
+    position: fixed;
+    z-index: 50;
+
+    section {
+      background: var(--carbon);
+      border: 1px solid rgb(200 213 207 / 18%);
+      box-shadow: 0 20px 70px rgb(0 0 0 / 38%);
+      color: var(--paper);
+      max-width: 430px;
+      padding: 22px;
+      width: 100%;
+    }
+
+    h2 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      margin: 7px 0;
+    }
+
+    p {
+      color: var(--mist);
+      font-size: 0.84rem;
+    }
+
+    button {
+      background: var(--surface-low);
+      border: 1px solid var(--outline-variant);
+      color: var(--paper);
+      min-height: 42px;
+      padding: 0 13px;
+    }
+
+    button:first-child {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: var(--night);
+    }
+
+    .danger {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: var(--paper);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    .delete-error {
+      color: #ffb4ab;
+    }
+  }
+
+  .delete-dialog-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 18px;
+  }
+
+  .eyebrow {
+    color: var(--primary);
+    font-family: var(--font-utility);
+    font-size: 0.63rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+
+@container (max-width: 620px) {
+  app-learn-page .review-action {
+    justify-items: start;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

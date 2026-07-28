@@ -128,6 +128,14 @@ export class CoachImportService {
     await this.initialize();
   }
 
+  async deleteGame(game: ImportedGame): Promise<void> {
+    await this.repository.deleteGame(game);
+    this.mutableGames.update((games) => games.filter((candidate) => candidate.key !== game.key));
+    this.mutableAnalyses.update((analyses) =>
+      analyses.filter((analysis) => analysis.importedGameKey !== game.key),
+    );
+  }
+
   async retry(platform: ChessPlatform): Promise<void> {
     const request = this.lastRequests.get(platform);
     if (!request || this.mutableStatuses()[platform].state === 'loading') return;

@@ -1,5 +1,10 @@
 import { learnerColorForGame } from '../analysis/analysis-rules';
-import type { ChessPlatform, ImportedGame, ImportedProfile } from '../domain/coach.types';
+import type {
+  ChessPlatform,
+  GameSource,
+  ImportedGame,
+  ImportedProfile,
+} from '../domain/coach.types';
 
 export type LearnGameOutcome = 'win' | 'draw' | 'loss' | 'unknown';
 export type LearnGameResultFilter = 'all' | Exclude<LearnGameOutcome, 'unknown'>;
@@ -7,7 +12,7 @@ export type LearnGameSort = 'newest' | 'oldest';
 
 export interface LearnGameFilters {
   result: LearnGameResultFilter;
-  platform: 'all' | ChessPlatform;
+  platform: 'all' | GameSource;
   speed: string;
   sort: LearnGameSort;
 }

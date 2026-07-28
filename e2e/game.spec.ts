@@ -47,7 +47,7 @@ test('starts as White, supports click moves, premoves, annotations, and restorat
   }
 });
 
-test('starts as Black, shows its chosen difficulty, and resigns', async ({ page }) => {
+test('reviews, archives, and deletes a completed Stockfish game', async ({ page }) => {
   await startGame(page, 'Black', 'Casual');
   await expect(page.locator('.history li')).toHaveCount(1, { timeout: 15_000 });
   await expect(page.locator('#difficulty')).toHaveCount(0);
@@ -60,6 +60,26 @@ test('starts as Black, shows its chosen difficulty, and resigns', async ({ page 
   );
   await page.getByRole('button', { name: 'Resign game' }).click();
   await expect(page.getByRole('heading', { name: 'You resigned' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Review game' }).click();
+  await expect(page).toHaveURL(/\/learn\/review\/local\/.+autoAnalyze=true/);
+  await expect(page.locator('.review-board')).toBeVisible();
+  await expect(page.locator('.game-meta')).toContainText('LealChess');
+  await expect(page.locator('.player-strip')).toContainText(['Stockfish', 'You']);
+  await expect(page.getByRole('button', { name: 'Analyze game' })).toHaveCount(0);
+
+  await page.goto('/learn');
+  const localGame = page.locator('.game-list article').filter({ hasText: 'LealChess' });
+  await expect(localGame).toHaveCount(1);
+  await localGame.getByRole('button', { name: 'Delete' }).click();
+  await expect(page.getByRole('alertdialog', { name: 'Delete this game?' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Keep game' })).toBeFocused();
+  await page.getByRole('button', { name: 'Delete game' }).click();
+  await expect(localGame).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Review your games' })).toBeFocused();
+
+  await page.goto('/play');
+  await expect(page.getByRole('heading', { name: 'Choose your side' })).toBeVisible();
 });
 
 test('supports drag-to-move and cancels a premove that becomes illegal', async ({ page }) => {

@@ -43,15 +43,29 @@
         Restart
       </button>
       <button type="button" (click)="controller.flipBoard()">Flip board</button>
-      <button
-        type="button"
-        class="resign"
-        (click)="confirm('resign', $event)"
-        [disabled]="state().phase !== 'active'"
-      >
-        Resign
-      </button>
+      @if (state().phase === 'game-over') {
+        <button
+          type="button"
+          class="review"
+          (click)="reviewRequested.emit()"
+          [disabled]="reviewPending()"
+        >
+          {{ reviewPending() ? 'Opening review…' : 'Review game' }}
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="resign"
+          (click)="confirm('resign', $event)"
+          [disabled]="state().phase !== 'active'"
+        >
+          Resign
+        </button>
+      }
     </div>
+    @if (reviewError()) {
+      <p class="review-error" role="alert">{{ reviewError() }}</p>
+    }
   </section>
 </aside>
 

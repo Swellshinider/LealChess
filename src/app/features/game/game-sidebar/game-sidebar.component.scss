@@ -18,8 +18,9 @@
   grid-template-areas:
     'status'
     'history'
+    'error'
     'actions';
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
   overflow: hidden;
 }
 
@@ -109,9 +110,21 @@ app-move-history {
     color: var(--primary);
   }
 
+  .review {
+    color: var(--primary);
+  }
+
   .resign {
     color: #ffb4ab;
   }
+}
+
+.review-error {
+  color: #ffb4ab;
+  font-size: 0.78rem;
+  grid-area: error;
+  margin: 0;
+  padding: 0 18px 12px;
 }
 
 .confirmation-backdrop {
@@ -197,7 +210,8 @@ button:disabled {
     grid-template-areas:
       'status'
       'actions'
+      'error'
       'history';
-    grid-template-rows: auto auto minmax(120px, 260px);
+    grid-template-rows: auto auto auto minmax(120px, 260px);
   }
 }

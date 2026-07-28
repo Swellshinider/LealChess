@@ -37,7 +37,8 @@ function game(
   } = {},
 ): ImportedGame {
   const platform = options.platform ?? 'chess-com';
-  const learnerName = platform === 'chess-com' ? 'Learner' : 'Student';
+  const learnerName =
+    platform === 'chess-com' ? 'Learner' : platform === 'lichess' ? 'Student' : 'You';
   const learner = options.learner ?? 'white';
   const learnerPlayer = { username: learnerName, rating: options.rating ?? 1500 };
   const opponent = { username: 'Opponent', rating: 1480 };
@@ -60,6 +61,7 @@ function game(
     profileKeys: [],
     firstImportedAt: '',
     lastImportedAt: '',
+    ...(platform === 'local' ? { learnerColor: learner } : {}),
   };
 }
 
@@ -100,6 +102,23 @@ describe('learn page helpers', () => {
         (candidate) => candidate.key,
       ),
     ).toEqual(['new-win', 'lichess-loss', 'old-loss']);
+  });
+
+  it('filters local games and determines their outcome without an imported profile', () => {
+    const local = game('local:game', {
+      platform: 'local',
+      learner: 'black',
+      result: '0-1',
+      speed: 'untimed',
+    });
+
+    expect(learnerOutcome(local, profiles)).toBe('win');
+    expect(
+      filterAndSortGames([game('imported'), local], profiles, {
+        ...DEFAULT_LEARN_GAME_FILTERS,
+        platform: 'local',
+      }),
+    ).toEqual([local]);
   });
 
   it('returns available speeds in a useful order', () => {

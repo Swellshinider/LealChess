@@ -11,6 +11,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Completed Stockfish games can be archived, opened directly in Review, and analyzed automatically.
+- Archived LealChess, Chess.com, and Lichess games can be deleted with their saved analysis.
 - Full move-quality labels and a color-coded progress rail for imported-game analysis.
 - Legal two-sided Practice exploration with persistent board annotations and explicit reset controls.
 - Branching Practice move lists with progressive move classifications and three ranked Stockfish

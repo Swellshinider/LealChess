@@ -2,6 +2,7 @@ import type { Square } from 'chess.js';
 import type { ChessColor } from '../../../shared/chess/chess.types';
 
 export type ChessPlatform = 'chess-com' | 'lichess';
+export type GameSource = ChessPlatform | 'local';
 export type SpeedFilter = 'any' | 'bullet' | 'blitz' | 'rapid' | 'classical-daily';
 export type ImportState = 'idle' | 'loading' | 'success' | 'warning' | 'error';
 export type ParseStatus = 'ready' | 'unsupported-variant' | 'invalid-pgn' | 'unavailable';
@@ -39,7 +40,7 @@ export interface ImportedMove {
 
 export interface ImportedGame {
   key: string;
-  platform: ChessPlatform;
+  platform: GameSource;
   platformGameId: string;
   platformUrl: string;
   pgn: string;
@@ -58,6 +59,7 @@ export interface ImportedGame {
   profileKeys: string[];
   firstImportedAt: string;
   lastImportedAt: string;
+  learnerColor?: ChessColor;
 }
 
 export interface ImportRequest {
