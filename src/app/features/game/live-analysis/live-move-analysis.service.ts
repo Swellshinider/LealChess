@@ -46,7 +46,8 @@ export class LiveMoveAnalysisService {
         return;
       }
       this.lastMoveKey = key;
-      void this.analyze(state.gameId, move);
+      const book = state.moves.every((candidate) => isOpeningPosition(candidate.after));
+      void this.analyze(state.gameId, move, book);
     });
   }
 
@@ -55,7 +56,7 @@ export class LiveMoveAnalysisService {
     this.engine.destroy();
   }
 
-  private async analyze(gameId: string, move: MoveRecord): Promise<void> {
+  private async analyze(gameId: string, move: MoveRecord, book: boolean): Promise<void> {
     this.abortController?.abort();
     const abortController = new AbortController();
     this.abortController = abortController;
@@ -68,7 +69,6 @@ export class LiveMoveAnalysisService {
     });
 
     try {
-      const book = isOpeningPosition(move.after);
       if (book) {
         await Promise.resolve();
         this.publish(requestId, gameId, move, 'book');

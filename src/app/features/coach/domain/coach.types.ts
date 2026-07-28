@@ -100,6 +100,17 @@ export interface PgnParseResult {
 }
 
 export type MoveClassification = 'good' | 'inaccuracy' | 'mistake' | 'blunder';
+export type ReviewMoveClassification =
+  | 'book'
+  | 'brilliant'
+  | 'great'
+  | 'best'
+  | 'excellent'
+  | 'good'
+  | 'inaccuracy'
+  | 'mistake'
+  | 'miss'
+  | 'blunder';
 export type MistakeCategory = 'opening' | 'tactical' | 'positional' | 'endgame';
 export type AnalysisStatus = 'partial' | 'complete';
 
@@ -119,6 +130,7 @@ export interface MoveAnalysis {
   playedEvaluation: EngineEvaluation;
   centipawnLoss?: number;
   classification: MoveClassification;
+  reviewClassification: ReviewMoveClassification;
   category?: MistakeCategory;
 }
 
@@ -132,6 +144,7 @@ export interface GameAnalysis {
   status: AnalysisStatus;
   totalUserMoves: number;
   moves: MoveAnalysis[];
+  reviewMoves?: MoveAnalysis[];
   updatedAt: string;
   completedAt?: string;
 }

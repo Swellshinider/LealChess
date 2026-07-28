@@ -12,7 +12,8 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:coverage": "ng test --coverage",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "generate:openings": "node scripts/generate-opening-index.mjs"
   },
   "private": true,
   "packageManager": "pnpm@11.17.0",

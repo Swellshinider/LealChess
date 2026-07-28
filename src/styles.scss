@@ -1,3 +1,5 @@
+@use './app/features/coach/review-page/review-page.global';
+
 @import '@fontsource/barlow-condensed/600.css';
 @import '@fontsource/barlow-condensed/700.css';
 @import '@fontsource/atkinson-hyperlegible/400.css';
@@ -128,7 +130,8 @@ a:focus-visible {
 app-review-page {
   .review-shell {
     display: flex;
-    min-height: 100dvh;
+    height: 100dvh;
+    min-height: 0;
   }
 
   .review-page {
@@ -136,12 +139,7 @@ app-review-page {
     --mistake: #d47b43;
 
     container-type: inline-size;
-    flex: 1 1 auto;
-    margin: 0 auto;
-    max-width: 1400px;
     min-width: 0;
-    padding: clamp(18px, 2.5vw, 32px);
-    width: 100%;
   }
 
   .folio {
@@ -154,57 +152,10 @@ app-review-page {
   }
 }
 
-.review-page {
-  .promotion-backdrop {
-    align-items: center;
-    background: rgb(23 36 44 / 78%);
-    display: flex;
-    inset: 0;
-    justify-content: center;
-    position: absolute;
-    z-index: 10;
-  }
-
-  .promotion-card {
-    background: var(--carbon);
-    border: 1px solid rgb(200 213 207 / 24%);
-    box-shadow: 0 20px 50px rgb(0 0 0 / 45%);
-    color: var(--paper);
-    display: grid;
-    gap: 16px;
-    padding: 20px;
-
-    > span {
-      font-family: var(--font-display);
-      font-size: 1.5rem;
-      font-weight: 700;
-    }
-  }
-
-  .promotion-pieces {
-    display: grid;
-    gap: 8px;
-    grid-template-columns: repeat(2, 1fr);
-
-    button {
-      background: var(--night);
-      border: 1px solid rgb(200 213 207 / 20%);
-      color: var(--paper);
-      min-width: 100px;
-      padding: 10px;
-    }
-
-    span {
-      color: var(--amber);
-      font-size: 1.35rem;
-      margin-right: 5px;
-    }
-  }
-}
-
 @media (max-width: 767px) {
   app-review-page .review-shell {
     display: block;
+    height: auto;
   }
 }
 

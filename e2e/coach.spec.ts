@@ -19,7 +19,7 @@ test.beforeEach(async ({ page }) => {
 
 test('imports both platforms, persists and deduplicates games, then replays moves', async ({
   page,
-}) => {
+}, testInfo) => {
   await page.getByLabel('Chess.com username').fill('Learner');
   await page.getByLabel('Lichess username').fill('Learner');
   await page.getByRole('button', { name: 'Import games' }).click();
@@ -68,6 +68,8 @@ test('imports both platforms, persists and deduplicates games, then replays move
     .first()
     .click();
   await expect(page.locator('.review-board')).toBeVisible();
+  await expect(page.locator('.player-strip.opponent')).toContainText('Opponent');
+  await expect(page.locator('.player-strip.opponent .player-avatar')).toHaveText('OP');
   await expect
     .poll(() =>
       page.locator('.review-board cg-board').evaluate((board) => {
@@ -88,6 +90,21 @@ test('imports both platforms, persists and deduplicates games, then replays move
     'color',
     'rgb(23, 36, 44)',
   );
+  if (!testInfo.project.name.includes('mobile')) {
+    await expectReviewWorkspaceToFitViewport(page);
+    await expect
+      .poll(() =>
+        page
+          .locator('.review-board coords.files coord')
+          .last()
+          .evaluate((coordinate) => {
+            const board = coordinate.closest('.review-board')!.getBoundingClientRect();
+            const bounds = coordinate.getBoundingClientRect();
+            return bounds.bottom <= board.bottom + 1;
+          }),
+      )
+      .toBe(true);
+  }
   await drawReviewArrow(page, 'c7', 'g5');
   await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(1);
   await expect(page.getByText('Ply 0 of 4', { exact: true })).toBeVisible();
@@ -157,7 +174,7 @@ test('analyzes locally, caches the result, and opens a missed position', async (
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'Real analysis worker smoke test');
-  test.setTimeout(45_000);
+  test.setTimeout(60_000);
   await page.getByLabel('Lichess username').fill('Learner');
   await page.getByRole('button', { name: 'Import games' }).click();
   await expect(page.getByText('Added 1 game.')).toBeVisible();
@@ -165,28 +182,44 @@ test('analyzes locally, caches the result, and opens a missed position', async (
   await page.getByRole('link', { name: /Open review/ }).click();
 
   await page.getByRole('button', { name: 'Analyze game' }).click();
-  await expect(page.getByRole('heading', { name: /learning moments found/ })).toBeVisible({
+  await expect(page.getByRole('heading', { name: /learning moments/ })).toBeVisible({
     timeout: 30_000,
   });
-  await page.getByRole('button', { name: /Practice \d+ moments/ }).click();
+  await expect(page.getByRole('progressbar', { name: 'Game analysis progress' })).toHaveAttribute(
+    'aria-valuetext',
+    '100% complete',
+  );
+  await page.getByRole('button', { name: 'f3' }).click();
+  await expect(page.locator('.review-classification')).toBeVisible();
+  await expectBoardOverlayWithinBounds(page, '.review-classification');
+  await page.getByRole('button', { name: 'e5' }).click();
+  await expect(page.locator('.review-classification')).toBeVisible();
+  await expect(page.locator('.move-note')).toContainText(/Book|Best|Excellent|Good/);
+  await page.getByRole('tab', { name: 'Practice' }).click();
   await expect(page.getByRole('heading', { name: 'Find a better move' })).toBeVisible();
   const practiceTab = page.getByRole('tab', { name: 'Practice' });
   await expect(practiceTab).toHaveAttribute('aria-selected', 'true');
   await practiceTab.focus();
   await page.keyboard.press('ArrowLeft');
-  await expect(page.getByRole('tab', { name: 'Score sheet' })).toHaveAttribute(
-    'aria-selected',
-    'true',
-  );
+  await expect(page.getByRole('tab', { name: 'Review' })).toHaveAttribute('aria-selected', 'true');
   await page.keyboard.press('ArrowRight');
   await expect(practiceTab).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByText(/Move a piece for/)).toHaveCount(0);
+  await moveReviewPiece(page, 'a2', 'a3');
+  await expect(page.getByText('Another idea.')).toBeVisible();
+  await moveReviewPiece(page, 'b8', 'c6');
+  await expect(page.getByText('2 moves explored')).toBeVisible();
+  await drawReviewArrow(page, 'c2', 'c4');
+  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Reset' }).click();
+  await expect(page.getByText('2 moves explored')).toHaveCount(0);
   await page.getByRole('button', { name: 'Reveal move' }).focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(1);
   await assertNoSeriousA11yViolations(page);
 
   await page.reload();
-  await expect(page.getByRole('heading', { name: /learning moments found/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /learning moments/ })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Analyze game' })).toHaveCount(0);
 });
 
@@ -354,6 +387,55 @@ async function drawReviewArrow(page: Page, from: string, to: string): Promise<vo
   await page.mouse.move(destination.x, destination.y, { steps: 12 });
   await page.waitForTimeout(50);
   await page.mouse.up({ button: 'right' });
+}
+
+async function moveReviewPiece(page: Page, from: string, to: string): Promise<void> {
+  const reviewBoard = page.locator('.review-board cg-board');
+  const board = await reviewBoard.boundingBox();
+  if (!board) throw new Error('Review board is not visible.');
+  const point = (square: string) => ({
+    x: board.x + ((square.charCodeAt(0) - 97 + 0.5) * board.width) / 8,
+    y: board.y + ((8 - Number(square[1]) + 0.5) * board.height) / 8,
+  });
+  const origin = point(from);
+  const destination = point(to);
+  await page.mouse.click(origin.x, origin.y);
+  await page.mouse.click(destination.x, destination.y);
+}
+
+async function expectBoardOverlayWithinBounds(page: Page, selector: string): Promise<void> {
+  await expect
+    .poll(() =>
+      page.locator(selector).evaluate((overlay) => {
+        const board = overlay.closest('.board-stage')!.getBoundingClientRect();
+        const bounds = overlay.getBoundingClientRect();
+        return (
+          bounds.left >= board.left &&
+          bounds.top >= board.top &&
+          bounds.right <= board.right &&
+          bounds.bottom <= board.bottom
+        );
+      }),
+    )
+    .toBe(true);
+}
+
+async function expectReviewWorkspaceToFitViewport(page: Page): Promise<void> {
+  const geometry = await page.evaluate(() => {
+    const scrollingElement = document.scrollingElement!;
+    const board = document.querySelector<HTMLElement>('.board-column')!.getBoundingClientRect();
+    const desk = document.querySelector<HTMLElement>('.review-desk')!.getBoundingClientRect();
+    return {
+      documentHeight: scrollingElement.scrollHeight,
+      clientHeight: scrollingElement.clientHeight,
+      boardBottom: board.bottom,
+      deskBottom: desk.bottom,
+      viewportHeight: window.innerHeight,
+    };
+  });
+  expect(geometry.documentHeight).toBeLessThanOrEqual(geometry.clientHeight + 1);
+  expect(geometry.boardBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
+  expect(geometry.deskBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
 }
 
 async function seedBoardTheme(

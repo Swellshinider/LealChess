@@ -73,6 +73,7 @@ function analysis(
         playedEvaluation: cp(-100),
         centipawnLoss: 130,
         classification: 'mistake',
+        reviewClassification: 'mistake',
         category,
       },
     ],

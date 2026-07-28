@@ -175,5 +175,5 @@ export function moveAnalysisForPly(
   analysis: GameAnalysis | null,
   ply: number,
 ): MoveAnalysis | undefined {
-  return analysis?.moves.find((move) => move.ply === ply);
+  return (analysis?.reviewMoves ?? analysis?.moves)?.find((move) => move.ply === ply);
 }

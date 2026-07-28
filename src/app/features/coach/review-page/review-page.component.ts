@@ -16,6 +16,7 @@ import type { Config } from '@lichess-org/chessground/config';
 import type { DrawShape } from '@lichess-org/chessground/draw';
 import type { Dests, Key } from '@lichess-org/chessground/types';
 import { Chess, type Square } from 'chess.js';
+import { boardOverlayPosition } from '../../../shared/chess/board-overlay-position';
 import type { ChessColor } from '../../../shared/chess/chess.types';
 import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
 import { SideNavigationComponent } from '../../../shared/layout/side-navigation/side-navigation.component';
@@ -43,6 +44,8 @@ import type {
   MoveAnalysis,
   MoveClassification,
   MistakeCategory,
+  PlatformPlayer,
+  ReviewMoveClassification,
   TrainingPosition,
 } from '../domain/coach.types';
 import { reviewSoundEvents } from './review-sound';
@@ -74,6 +77,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   protected readonly trainingIndex = signal(0);
   protected readonly puzzleStatus = signal<PuzzleStatus>('ready');
   protected readonly pendingPromotion = signal<Omit<MoveInput, 'promotion'> | null>(null);
+  protected readonly practiceLine = signal<MoveInput[]>([]);
   protected readonly promotionPieces: readonly PromotionPiece[] = ['q', 'r', 'b', 'n'];
   protected readonly positions = computed(() => {
     const game = this.game();
@@ -85,6 +89,28 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   protected readonly currentAnalysis = computed<MoveAnalysis | undefined>(() =>
     moveAnalysisForPly(this.coachAnalysis.analysis(), this.currentPly()),
   );
+  protected readonly learnerPlayer = computed<PlatformPlayer | null>(() => {
+    const game = this.game();
+    const color = this.learnerColor();
+    return game && color ? game[color] : null;
+  });
+  protected readonly opponentPlayer = computed<PlatformPlayer | null>(() => {
+    const game = this.game();
+    const color = this.learnerColor();
+    if (!game || !color) return null;
+    return game[color === 'white' ? 'black' : 'white'];
+  });
+  protected readonly boardTurn = computed<ChessColor>(() => {
+    if (this.mode() === 'practice') return turnColor(this.practiceFen());
+    const game = this.game();
+    const ply = this.currentPly();
+    const fen = game?.moves[ply - 1]?.fenAfter ?? game?.moves[0]?.fenBefore ?? STARTING_FEN;
+    return turnColor(fen);
+  });
+  protected readonly analysisMoves = computed(() => {
+    const game = this.game();
+    return game?.moves ?? [];
+  });
   private api: Api | null = null;
   private apiElement: HTMLElement | null = null;
   private resizeObserver: ResizeObserver | null = null;
@@ -99,6 +125,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       this.mode();
       this.trainingIndex();
       this.puzzleStatus();
+      this.practiceLine();
       const host = this.boardHost()?.nativeElement;
       if (host && host !== this.apiElement) {
         this.api?.destroy();
@@ -229,12 +256,16 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     if (!this.positions().length) return;
     this.trainingIndex.set(Math.max(0, Math.min(index, this.positions().length - 1)));
     this.puzzleStatus.set('ready');
+    this.practiceLine.set([]);
+    this.shapes = [];
     this.pendingPromotion.set(null);
     this.mode.set('practice');
   }
 
   protected leavePractice(): void {
     this.pendingPromotion.set(null);
+    this.practiceLine.set([]);
+    this.shapes = [];
     this.mode.set('review');
   }
 
@@ -242,11 +273,22 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     const next = (this.trainingIndex() + 1) % this.positions().length;
     this.trainingIndex.set(next);
     this.puzzleStatus.set('ready');
+    this.practiceLine.set([]);
+    this.shapes = [];
   }
 
   protected revealMove(): void {
     this.pendingPromotion.set(null);
+    this.practiceLine.set([]);
+    this.shapes = [];
     this.puzzleStatus.set('revealed');
+  }
+
+  protected resetPractice(): void {
+    this.pendingPromotion.set(null);
+    this.practiceLine.set([]);
+    this.shapes = [];
+    this.puzzleStatus.set('ready');
   }
 
   protected choosePromotion(piece: PromotionPiece): void {
@@ -268,8 +310,35 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     return moveAnalysisForPly(this.coachAnalysis.analysis(), ply);
   }
 
-  protected classificationLabel(classification: MoveClassification): string {
+  protected classificationLabel(
+    classification: MoveClassification | ReviewMoveClassification,
+  ): string {
     return classification.charAt(0).toUpperCase() + classification.slice(1);
+  }
+
+  protected classificationPosition(square: string): string {
+    return boardOverlayPosition(square, this.orientation());
+  }
+
+  protected playerInitials(player: PlatformPlayer | null): string {
+    const normalized = player?.username.replace(/[^a-z0-9]/gi, '') ?? '';
+    return normalized.slice(0, 2).toUpperCase() || '♟';
+  }
+
+  protected learnerSide(): ChessColor {
+    return this.learnerColor() ?? 'white';
+  }
+
+  protected opponentSide(): ChessColor {
+    return this.learnerSide() === 'white' ? 'black' : 'white';
+  }
+
+  protected currentMoveDestination(): string | null {
+    return this.game()?.moves[this.currentPly() - 1]?.to ?? null;
+  }
+
+  protected reviewClassification(ply: number): ReviewMoveClassification | undefined {
+    return this.moveAnalysis(ply)?.reviewClassification;
   }
 
   protected categoryLabel = categoryLabel;
@@ -345,7 +414,10 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
         defaultSnapToValidMove: true,
         eraseOnMovablePieceClick: false,
         onChange: (shapes) => {
-          this.shapes = shapes;
+          const hint = this.practiceHint();
+          this.shapes = hint
+            ? shapes.filter((shape) => shape.orig !== hint.orig || shape.dest !== hint.dest)
+            : shapes;
         },
       },
     };
@@ -379,44 +451,37 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     const position = this.activePosition();
     if (!position || !this.api) return;
     const chess = new Chess(position.fen);
-    const solved = this.puzzleStatus() === 'correct';
-    let fen = position.fen;
     let lastMove: [Key, Key] | undefined;
-    if (solved) {
-      const move = parseUci(position.bestMove);
+    for (const move of this.practiceLine()) {
       chess.move(move);
-      fen = chess.fen();
       lastMove = [move.from as Key, move.to as Key];
     }
-    const revealed = this.puzzleStatus() === 'revealed';
-    const best = parseUci(position.bestMove);
-    const shapes: DrawShape[] = revealed
-      ? [{ orig: best.from as Key, dest: best.to as Key, brush: 'green' }]
-      : [];
-    const active = !solved && !revealed;
+    const fen = chess.fen();
+    const color = turnColor(fen);
+    const hint = this.practiceHint();
     this.api.set({
       fen,
       orientation: this.orientation(),
-      turnColor: this.learnerColor() ?? 'white',
+      turnColor: color,
       lastMove,
       movable: {
-        color: active ? (this.learnerColor() ?? undefined) : undefined,
-        dests: active ? legalDestinations(position.fen) : new Map(),
+        color,
+        dests: legalDestinations(fen),
         showDests: true,
       },
-      draggable: { enabled: active },
-      selectable: { enabled: active },
-      drawable: { enabled: false, shapes },
+      draggable: { enabled: true },
+      selectable: { enabled: true },
+      drawable: { enabled: true, shapes: hint ? [...this.shapes, hint] : this.shapes },
     });
     this.api.state.dom.bounds.clear();
     this.api.redrawAll();
   }
 
   private handleTrainingMove(from: Key, to: Key): void {
-    if (this.mode() !== 'practice' || this.puzzleStatus() === 'correct') return;
+    if (this.mode() !== 'practice') return;
     const position = this.activePosition();
     if (!position) return;
-    const chess = new Chess(position.fen);
+    const chess = new Chess(this.practiceFen());
     const piece = chess.get(from as Square);
     const move = { from: from as Square, to: to as Square };
     if (
@@ -433,18 +498,33 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     const position = this.activePosition();
     if (!position) return;
     try {
-      new Chess(position.fen).move(move);
+      new Chess(this.practiceFen()).move(move);
     } catch {
-      this.puzzleStatus.set('incorrect');
+      this.syncBoard();
       return;
     }
-    if (moveToUci(move) === position.bestMove) {
-      this.puzzleStatus.set('correct');
-      this.sound.play('move');
-    } else {
-      this.puzzleStatus.set('incorrect');
-      this.syncBoard();
+    const firstMove = this.practiceLine().length === 0;
+    if (this.puzzleStatus() === 'revealed') this.shapes = [];
+    this.practiceLine.update((line) => [...line, move]);
+    if (firstMove) {
+      this.puzzleStatus.set(moveToUci(move) === position.bestMove ? 'correct' : 'incorrect');
     }
+    this.sound.play('move');
+  }
+
+  private practiceFen(): string {
+    const position = this.activePosition();
+    if (!position) return STARTING_FEN;
+    const chess = new Chess(position.fen);
+    for (const move of this.practiceLine()) chess.move(move);
+    return chess.fen();
+  }
+
+  private practiceHint(): DrawShape | null {
+    const position = this.activePosition();
+    if (!position || this.mode() !== 'practice' || this.puzzleStatus() !== 'revealed') return null;
+    const best = parseUci(position.bestMove);
+    return { orig: best.from as Key, dest: best.to as Key, brush: 'green' };
   }
 }
 
@@ -464,4 +544,8 @@ function parseUci(uci: string): MoveInput {
     to: uci.slice(2, 4) as Square,
     ...(uci[4] ? { promotion: uci[4] as PromotionPiece } : {}),
   };
+}
+
+function turnColor(fen: string): ChessColor {
+  return new Chess(fen).turn() === 'w' ? 'white' : 'black';
 }

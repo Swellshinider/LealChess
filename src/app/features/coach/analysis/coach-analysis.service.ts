@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { ANALYSIS_ENGINE_PORT } from '../../../core/engine/analysis-engine.types';
 import type { ChessColor } from '../../../shared/chess/chess.types';
+import { openingBookPlyCount } from '../../game/live-analysis/opening-index';
 import { CoachRepositoryService } from '../data/coach-repository.service';
 import type { GameAnalysis, ImportedGame, MoveAnalysis } from '../domain/coach.types';
 import {
@@ -15,6 +16,7 @@ import {
   moveToSan,
   moveToUci,
 } from './analysis-rules';
+import { classifyReviewMove } from './review-classification';
 
 export type AnalysisPhase =
   'idle' | 'ready' | 'starting' | 'running' | 'partial' | 'complete' | 'error';
@@ -53,8 +55,8 @@ export class CoachAnalysisService {
     this.mutableAnalysis.set(analysis);
     this.mutableState.set({
       phase: analysis?.status === 'complete' ? 'complete' : analysis ? 'partial' : 'ready',
-      completed: analysis?.moves.length ?? 0,
-      total: game.moves.filter((move) => move.color === learnerColor).length,
+      completed: analysis?.reviewMoves?.length ?? analysis?.moves.length ?? 0,
+      total: game.moves.length,
       error: null,
     });
   }
@@ -63,6 +65,7 @@ export class CoachAnalysisService {
     if (this.abortController) return;
     const fingerprint = await analysisFingerprint(game, learnerColor);
     const userMoves = game.moves.filter((move) => move.color === learnerColor);
+    const reviewMoves = game.moves;
     const cached = this.mutableAnalysis();
     let analysis =
       cached?.sourceFingerprint === fingerprint
@@ -72,8 +75,8 @@ export class CoachAnalysisService {
     this.abortController = new AbortController();
     this.mutableState.set({
       phase: 'starting',
-      completed: analysis.moves.length,
-      total: userMoves.length,
+      completed: analysis.reviewMoves?.length ?? 0,
+      total: reviewMoves.length,
       error: null,
     });
 
@@ -83,12 +86,14 @@ export class CoachAnalysisService {
         throw new DOMException('Analysis cancelled.', 'AbortError');
       }
       this.mutableState.update((state) => ({ ...state, phase: 'running' }));
-      const completedPlies = new Set(analysis.moves.map((move) => move.ply));
-      for (const move of userMoves) {
+      const completedPlies = new Set((analysis.reviewMoves ?? []).map((move) => move.ply));
+      const bookPlyLimit = openingBookPlyCount(reviewMoves.map((move) => move.fenAfter));
+      for (const move of reviewMoves) {
         if (completedPlies.has(move.ply)) continue;
         const best = await this.engine.analyze({
           fen: move.fenBefore,
           depth: ANALYSIS_DEPTH,
+          multiPv: 2,
           signal: this.abortController.signal,
         });
         if (!best.bestMove) throw new Error(`No best move was returned for ply ${move.ply}.`);
@@ -115,18 +120,29 @@ export class CoachAnalysisService {
           playedEvaluation: played.evaluation,
           ...(result.centipawnLoss === undefined ? {} : { centipawnLoss: result.centipawnLoss }),
           classification: result.classification,
-          ...(result.classification === 'good'
+          reviewClassification: classifyReviewMove(move, best, played, move.ply <= bookPlyLimit),
+          ...(move.color !== learnerColor || result.classification === 'good'
             ? {}
             : { category: categorizeMistake(move.fenBefore, move.ply, bestMoveSan) }),
         };
+        const nextReviewMoves = [...(analysis.reviewMoves ?? []), moveAnalysis].sort(
+          (left, right) => left.ply - right.ply,
+        );
         analysis = {
           ...analysis,
-          moves: [...analysis.moves, moveAnalysis].sort((left, right) => left.ply - right.ply),
+          moves:
+            move.color === learnerColor
+              ? [...analysis.moves, moveAnalysis].sort((left, right) => left.ply - right.ply)
+              : analysis.moves,
+          reviewMoves: nextReviewMoves,
           status: 'partial',
           updatedAt: new Date().toISOString(),
         };
         this.mutableAnalysis.set(analysis);
-        this.mutableState.update((state) => ({ ...state, completed: analysis.moves.length }));
+        this.mutableState.update((state) => ({
+          ...state,
+          completed: analysis.reviewMoves?.length ?? 0,
+        }));
         await this.repository.saveAnalysis(analysis);
       }
 
@@ -141,8 +157,8 @@ export class CoachAnalysisService {
       this.mutableAnalysis.set(analysis);
       this.mutableState.set({
         phase: 'complete',
-        completed: analysis.moves.length,
-        total: userMoves.length,
+        completed: analysis.reviewMoves?.length ?? 0,
+        total: reviewMoves.length,
         error: null,
       });
     } catch (error) {
@@ -184,6 +200,7 @@ export class CoachAnalysisService {
       status: 'partial',
       totalUserMoves,
       moves: [],
+      reviewMoves: [],
       updatedAt: new Date().toISOString(),
     };
   }
