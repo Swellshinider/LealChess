@@ -14,7 +14,7 @@ describe('SideNavigationComponent', () => {
     vi.restoreAllMocks();
   });
 
-  it('exposes working routes and unavailable placeholders without activating them', async () => {
+  it('exposes every working route in the desktop navigation', async () => {
     stubMedia({ desktop: true, mobile: false });
     await TestBed.configureTestingModule({
       imports: [SideNavigationComponent],
@@ -24,7 +24,7 @@ describe('SideNavigationComponent', () => {
     fixture.detectChanges();
     const host = fixture.nativeElement as HTMLElement;
 
-    expect(host.querySelectorAll('a[href]').length).toBe(6);
+    expect(host.querySelectorAll('a[href]').length).toBe(7);
     expect(host.querySelector<HTMLImageElement>('.brand-logo')?.getAttribute('src')).toBe(
       '/favicon.svg',
     );
@@ -32,7 +32,10 @@ describe('SideNavigationComponent', () => {
     expect(host.querySelector('[data-tooltip="Learn"]')).not.toBeNull();
     expect(host.querySelector('[data-tooltip="Explorer"]')).not.toBeNull();
     expect(host.querySelector('[data-tooltip="Settings"]')).not.toBeNull();
-    expect(host.querySelector('[aria-label="Help, unavailable"]')).not.toBeNull();
+    expect(
+      host.querySelector<HTMLAnchorElement>('[data-tooltip="Help"]')?.getAttribute('href'),
+    ).toBe('/help');
+    expect(host.querySelector('[aria-disabled="true"]')).toBeNull();
 
     const toggle = host.querySelector<HTMLButtonElement>('.rail-toggle')!;
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
@@ -57,6 +60,7 @@ describe('SideNavigationComponent', () => {
 
     expect(drawer).not.toBeNull();
     expect(drawer.getAttribute('aria-modal')).toBe('true');
+    expect(drawer.querySelector<HTMLAnchorElement>('a[href="/help"]')).not.toBeNull();
 
     drawer.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     fixture.detectChanges();

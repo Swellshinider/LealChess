@@ -42,6 +42,12 @@ export const routes: Routes = [
     title: 'Explorer | LealChess',
   },
   {
+    path: 'help',
+    loadComponent: () =>
+      import('./features/help/help-page.component').then((module) => module.HelpPageComponent),
+    title: 'Help | LealChess',
+  },
+  {
     path: 'learn/review/:platform/:gameId',
     loadComponent: () =>
       import('./features/coach/review-page/review-page.component').then(
@@ -49,5 +55,12 @@ export const routes: Routes = [
       ),
     title: 'Review game | LealChess',
   },
-  { path: '**', redirectTo: '' },
+  {
+    path: '**',
+    loadComponent: () =>
+      import('./features/not-found/not-found-page.component').then(
+        (module) => module.NotFoundPageComponent,
+      ),
+    title: 'Page not found | LealChess',
+  },
 ];
