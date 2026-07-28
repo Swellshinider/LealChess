@@ -18,11 +18,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Branching Practice move lists with progressive move classifications and three ranked Stockfish
   continuations.
 - Opponent-move replays and previous/next navigation between review training positions.
+- A persistent Explorer workspace for FEN, PGN, custom-position, variation, and Stockfish
+  move-quality analysis.
 
 ### Changed
 
 - Simplified game reviews into a board-first workspace with compact player identities, contextual
   engine details, and responsive controls.
+- Simplified Explorer into a viewport-fitting board-first workspace with restrained controls and an
+  orientation-aware evaluation rail.
 
 ### Removed
 
@@ -32,6 +36,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Keep Review board coordinates visible and the desktop workspace within the viewport.
 - Classify complete opening lines as Book and include opponent moves in game-review analysis.
+- Match Explorer square ordering and coordinate contrast with Play and Review.
 
 ## [Unreleased] - 27-07-2026
 
