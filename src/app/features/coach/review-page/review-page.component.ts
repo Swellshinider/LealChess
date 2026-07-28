@@ -6,6 +6,7 @@ import {
   effect,
   inject,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import type { ElementRef, OnDestroy, OnInit } from '@angular/core';
@@ -16,6 +17,7 @@ import type { Config } from '@lichess-org/chessground/config';
 import type { DrawShape } from '@lichess-org/chessground/draw';
 import type { Dests, Key } from '@lichess-org/chessground/types';
 import { Chess, type Square } from 'chess.js';
+import { StockfishAnalysisEngineService } from '../../../core/engine/stockfish-analysis-engine.service';
 import { boardOverlayPosition } from '../../../shared/chess/board-overlay-position';
 import type { ChessColor } from '../../../shared/chess/chess.types';
 import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
@@ -48,6 +50,24 @@ import type {
   ReviewMoveClassification,
   TrainingPosition,
 } from '../domain/coach.types';
+import {
+  PRACTICE_ANALYSIS_ENGINE_PORT,
+  PracticeAnalysisService,
+} from './practice-analysis.service';
+import { PracticeMoveTreeComponent } from './practice-move-tree.component';
+import {
+  commitPracticeMove,
+  createPracticeSession,
+  practiceSessionKey,
+  selectPracticeNode,
+  updatePracticeNode,
+} from './practice-session';
+import type {
+  PracticeAnalysisRequest,
+  PracticeCandidateLine,
+  PracticeSession,
+  PracticeVariationNode,
+} from './practice.types';
 import { reviewSoundEvents } from './review-sound';
 
 type ReviewMode = 'review' | 'practice';
@@ -55,7 +75,14 @@ type PuzzleStatus = 'ready' | 'incorrect' | 'correct' | 'revealed';
 
 @Component({
   selector: 'app-review-page',
-  imports: [ModalFocusDirective, RouterLink, SideNavigationComponent],
+  imports: [ModalFocusDirective, PracticeMoveTreeComponent, RouterLink, SideNavigationComponent],
+  providers: [
+    PracticeAnalysisService,
+    {
+      provide: PRACTICE_ANALYSIS_ENGINE_PORT,
+      useClass: StockfishAnalysisEngineService,
+    },
+  ],
   templateUrl: './review-page.component.html',
   styleUrl: './review-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -66,6 +93,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   private readonly repository = inject(CoachRepositoryService);
   private readonly persistence = inject(PERSISTENCE_PORT);
   private readonly sound = inject(SoundService);
+  protected readonly practiceAnalysis = inject(PracticeAnalysisService);
   protected readonly coachAnalysis = inject(CoachAnalysisService);
   protected readonly game = signal<ImportedGame | null>(null);
   protected readonly loading = signal(true);
@@ -77,7 +105,9 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   protected readonly trainingIndex = signal(0);
   protected readonly puzzleStatus = signal<PuzzleStatus>('ready');
   protected readonly pendingPromotion = signal<Omit<MoveInput, 'promotion'> | null>(null);
-  protected readonly practiceLine = signal<MoveInput[]>([]);
+  private readonly practiceSessions = signal<Record<string, PracticeSession>>({});
+  private readonly practiceReplayFen = signal<string | null>(null);
+  protected readonly practiceReplaying = signal(false);
   protected readonly promotionPieces: readonly PromotionPiece[] = ['q', 'r', 'b', 'n'];
   protected readonly positions = computed(() => {
     const game = this.game();
@@ -85,6 +115,21 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   });
   protected readonly activePosition = computed<TrainingPosition | null>(
     () => this.positions()[this.trainingIndex()] ?? null,
+  );
+  protected readonly activePracticeSession = computed<PracticeSession | null>(() => {
+    const position = this.activePosition();
+    return position ? (this.practiceSessions()[practiceSessionKey(position)] ?? null) : null;
+  });
+  protected readonly selectedPracticeNode = computed<PracticeVariationNode | null>(() => {
+    const session = this.activePracticeSession();
+    return session?.nodes[session.selectedNodeId] ?? null;
+  });
+  protected readonly practiceMoveCount = computed(() => {
+    const session = this.activePracticeSession();
+    return session ? Math.max(0, Object.keys(session.nodes).length - 1) : 0;
+  });
+  protected readonly practiceInputLocked = computed(
+    () => this.practiceReplaying() || this.practiceAnalysis.state().phase === 'quick',
   );
   protected readonly currentAnalysis = computed<MoveAnalysis | undefined>(() =>
     moveAnalysisForPly(this.coachAnalysis.analysis(), this.currentPly()),
@@ -115,6 +160,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   private apiElement: HTMLElement | null = null;
   private resizeObserver: ResizeObserver | null = null;
   private resizeFrame: number | null = null;
+  private replayTimers: ReturnType<typeof setTimeout>[] = [];
   private shapes: DrawShape[] = [];
 
   constructor() {
@@ -125,7 +171,10 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       this.mode();
       this.trainingIndex();
       this.puzzleStatus();
-      this.practiceLine();
+      this.practiceSessions();
+      this.practiceReplayFen();
+      this.practiceReplaying();
+      this.practiceAnalysis.state();
       const host = this.boardHost()?.nativeElement;
       if (host && host !== this.apiElement) {
         this.api?.destroy();
@@ -143,6 +192,24 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
         this.resizeObserver.observe(host);
       }
       this.syncBoard();
+    });
+    effect(() => {
+      const state = this.practiceAnalysis.state();
+      if (!state.nodeId || (!state.result && !state.error)) return;
+      untracked(() =>
+        this.updateActiveSession((session) =>
+          updatePracticeNode(session, state.nodeId!, {
+            ...(state.result
+              ? {
+                  assessment: state.result.assessment,
+                  candidates: state.result.candidates,
+                  candidateDepth: state.result.assessment.depth,
+                }
+              : {}),
+            analysisError: state.error,
+          }),
+        ),
+      );
     });
   }
 
@@ -172,6 +239,8 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.coachAnalysis.cancel();
+    this.clearReplayTimers();
+    this.practiceAnalysis.destroy();
     if (this.resizeFrame !== null) cancelAnimationFrame(this.resizeFrame);
     this.resizeObserver?.disconnect();
     this.api?.destroy();
@@ -256,39 +325,74 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     if (!this.positions().length) return;
     this.trainingIndex.set(Math.max(0, Math.min(index, this.positions().length - 1)));
     this.puzzleStatus.set('ready');
-    this.practiceLine.set([]);
     this.shapes = [];
     this.pendingPromotion.set(null);
+    this.ensureActiveSession();
     this.mode.set('practice');
+    this.replayOpponentMove();
   }
 
   protected leavePractice(): void {
+    this.clearReplayTimers();
+    this.practiceAnalysis.cancel();
     this.pendingPromotion.set(null);
-    this.practiceLine.set([]);
+    this.practiceReplayFen.set(null);
+    this.practiceReplaying.set(false);
     this.shapes = [];
     this.mode.set('review');
   }
 
+  protected previousPosition(): void {
+    if (this.trainingIndex() === 0) return;
+    this.changePracticePosition(this.trainingIndex() - 1);
+  }
+
   protected nextPosition(): void {
-    const next = (this.trainingIndex() + 1) % this.positions().length;
-    this.trainingIndex.set(next);
-    this.puzzleStatus.set('ready');
-    this.practiceLine.set([]);
-    this.shapes = [];
+    if (this.trainingIndex() >= this.positions().length - 1) return;
+    this.changePracticePosition(this.trainingIndex() + 1);
   }
 
   protected revealMove(): void {
+    const session = this.activePracticeSession();
+    if (!session) return;
+    this.practiceAnalysis.cancel();
     this.pendingPromotion.set(null);
-    this.practiceLine.set([]);
+    this.updateActiveSession((current) => selectPracticeNode(current, current.rootId));
     this.shapes = [];
     this.puzzleStatus.set('revealed');
   }
 
   protected resetPractice(): void {
+    const position = this.activePosition();
+    if (!position) return;
+    this.practiceAnalysis.cancel();
     this.pendingPromotion.set(null);
-    this.practiceLine.set([]);
+    this.practiceSessions.update((sessions) => ({
+      ...sessions,
+      [practiceSessionKey(position)]: createPracticeSession(position),
+    }));
     this.shapes = [];
     this.puzzleStatus.set('ready');
+    this.replayOpponentMove();
+  }
+
+  protected selectPracticeNode(nodeId: string): void {
+    this.practiceAnalysis.cancel();
+    this.pendingPromotion.set(null);
+    this.practiceReplayFen.set(null);
+    this.practiceReplaying.set(false);
+    this.updateActiveSession((session) => selectPracticeNode(session, nodeId));
+    this.puzzleStatus.set('ready');
+    const node = this.selectedPracticeNode();
+    if (node?.move && (!node.assessment || node.assessment.provisional)) {
+      const request = this.practiceAnalysisRequest(node);
+      if (request) this.practiceAnalysis.analyze(request);
+    }
+  }
+
+  protected retryPracticeAnalysis(): void {
+    const request = this.practiceAnalysisRequest();
+    if (request) this.practiceAnalysis.retry(request);
   }
 
   protected choosePromotion(piece: PromotionPiece): void {
@@ -349,6 +453,45 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     }
     const pawns = evaluation.score.value / 100;
     return `${pawns >= 0 ? '+' : ''}${pawns.toFixed(2)}`;
+  }
+
+  protected candidateEvaluationLabel(
+    line: PracticeCandidateLine,
+    fen = this.selectedPracticeNode()?.fen,
+  ): string {
+    if (!fen || turnColor(fen) === 'white') return this.evaluationLabel(line.evaluation);
+    const score = line.evaluation.score;
+    return this.evaluationLabel({
+      ...line.evaluation,
+      score:
+        score.kind === 'mate'
+          ? { kind: 'mate', moves: -score.moves }
+          : { kind: 'centipawn', value: -score.value },
+    });
+  }
+
+  protected candidateRuleWidth(rank: number): string {
+    return `${{ 1: 14, 2: 10, 3: 6 }[rank] ?? 6}px`;
+  }
+
+  protected selectedPracticeMoveDestination(): string | null {
+    return this.selectedPracticeNode()?.move?.to ?? null;
+  }
+
+  protected selectedPracticeGameOver(): boolean {
+    const fen = this.selectedPracticeNode()?.fen;
+    return Boolean(fen && new Chess(fen).isGameOver());
+  }
+
+  protected practiceAnalysisLabel(): string {
+    const state = this.practiceAnalysis.state();
+    if (state.phase === 'quick') return 'Finding a quick evaluation…';
+    if (state.phase === 'refining') return 'Depth 10 · refining to depth 14';
+    if (state.phase === 'complete') return 'Stockfish depth 14';
+    if (state.phase === 'error' && state.result) return 'Depth 10 · refinement unavailable';
+    if (state.phase === 'error') return 'Analysis unavailable';
+    const node = this.selectedPracticeNode();
+    return node?.candidateDepth ? `Stockfish depth ${node.candidateDepth}` : '';
   }
 
   protected analysisButtonLabel(): string {
@@ -449,36 +592,45 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
 
   private syncPracticeBoard(): void {
     const position = this.activePosition();
-    if (!position || !this.api) return;
-    const chess = new Chess(position.fen);
-    let lastMove: [Key, Key] | undefined;
-    for (const move of this.practiceLine()) {
-      chess.move(move);
-      lastMove = [move.from as Key, move.to as Key];
-    }
-    const fen = chess.fen();
+    const session = this.activePracticeSession();
+    const node = this.selectedPracticeNode();
+    if (!position || !session || !node || !this.api) return;
+    const fen = this.practiceReplayFen() ?? node.fen;
     const color = turnColor(fen);
     const hint = this.practiceHint();
+    const previousOpponentMove = this.previousOpponentMove();
+    const lastMove =
+      this.practiceReplayFen() !== null
+        ? undefined
+        : node.move
+          ? ([node.move.from as Key, node.move.to as Key] as [Key, Key])
+          : previousOpponentMove
+            ? ([previousOpponentMove.from, previousOpponentMove.to] as [Key, Key])
+            : undefined;
     this.api.set({
       fen,
       orientation: this.orientation(),
       turnColor: color,
       lastMove,
       movable: {
-        color,
-        dests: legalDestinations(fen),
+        color: this.practiceInputLocked() ? undefined : color,
+        dests: this.practiceInputLocked() ? new Map() : legalDestinations(fen),
         showDests: true,
       },
-      draggable: { enabled: true },
-      selectable: { enabled: true },
-      drawable: { enabled: true, shapes: hint ? [...this.shapes, hint] : this.shapes },
+      draggable: { enabled: !this.practiceInputLocked() },
+      selectable: { enabled: !this.practiceInputLocked() },
+      drawable: {
+        enabled: true,
+        shapes: this.shapes,
+        autoShapes: hint ? [hint] : this.engineCandidateShapes(node.candidates),
+      },
     });
     this.api.state.dom.bounds.clear();
     this.api.redrawAll();
   }
 
   private handleTrainingMove(from: Key, to: Key): void {
-    if (this.mode() !== 'practice') return;
+    if (this.mode() !== 'practice' || this.practiceInputLocked()) return;
     const position = this.activePosition();
     if (!position) return;
     const chess = new Chess(this.practiceFen());
@@ -496,35 +648,146 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
 
   private gradeMove(move: MoveInput): void {
     const position = this.activePosition();
-    if (!position) return;
+    const session = this.activePracticeSession();
+    const parent = this.selectedPracticeNode();
+    if (!position || !session || !parent) return;
     try {
-      new Chess(this.practiceFen()).move(move);
+      new Chess(parent.fen).move(move);
     } catch {
       this.syncBoard();
       return;
     }
-    const firstMove = this.practiceLine().length === 0;
+    const firstMove = parent.id === session.rootId;
     if (this.puzzleStatus() === 'revealed') this.shapes = [];
-    this.practiceLine.update((line) => [...line, move]);
+    const committed = commitPracticeMove(session, move);
+    this.practiceSessions.update((sessions) => ({
+      ...sessions,
+      [session.key]: committed.session,
+    }));
     if (firstMove) {
       this.puzzleStatus.set(moveToUci(move) === position.bestMove ? 'correct' : 'incorrect');
     }
     this.sound.play('move');
+    if (
+      committed.created ||
+      !committed.node.assessment ||
+      committed.node.assessment.provisional ||
+      committed.node.analysisError
+    ) {
+      const request = this.practiceAnalysisRequest(committed.node);
+      if (request) this.practiceAnalysis.analyze(request);
+    }
   }
 
   private practiceFen(): string {
-    const position = this.activePosition();
-    if (!position) return STARTING_FEN;
-    const chess = new Chess(position.fen);
-    for (const move of this.practiceLine()) chess.move(move);
-    return chess.fen();
+    return this.practiceReplayFen() ?? this.selectedPracticeNode()?.fen ?? STARTING_FEN;
   }
 
   private practiceHint(): DrawShape | null {
     const position = this.activePosition();
-    if (!position || this.mode() !== 'practice' || this.puzzleStatus() !== 'revealed') return null;
+    const session = this.activePracticeSession();
+    if (
+      !position ||
+      !session ||
+      session.selectedNodeId !== session.rootId ||
+      this.mode() !== 'practice' ||
+      this.puzzleStatus() !== 'revealed'
+    ) {
+      return null;
+    }
     const best = parseUci(position.bestMove);
     return { orig: best.from as Key, dest: best.to as Key, brush: 'green' };
+  }
+
+  private practiceAnalysisRequest(
+    node = this.selectedPracticeNode(),
+  ): PracticeAnalysisRequest | null {
+    const session = this.activePracticeSession();
+    if (!session || !node?.move || !node.san || !node.color || !node.parentId) return null;
+    const parent = session.nodes[node.parentId];
+    if (!parent) return null;
+    return {
+      nodeId: node.id,
+      fenBefore: parent.fen,
+      fenAfter: node.fen,
+      move: node.move,
+      san: node.san,
+      color: node.color,
+    };
+  }
+
+  private engineCandidateShapes(lines: PracticeCandidateLine[]): DrawShape[] {
+    const widths = [14, 10, 6];
+    return lines.map((line, index) => ({
+      orig: line.firstMove.from as Key,
+      dest: line.firstMove.to as Key,
+      brush: 'green',
+      modifiers: { lineWidth: widths[index] ?? 6 },
+    }));
+  }
+
+  private ensureActiveSession(): void {
+    const position = this.activePosition();
+    if (!position) return;
+    const key = practiceSessionKey(position);
+    if (this.practiceSessions()[key]) {
+      this.updateActiveSession((session) => selectPracticeNode(session, session.rootId));
+      return;
+    }
+    this.practiceSessions.update((sessions) => ({
+      ...sessions,
+      [key]: createPracticeSession(position),
+    }));
+  }
+
+  private changePracticePosition(index: number): void {
+    this.clearReplayTimers();
+    this.practiceAnalysis.cancel();
+    this.trainingIndex.set(index);
+    this.puzzleStatus.set('ready');
+    this.pendingPromotion.set(null);
+    this.shapes = [];
+    this.ensureActiveSession();
+    this.replayOpponentMove();
+  }
+
+  private updateActiveSession(update: (session: PracticeSession) => PracticeSession): void {
+    const session = this.activePracticeSession();
+    if (!session) return;
+    this.practiceSessions.update((sessions) => ({
+      ...sessions,
+      [session.key]: update(session),
+    }));
+  }
+
+  private previousOpponentMove(): ImportedGame['moves'][number] | undefined {
+    const position = this.activePosition();
+    return position ? this.game()?.moves[position.ply - 2] : undefined;
+  }
+
+  private replayOpponentMove(): void {
+    this.clearReplayTimers();
+    this.practiceAnalysis.cancel();
+    const previousMove = this.previousOpponentMove();
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!previousMove || reducedMotion) {
+      this.practiceReplayFen.set(null);
+      this.practiceReplaying.set(false);
+      return;
+    }
+    this.practiceReplaying.set(true);
+    this.practiceReplayFen.set(previousMove.fenBefore);
+    this.replayTimers.push(
+      setTimeout(() => {
+        this.practiceReplayFen.set(null);
+        for (const event of reviewSoundEvents(previousMove)) this.sound.play(event);
+      }, 80),
+      setTimeout(() => this.practiceReplaying.set(false), 260),
+    );
+  }
+
+  private clearReplayTimers(): void {
+    for (const timer of this.replayTimers.splice(0)) clearTimeout(timer);
   }
 }
 

@@ -88,6 +88,25 @@
                   }
                 }
 
+                @if (
+                  mode() === 'practice' &&
+                    !practiceReplaying() &&
+                    selectedPracticeNode()?.assessment;
+                  as assessment
+                ) {
+                  @if (selectedPracticeMoveDestination(); as square) {
+                    <div
+                      class="review-classification practice-classification"
+                      [attr.data-classification]="assessment.classification"
+                      [attr.style]="classificationPosition(square)"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      {{ classificationLabel(assessment.classification) }}
+                    </div>
+                  }
+                }
+
                 @if (pendingPromotion()) {
                   <div
                     appModalFocus
@@ -430,6 +449,11 @@
                         <strong>{{ game()?.moves?.[position.ply - 1]?.san }}</strong>
                         here.
                       </p>
+                      @if (practiceReplaying()) {
+                        <small class="opponent-replay" aria-live="polite">
+                          Replaying the opponent’s last move…
+                        </small>
+                      }
                     </div>
 
                     <div
@@ -437,34 +461,92 @@
                       [attr.data-status]="puzzleStatus()"
                       aria-live="polite"
                     >
-                      @switch (puzzleStatus()) {
-                        @case ('correct') {
-                          <strong>Best move.</strong>
-                          <span>Keep playing both sides to explore the line.</span>
-                        }
-                        @case ('incorrect') {
-                          <strong>Another idea.</strong>
-                          <span>Keep the position and play both sides to test your plan.</span>
-                        }
-                        @case ('revealed') {
-                          <strong>{{ position.bestMoveSan }}</strong>
-                          <span>The arrow marks Stockfish’s move. You can play from here.</span>
-                        }
-                        @default {
-                          <strong>{{ classificationLabel(position.classification) }}</strong>
-                          <span>{{ categoryLabel(position.category) }}</span>
+                      @if (selectedPracticeNode()?.assessment; as assessment) {
+                        <strong>{{ classificationLabel(assessment.classification) }}</strong>
+                        <span>{{ practiceAnalysisLabel() }}</span>
+                      } @else {
+                        @switch (puzzleStatus()) {
+                          @case ('correct') {
+                            <strong>Best move.</strong>
+                            <span>Stockfish is evaluating the position.</span>
+                          }
+                          @case ('incorrect') {
+                            <strong>Another idea.</strong>
+                            <span>Stockfish is checking the move.</span>
+                          }
+                          @case ('revealed') {
+                            <strong>{{ position.bestMoveSan }}</strong>
+                            <span>The arrow marks Stockfish’s move. You can play from here.</span>
+                          }
+                          @default {
+                            <strong>{{ classificationLabel(position.classification) }}</strong>
+                            <span>{{ categoryLabel(position.category) }}</span>
+                          }
                         }
                       }
-                      @if (practiceLine().length) {
-                        <small>{{ practiceLine().length }} moves explored</small>
+                      @if (practiceMoveCount()) {
+                        <small>{{ practiceMoveCount() }} moves across your variations</small>
+                      }
+                      @if (selectedPracticeNode()?.analysisError; as error) {
+                        <small class="practice-analysis-error">{{ error }}</small>
+                        <button type="button" class="text-action" (click)="retryPracticeAnalysis()">
+                          Retry analysis
+                        </button>
                       }
                     </div>
+
+                    @if (selectedPracticeNode()?.candidates; as candidates) {
+                      @if (candidates.length) {
+                        <section class="candidate-lines" aria-labelledby="candidate-lines-heading">
+                          <div class="candidate-heading">
+                            <div>
+                              <span>Engine candidates</span>
+                              <h3 id="candidate-lines-heading">Three ways forward</h3>
+                            </div>
+                            <small>{{ practiceAnalysisLabel() }}</small>
+                          </div>
+                          <ol>
+                            @for (line of candidates; track line.rank) {
+                              <li>
+                                <span class="candidate-rank">{{ line.rank }}</span>
+                                <i
+                                  class="candidate-rule"
+                                  [style.height]="candidateRuleWidth(line.rank)"
+                                  aria-hidden="true"
+                                ></i>
+                                <strong>{{ candidateEvaluationLabel(line) }}</strong>
+                                <span>{{ line.san.join(' ') }}</span>
+                              </li>
+                            }
+                          </ol>
+                        </section>
+                      } @else if (
+                        selectedPracticeNode()?.assessment && selectedPracticeGameOver()
+                      ) {
+                        <p class="terminal-position">The line ends in this position.</p>
+                      }
+                    }
+
+                    @if (activePracticeSession(); as session) {
+                      <app-practice-move-tree
+                        [session]="session"
+                        (nodeSelected)="selectPracticeNode($event)"
+                      />
+                    }
 
                     <div class="practice-actions">
                       <button
                         type="button"
                         class="secondary-action"
-                        [disabled]="!practiceLine().length && puzzleStatus() === 'ready'"
+                        [disabled]="trainingIndex() === 0"
+                        (click)="previousPosition()"
+                      >
+                        Previous position
+                      </button>
+                      <button
+                        type="button"
+                        class="secondary-action"
+                        [disabled]="!practiceMoveCount() && puzzleStatus() === 'ready'"
                         (click)="resetPractice()"
                       >
                         Reset
@@ -472,7 +554,12 @@
                       <button type="button" class="secondary-action" (click)="revealMove()">
                         Reveal move
                       </button>
-                      <button type="button" class="primary-action" (click)="nextPosition()">
+                      <button
+                        type="button"
+                        class="primary-action"
+                        [disabled]="trainingIndex() === positions().length - 1"
+                        (click)="nextPosition()"
+                      >
                         Next position
                       </button>
                     </div>

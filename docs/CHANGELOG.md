@@ -1,4 +1,5 @@
 <!-- markdownlint-disable MD024 (MD024/no-duplicate-heading: Multiple headings with the same content)-->
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -12,6 +13,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Full move-quality labels and a color-coded progress rail for imported-game analysis.
 - Legal two-sided Practice exploration with persistent board annotations and explicit reset controls.
+- Branching Practice move lists with progressive move classifications and three ranked Stockfish
+  continuations.
+- Opponent-move replays and previous/next navigation between review training positions.
 
 ### Changed
 

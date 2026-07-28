@@ -1,0 +1,127 @@
+:host {
+  display: block;
+}
+
+.practice-tree {
+  border-top: 1px solid rgb(200 213 207 / 14%);
+  padding-top: 12px;
+}
+
+.tree-heading {
+  align-items: end;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+
+  span,
+  small {
+    color: var(--mist);
+    font-family: var(--font-utility);
+    font-size: 0.52rem;
+  }
+
+  span {
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  h3 {
+    color: var(--paper);
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    line-height: 1;
+    margin: 2px 0 0;
+  }
+
+  small {
+    max-width: 130px;
+    text-align: right;
+  }
+}
+
+.tree-score {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 9px;
+}
+
+.tree-branch {
+  align-items: center;
+  display: contents;
+}
+
+.branch-mark,
+.move-number {
+  color: var(--mist);
+  font-family: var(--font-utility);
+  font-size: 0.52rem;
+}
+
+.side-variation {
+  .branch-mark {
+    color: var(--amber);
+  }
+}
+
+button {
+  background: var(--surface-lowest);
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: var(--paper);
+  display: inline-flex;
+  gap: 6px;
+  min-height: 30px;
+  padding: 5px 7px;
+
+  &:focus-visible,
+  &.current {
+    border-color: var(--primary);
+    outline: 0;
+  }
+
+  &.current {
+    background: var(--surface-container-high);
+  }
+
+  i,
+  small {
+    color: var(--classification-color, var(--mist));
+    font-family: var(--font-utility);
+    font-size: 0.48rem;
+    font-style: normal;
+  }
+
+  &[data-classification='book'],
+  &[data-classification='brilliant'],
+  &[data-classification='great'],
+  &[data-classification='best'] {
+    --classification-color: #77aaa5;
+  }
+
+  &[data-classification='excellent'],
+  &[data-classification='good'] {
+    --classification-color: #8cb2a9;
+  }
+
+  &[data-classification='inaccuracy'] {
+    --classification-color: #d3a747;
+  }
+
+  &[data-classification='mistake'],
+  &[data-classification='miss'] {
+    --classification-color: #d78757;
+  }
+
+  &[data-classification='blunder'] {
+    --classification-color: var(--danger);
+  }
+}
+
+.start-node {
+  color: var(--primary);
+  font-family: var(--font-utility);
+  font-size: 0.55rem;
+  text-transform: uppercase;
+}
