@@ -60,9 +60,9 @@
 
           <div class="board-stage">
             <div class="explorer-board-frame" [attr.data-board-theme]="boardTheme()">
-              <div
-                #boardHost
+              <app-chessground-board
                 class="explorer-board"
+                [initialConfig]="boardConfig()"
                 role="img"
                 [attr.aria-label]="
                   mode() === 'setup'
@@ -70,8 +70,8 @@
                     : 'Analysis chessboard, ' + turn() + ' to move'
                 "
                 aria-describedby="explorer-board-help"
-                (click)="handleBoardClick($event)"
-              ></div>
+                (boardClick)="handleBoardClick($event)"
+              />
             </div>
             <p id="explorer-board-help" class="sr-only">
               @if (mode() === 'setup') {

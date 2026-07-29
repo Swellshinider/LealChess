@@ -8,22 +8,16 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import type { ElementRef, OnDestroy, OnInit } from '@angular/core';
+import type { OnDestroy, OnInit } from '@angular/core';
 import { Chess, type PieceSymbol, type Square } from 'chess.js';
-import { Chessground } from '@lichess-org/chessground';
-import type { Api } from '@lichess-org/chessground/api';
 import type { Config } from '@lichess-org/chessground/config';
 import type { DrawShape } from '@lichess-org/chessground/draw';
-import type { Dests, Key } from '@lichess-org/chessground/types';
+import type { Key } from '@lichess-org/chessground/types';
 import { StockfishAnalysisEngineService } from '../../core/engine/stockfish-analysis-engine.service';
-import {
-  STARTING_FEN,
-  type BoardTheme,
-  type MoveInput,
-  type PromotionPiece,
-} from '../../core/game/game.types';
-import { PERSISTENCE_PORT } from '../../core/persistence/persistence.types';
+import { legalDestinations } from '../../core/game/chess-move';
+import { STARTING_FEN, type MoveInput, type PromotionPiece } from '../../core/game/game.types';
 import type { ChessColor } from '../../shared/chess/chess.types';
+import { ChessgroundBoardComponent } from '../../shared/chess/chessground-board/chessground-board.component';
 import { ModalFocusDirective } from '../../shared/a11y/modal-focus.directive';
 import { SideNavigationComponent } from '../../shared/layout/side-navigation/side-navigation.component';
 import {
@@ -38,6 +32,7 @@ import {
   setupStateToFen,
 } from './explorer-position';
 import { ExplorerRepositoryService } from './explorer-repository.service';
+import { ExplorerPageStore } from './explorer-page.store';
 import {
   commitExplorerMove,
   createExplorerSession,
@@ -69,10 +64,11 @@ interface TreeRow {
 
 @Component({
   selector: 'app-explorer-page',
-  imports: [ModalFocusDirective, SideNavigationComponent],
+  imports: [ChessgroundBoardComponent, ModalFocusDirective, SideNavigationComponent],
   providers: [
     ExplorerAnalysisService,
     ExplorerRepositoryService,
+    ExplorerPageStore,
     {
       provide: EXPLORER_ANALYSIS_ENGINE_PORT,
       useClass: StockfishAnalysisEngineService,
@@ -83,14 +79,13 @@ interface TreeRow {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ExplorerPageComponent implements OnInit, OnDestroy {
-  private readonly boardHost = viewChild<ElementRef<HTMLElement>>('boardHost');
+  private readonly board = viewChild(ChessgroundBoardComponent);
+  private readonly store = inject(ExplorerPageStore);
   private readonly analysis = inject(ExplorerAnalysisService);
-  private readonly repository = inject(ExplorerRepositoryService);
-  private readonly persistence = inject(PERSISTENCE_PORT);
 
-  protected readonly session = signal(createExplorerSession());
+  protected readonly session = this.store.session;
   protected readonly mode = signal<ExplorerMode>('analysis');
-  protected readonly loading = signal(true);
+  protected readonly loading = this.store.loading;
   protected readonly importOpen = signal(false);
   protected readonly importTab = signal<ImportTab>('fen');
   protected readonly importValue = signal('');
@@ -101,7 +96,7 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
   protected readonly setup = signal<ExplorerSetupState>(setupStateFromFen(STARTING_FEN));
   protected readonly setupTool = signal<SetupTool>({ color: 'w', type: 'q' });
   protected readonly setupError = signal<string | null>(null);
-  protected readonly boardTheme = signal<BoardTheme>('tournament');
+  protected readonly boardTheme = this.store.boardTheme;
   protected readonly promotionPieces: readonly PromotionPiece[] = ['q', 'r', 'b', 'n'];
   protected readonly pieceTypes: readonly PieceSymbol[] = ['k', 'q', 'r', 'b', 'n', 'p'];
   protected readonly setupColors: readonly ['w', 'b'] = ['w', 'b'];
@@ -163,51 +158,22 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
     return null;
   });
 
-  private api: Api | null = null;
-  private apiElement: HTMLElement | null = null;
-  private resizeObserver: ResizeObserver | null = null;
-  private resizeFrame: number | null = null;
   private activeAbort: AbortController | null = null;
   private activeKind: AnalysisKind = 'idle';
   private analysisTicket = 0;
   private destroyed = false;
-  private saveTimer: ReturnType<typeof setTimeout> | null = null;
-  private restored = false;
 
   constructor() {
     effect(() => {
       this.session();
       this.mode();
       this.setup();
-      const host = this.boardHost()?.nativeElement;
-      if (host && host !== this.apiElement) this.createBoard(host);
       this.syncBoard();
-    });
-    effect(() => {
-      const session = this.session();
-      if (!this.restored) return;
-      if (this.saveTimer) clearTimeout(this.saveTimer);
-      this.saveTimer = setTimeout(() => void this.repository.save(session), 250);
     });
   }
 
   async ngOnInit(): Promise<void> {
-    const [restored, persistedState] = await Promise.all([
-      this.repository.restore(),
-      this.persistence.restore(),
-    ]);
-    this.boardTheme.set(persistedState.preferences.boardTheme);
-    if (restored) {
-      this.session.set({
-        ...restored,
-        batch:
-          restored.batch.status === 'running'
-            ? { ...restored.batch, status: 'running' }
-            : restored.batch,
-      });
-    }
-    this.restored = true;
-    this.loading.set(false);
+    await this.store.initialize();
     this.requestInteractiveAnalysis();
   }
 
@@ -215,12 +181,8 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
     this.destroyed = true;
     this.analysisTicket += 1;
     this.activeAbort?.abort();
-    if (this.saveTimer) clearTimeout(this.saveTimer);
-    void this.repository.save(this.session()).then(() => this.repository.flush());
+    void this.store.destroy();
     this.analysis.destroy();
-    if (this.resizeFrame !== null) cancelAnimationFrame(this.resizeFrame);
-    this.resizeObserver?.disconnect();
-    this.api?.destroy();
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -340,13 +302,14 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
   }
 
   protected handleBoardClick(event: MouseEvent): void {
-    if (this.mode() !== 'setup' || !this.apiElement) return;
+    const board = this.board();
+    if (this.mode() !== 'setup' || !board) return;
     const target = event.target as HTMLElement;
     if (target.closest('piece') && this.setupTool() !== 'erase') return;
     const square = squareAtPoint(
       event.clientX,
       event.clientY,
-      this.apiElement.getBoundingClientRect(),
+      board.bounds(),
       this.session().orientation,
     );
     if (!square) return;
@@ -410,7 +373,7 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
 
   protected cancelPromotion(): void {
     this.pendingPromotion.set(null);
-    this.api?.cancelMove();
+    this.board()?.cancelMove();
     this.syncBoard();
   }
 
@@ -455,23 +418,7 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
     this.requestInteractiveAnalysis();
   }
 
-  private createBoard(host: HTMLElement): void {
-    this.api?.destroy();
-    this.resizeObserver?.disconnect();
-    this.api = Chessground(host, this.boardConfig());
-    this.apiElement = host;
-    this.resizeObserver = new ResizeObserver(() => {
-      if (this.resizeFrame !== null) cancelAnimationFrame(this.resizeFrame);
-      this.resizeFrame = requestAnimationFrame(() => {
-        this.api?.state.dom.bounds.clear();
-        this.api?.redrawAll();
-        this.resizeFrame = null;
-      });
-    });
-    this.resizeObserver.observe(host);
-  }
-
-  private boardConfig(): Config {
+  protected boardConfig(): Config {
     return {
       fen: STARTING_FEN,
       orientation: 'white',
@@ -499,9 +446,10 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
   }
 
   private syncBoard(): void {
-    if (!this.api) return;
+    const board = this.board();
+    if (!board) return;
     if (this.mode() === 'setup') {
-      this.api.set({
+      board.set({
         fen: this.setupFen(),
         orientation: this.session().orientation,
         turnColor: this.setup().turn === 'w' ? 'white' : 'black',
@@ -516,7 +464,7 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
       const chess = new Chess(node.fen);
       const color = chess.turn() === 'w' ? 'white' : 'black';
       const movable = !chess.isGameOver();
-      this.api.set({
+      board.set({
         fen: node.fen,
         orientation: this.session().orientation,
         turnColor: color,
@@ -536,8 +484,6 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
         },
       });
     }
-    this.api.state.dom.bounds.clear();
-    this.api.redrawAll();
   }
 
   private handleBoardMove(from: Key, to: Key): void {
@@ -567,7 +513,7 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
     try {
       const committed = commitExplorerMove(this.session(), move);
       this.session.set(committed.session);
-      void this.repository.save(committed.session);
+      this.store.save(committed.session);
       this.requestInteractiveAnalysis();
     } catch {
       this.syncBoard();
@@ -577,7 +523,7 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
   private replaceSession(session: ExplorerSession): void {
     this.interruptAnalysis();
     this.session.set(session);
-    void this.repository.save(session);
+    this.store.save(session);
     this.requestInteractiveAnalysis();
   }
 
@@ -813,16 +759,6 @@ function emptyCastling(): ExplorerSetupState['castling'] {
     blackKing: false,
     blackQueen: false,
   };
-}
-
-function legalDestinations(fen: string): Dests {
-  const chess = new Chess(fen);
-  const destinations: Dests = new Map();
-  for (const move of chess.moves({ verbose: true })) {
-    const from = move.from as Key;
-    destinations.set(from, [...(destinations.get(from) ?? []), move.to as Key]);
-  }
-  return destinations;
 }
 
 function candidateShapes(lines: ExplorerCandidateLine[]): DrawShape[] {

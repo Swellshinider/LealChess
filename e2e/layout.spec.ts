@@ -90,15 +90,23 @@ test('adapts Play from a landscape tablet desk to a portrait board-first stack',
     .toBe(true);
 });
 
-test('launches each workspace and provides project help', async ({ page }) => {
+test('launches each workspace and provides project information', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'LealChess' })).toBeVisible();
   await expect(page.getByRole('link', { name: /Play/ })).toHaveAttribute('href', '/play');
   await expect(page.getByRole('link', { name: /Learn/ })).toHaveAttribute('href', '/learn');
   await expect(page.getByRole('link', { name: /Settings/ })).toHaveAttribute('href', '/settings');
 
+  await page.goto('/about');
+  await expect(page.getByRole('heading', { name: 'About' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Private report' })).toHaveAttribute(
+    'href',
+    'https://github.com/Swellshinider/LealChess/security/advisories/new',
+  );
+
   await page.goto('/help');
-  await expect(page.getByRole('heading', { name: 'Help' })).toBeVisible();
+  await expect(page).toHaveURL(/\/about$/);
+  await expect(page.getByRole('heading', { name: 'About' })).toBeVisible();
   await expect(page.getByText('v0.1.0-beta', { exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Swellshinider/LealChess' })).toHaveAttribute(
     'href',

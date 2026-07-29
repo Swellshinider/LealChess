@@ -71,5 +71,5 @@ pnpm e2e
 
 ## License
 
-LealChess is licensed under GPL-3.0. See [LICENSE](LICENSE) and
+LealChess is licensed under GPL-3.0-only. See [LICENSE](LICENSE) and
 [third-party notices](docs/THIRD_PARTY_NOTICES.md).

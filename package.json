@@ -13,10 +13,17 @@
     "test": "ng test",
     "test:coverage": "ng test --coverage",
     "e2e": "playwright test",
+    "audit": "pnpm audit --audit-level moderate",
+    "verify:quality": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm run audit",
+    "verify": "pnpm verify:quality && pnpm e2e",
     "generate:openings": "node scripts/generate-opening-index.mjs"
   },
   "private": true,
   "packageManager": "pnpm@11.17.0",
+  "engines": {
+    "node": ">=24.15.0 <25",
+    "pnpm": ">=11.17.0 <12"
+  },
   "dependencies": {
     "@angular/common": "^22.0.0",
     "@angular/compiler": "^22.0.0",
@@ -50,5 +57,5 @@
     "typescript-eslint": "^8.0.0",
     "vitest": "^4.0.8"
   },
-  "license": "GPL-3.0"
+  "license": "GPL-3.0-only"
 }

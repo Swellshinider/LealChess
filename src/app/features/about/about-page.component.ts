@@ -3,12 +3,12 @@ import packageMetadata from '../../../../package.json';
 import { SideNavigationComponent } from '../../shared/layout/side-navigation/side-navigation.component';
 
 @Component({
-  selector: 'app-help-page',
+  selector: 'app-about-page',
   imports: [SideNavigationComponent],
-  templateUrl: './help-page.component.html',
-  styleUrl: './help-page.component.scss',
+  templateUrl: './about-page.component.html',
+  styleUrl: './about-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HelpPageComponent {
+export class AboutPageComponent {
   protected readonly version = `v${packageMetadata.version}`;
 }

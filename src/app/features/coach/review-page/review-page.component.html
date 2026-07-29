@@ -82,14 +82,14 @@
                 }
 
                 <div class="board-stage">
-                  <div
-                    #boardHost
+                  <app-chessground-board
                     class="review-board"
+                    [initialConfig]="boardConfig()"
                     role="img"
                     aria-label="Review chessboard"
                     aria-describedby="review-board-description"
                     [attr.data-board-theme]="boardTheme()"
-                  ></div>
+                  />
                   <p id="review-board-description" class="sr-only">
                     {{ orientation() }} orientation.
                     @switch (mode()) {

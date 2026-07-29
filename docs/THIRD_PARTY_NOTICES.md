@@ -19,4 +19,4 @@ LealChess includes or depends on the following open-source software:
   Source: <https://fontsource.org>
 
 Dependency license texts remain available in their distributed packages. The combined application
-is distributed under GPL-3.0 as required by Chessground and Stockfish.
+is distributed under GPL-3.0-only as required by Chessground and Stockfish.

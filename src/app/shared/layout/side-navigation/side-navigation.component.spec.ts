@@ -33,8 +33,8 @@ describe('SideNavigationComponent', () => {
     expect(host.querySelector('[data-tooltip="Explorer"]')).not.toBeNull();
     expect(host.querySelector('[data-tooltip="Settings"]')).not.toBeNull();
     expect(
-      host.querySelector<HTMLAnchorElement>('[data-tooltip="Help"]')?.getAttribute('href'),
-    ).toBe('/help');
+      host.querySelector<HTMLAnchorElement>('[data-tooltip="About"]')?.getAttribute('href'),
+    ).toBe('/about');
     expect(host.querySelector('[aria-disabled="true"]')).toBeNull();
 
     const toggle = host.querySelector<HTMLButtonElement>('.rail-toggle')!;
@@ -60,7 +60,7 @@ describe('SideNavigationComponent', () => {
 
     expect(drawer).not.toBeNull();
     expect(drawer.getAttribute('aria-modal')).toBe('true');
-    expect(drawer.querySelector<HTMLAnchorElement>('a[href="/help"]')).not.toBeNull();
+    expect(drawer.querySelector<HTMLAnchorElement>('a[href="/about"]')).not.toBeNull();
 
     drawer.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     fixture.detectChanges();

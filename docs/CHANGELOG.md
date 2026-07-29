@@ -7,6 +7,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 29-07-2026
+
+### Added
+
+- Open-source contribution, conduct, security, support, architecture, and maintenance guidance.
+- Structured issue forms, a pull request template, grouped Dependabot updates, and verified
+  release-tag automation.
+- Local verification scripts covering quality checks, dependency auditing, and browser tests.
+
+### Changed
+
+- Renamed Help to About, with `/about` as the canonical project-information page and `/help`
+  retained as a compatibility redirect.
+- Hardened continuous integration with least-privilege permissions, immutable action pins,
+  concurrency cancellation, timeouts, dependency auditing, and failure-only browser artifacts.
+- Standardized tracked text files on LF and expanded ignored local environment, cache, log, and
+  editor artifacts.
+- Declared the project license using the precise `GPL-3.0-only` SPDX identifier.
+- Separated Review and Explorer route state from their board rendering and consolidated shared
+  chess move, candidate-line, legal-destination, and resize behavior.
+- Split game state construction, stored-game validation, result evaluation, and presentation out
+  of the game controller into focused pure modules.
+
+### Fixed
+
+- Updated vulnerable transitive dependencies used by development tooling.
+
 ## [Unreleased] - 28-07-2026
 
 ### Added

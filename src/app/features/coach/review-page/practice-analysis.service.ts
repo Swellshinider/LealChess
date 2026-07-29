@@ -1,20 +1,17 @@
 import { Injectable, InjectionToken, inject, signal } from '@angular/core';
-import { Chess, type Square } from 'chess.js';
+import { Chess } from 'chess.js';
 import type {
   AnalysisEnginePort,
-  AnalysisVariation,
   PositionAnalysisResult,
 } from '../../../core/engine/analysis-engine.types';
-import type { MoveInput, PromotionPiece } from '../../../core/game/game.types';
+import { candidateLines, moveToUci } from '../../../core/game/chess-move';
 import { isOpeningPosition } from '../analysis/opening-index';
 import { classifyReviewMove } from '../analysis/review-classification';
-import { moveToUci } from '../analysis/analysis-rules';
 import type { ImportedMove } from '../domain/coach.types';
 import type {
   PracticeAnalysisRequest,
   PracticeAnalysisResult,
   PracticeAnalysisState,
-  PracticeCandidateLine,
 } from './practice.types';
 
 export const PRACTICE_ANALYSIS_ENGINE_PORT = new InjectionToken<AnalysisEnginePort>(
@@ -128,6 +125,7 @@ export class PracticeAnalysisService {
       : candidateLines(
           request.fenAfter,
           await this.positionAnalysis(request.fenAfter, depth, signal),
+          6,
         );
     return {
       assessment: {
@@ -155,53 +153,6 @@ export class PracticeAnalysisService {
   private isCurrent(requestId: number): boolean {
     return requestId === this.requestId;
   }
-}
-
-function candidateLines(fen: string, result: PositionAnalysisResult): PracticeCandidateLine[] {
-  const variations = result.variations?.length
-    ? result.variations
-    : [
-        {
-          rank: 1,
-          evaluation: result.evaluation,
-          principalVariation: result.principalVariation,
-        },
-      ];
-  return variations
-    .slice(0, 3)
-    .map((variation) => candidateLine(fen, variation))
-    .filter((line): line is PracticeCandidateLine => line !== null);
-}
-
-function candidateLine(fen: string, variation: AnalysisVariation): PracticeCandidateLine | null {
-  const firstMove = parseUci(variation.principalVariation[0]);
-  if (!firstMove) return null;
-  const chess = new Chess(fen);
-  const san: string[] = [];
-  for (const uci of variation.principalVariation.slice(0, 6)) {
-    const move = parseUci(uci);
-    if (!move) break;
-    try {
-      san.push(chess.move(move).san);
-    } catch {
-      break;
-    }
-  }
-  return {
-    rank: variation.rank,
-    evaluation: variation.evaluation,
-    firstMove,
-    san,
-  };
-}
-
-function parseUci(uci?: string): MoveInput | null {
-  if (!uci || uci.length < 4) return null;
-  return {
-    from: uci.slice(0, 2) as Square,
-    to: uci.slice(2, 4) as Square,
-    ...(uci[4] ? { promotion: uci[4] as PromotionPiece } : {}),
-  };
 }
 
 function isAbort(error: unknown): boolean {

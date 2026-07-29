@@ -42,10 +42,15 @@ export const routes: Routes = [
     title: 'Explorer | LealChess',
   },
   {
-    path: 'help',
+    path: 'about',
     loadComponent: () =>
-      import('./features/help/help-page.component').then((module) => module.HelpPageComponent),
-    title: 'Help | LealChess',
+      import('./features/about/about-page.component').then((module) => module.AboutPageComponent),
+    title: 'About | LealChess',
+  },
+  {
+    path: 'help',
+    redirectTo: 'about',
+    pathMatch: 'full',
   },
   {
     path: 'learn/review/:platform/:gameId',
