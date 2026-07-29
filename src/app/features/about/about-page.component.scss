@@ -4,22 +4,22 @@
   overflow: hidden;
 }
 
-.help-shell {
+.about-shell {
   display: flex;
   height: 100dvh;
 }
 
-.help-page {
+.about-page {
   background: var(--surface-lowest);
   flex: 1 1 auto;
   min-width: 0;
   overflow: auto;
-  padding: clamp(44px, 6vh, 72px) clamp(32px, 6vw, 96px);
+  padding: clamp(28px, 4vh, 48px) clamp(24px, 5vw, 72px);
 }
 
-.help-content {
+.about-content {
   display: grid;
-  gap: clamp(58px, 8vh, 100px);
+  gap: clamp(36px, 5vh, 64px);
   grid-template-rows: auto 1fr auto;
   margin: 0 auto;
   max-width: 1440px;
@@ -29,7 +29,7 @@
 
 header {
   align-items: end;
-  column-gap: clamp(60px, 10vw, 160px);
+  column-gap: clamp(40px, 7vw, 96px);
   display: grid;
   grid-template-columns: minmax(220px, 0.65fr) minmax(420px, 1.35fr);
 }
@@ -58,7 +58,7 @@ h3 {
 }
 
 h1 {
-  font-size: clamp(3.8rem, 7vw, 6.4rem);
+  font-size: clamp(2.5rem, 5vw, 4.2rem);
   letter-spacing: -0.035em;
   line-height: 0.82;
   margin-bottom: 0;
@@ -78,10 +78,10 @@ h2 {
   margin-bottom: 22px;
 }
 
-.help-main {
+.about-main {
   align-items: center;
   display: grid;
-  gap: clamp(64px, 10vw, 150px);
+  gap: clamp(44px, 7vw, 96px);
   grid-template-columns: minmax(0, 1.7fr) minmax(270px, 0.65fr);
 }
 
@@ -122,7 +122,7 @@ h2 {
   border-top: 1px solid var(--outline-variant);
   display: grid;
   gap: clamp(28px, 5vw, 80px);
-  grid-template-columns: 0.8fr 1.5fr 0.8fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   margin: 0;
   padding-top: 20px;
 }
@@ -154,8 +154,8 @@ h2 {
 }
 
 @media (max-width: 1100px) {
-  .help-content {
-    gap: 60px;
+  .about-content {
+    gap: 44px;
     grid-template-rows: auto;
   }
 
@@ -165,9 +165,9 @@ h2 {
     grid-template-columns: 1fr;
   }
 
-  .help-main {
+  .about-main {
     align-items: start;
-    gap: 56px;
+    gap: 40px;
     grid-template-columns: 1fr;
   }
 
@@ -183,18 +183,18 @@ h2 {
     overflow: visible;
   }
 
-  .help-shell {
+  .about-shell {
     display: block;
     height: auto;
     min-height: 100dvh;
   }
 
-  .help-page {
+  .about-page {
     min-height: calc(100dvh - 64px);
     padding: 48px 20px 52px;
   }
 
-  .help-content {
+  .about-content {
     gap: 56px;
   }
 

@@ -8,7 +8,20 @@
 
 # Node
 /node_modules
+/.pnpm-store
+/.npm
+/.yarn
+.pnp.*
+*.log
 pnpm-debug.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment and local configuration
+.env
+.env.*
+!.env.example
 
 # IDEs and editors
 .idea/
@@ -21,12 +34,9 @@ pnpm-debug.log*
 
 # Visual Studio Code
 .vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
 !.vscode/extensions.json
-!.vscode/mcp.json
 .history/*
+*.code-workspace
 
 # Miscellaneous
 /.angular/cache
@@ -44,6 +54,10 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
 
 # Local agent instructions
 AGENTS.md

@@ -9,45 +9,29 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import type { ElementRef, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Chessground } from '@lichess-org/chessground';
-import type { Api } from '@lichess-org/chessground/api';
+import type { OnDestroy, OnInit } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import type { Config } from '@lichess-org/chessground/config';
 import type { DrawShape } from '@lichess-org/chessground/draw';
-import type { Dests, Key } from '@lichess-org/chessground/types';
+import type { Key } from '@lichess-org/chessground/types';
 import { Chess, type Square } from 'chess.js';
 import { StockfishAnalysisEngineService } from '../../../core/engine/stockfish-analysis-engine.service';
+import { legalDestinations, parseUci, turnColor } from '../../../core/game/chess-move';
 import { boardOverlayPosition } from '../../../shared/chess/board-overlay-position';
+import { ChessgroundBoardComponent } from '../../../shared/chess/chessground-board/chessground-board.component';
 import type { ChessColor } from '../../../shared/chess/chess.types';
 import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
 import { SideNavigationComponent } from '../../../shared/layout/side-navigation/side-navigation.component';
-import {
-  STARTING_FEN,
-  type BoardTheme,
-  type MoveInput,
-  type PromotionPiece,
-} from '../../../core/game/game.types';
-import { PERSISTENCE_PORT } from '../../../core/persistence/persistence.types';
+import { STARTING_FEN, type MoveInput, type PromotionPiece } from '../../../core/game/game.types';
 import { SoundService } from '../../../core/sound/sound.service';
-import {
-  categoryLabel,
-  learnerColorForGame,
-  moveAnalysisForPly,
-  moveToUci,
-  trainingPositions,
-} from '../analysis/analysis-rules';
-import { CoachAnalysisService } from '../analysis/coach-analysis.service';
-import { CoachRepositoryService } from '../data/coach-repository.service';
+import { categoryLabel, moveAnalysisForPly, moveToUci } from '../analysis/analysis-rules';
 import type {
   EngineEvaluation,
-  GameSource,
   ImportedGame,
   MoveAnalysis,
   MoveClassification,
   PlatformPlayer,
   ReviewMoveClassification,
-  TrainingPosition,
 } from '../domain/coach.types';
 import {
   PRACTICE_ANALYSIS_ENGINE_PORT,
@@ -65,7 +49,6 @@ import type {
   PracticeAnalysisRequest,
   PracticeCandidateLine,
   PracticeSession,
-  PracticeVariationNode,
 } from './practice.types';
 import { ReviewAnalysisPanelComponent } from './review-analysis-panel.component';
 import {
@@ -76,9 +59,7 @@ import {
 } from './review-insights';
 import { reviewSoundEvents } from './review-sound';
 import { ReviewSummaryComponent } from './review-summary.component';
-
-type ReviewMode = 'summary' | 'analysis' | 'practice';
-type PuzzleStatus = 'ready' | 'incorrect' | 'correct' | 'revealed';
+import { ReviewPageStore } from './review-page.store';
 
 @Component({
   selector: 'app-review-page',
@@ -87,11 +68,13 @@ type PuzzleStatus = 'ready' | 'incorrect' | 'correct' | 'revealed';
     PracticeMoveTreeComponent,
     ReviewAnalysisPanelComponent,
     ReviewSummaryComponent,
+    ChessgroundBoardComponent,
     RouterLink,
     SideNavigationComponent,
   ],
   providers: [
     PracticeAnalysisService,
+    ReviewPageStore,
     {
       provide: PRACTICE_ANALYSIS_ENGINE_PORT,
       useClass: StockfishAnalysisEngineService,
@@ -102,49 +85,31 @@ type PuzzleStatus = 'ready' | 'incorrect' | 'correct' | 'revealed';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReviewPageComponent implements OnInit, OnDestroy {
-  private readonly boardHost = viewChild<ElementRef<HTMLElement>>('boardHost');
-  private readonly route = inject(ActivatedRoute);
-  private readonly repository = inject(CoachRepositoryService);
-  private readonly persistence = inject(PERSISTENCE_PORT);
+  private readonly board = viewChild(ChessgroundBoardComponent);
+  private readonly store = inject(ReviewPageStore);
   private readonly sound = inject(SoundService);
-  protected readonly practiceAnalysis = inject(PracticeAnalysisService);
-  protected readonly coachAnalysis = inject(CoachAnalysisService);
-  protected readonly game = signal<ImportedGame | null>(null);
-  protected readonly loading = signal(true);
-  protected readonly currentPly = signal(0);
-  protected readonly orientation = signal<ChessColor>('white');
-  protected readonly learnerColor = signal<ChessColor | null>(null);
-  protected readonly boardTheme = signal<BoardTheme>('tournament');
-  protected readonly mode = signal<ReviewMode>('summary');
-  protected readonly trainingIndex = signal(0);
-  protected readonly puzzleStatus = signal<PuzzleStatus>('ready');
-  protected readonly pendingPromotion = signal<Omit<MoveInput, 'promotion'> | null>(null);
-  private readonly practiceSessions = signal<Record<string, PracticeSession>>({});
-  private readonly practiceReplayFen = signal<string | null>(null);
-  protected readonly practiceReplaying = signal(false);
-  protected readonly promotionPieces: readonly PromotionPiece[] = ['q', 'r', 'b', 'n'];
-  protected readonly positions = computed(() => {
-    const game = this.game();
-    return game ? trainingPositions(game, this.coachAnalysis.analysis()) : [];
-  });
-  protected readonly activePosition = computed<TrainingPosition | null>(
-    () => this.positions()[this.trainingIndex()] ?? null,
-  );
-  protected readonly activePracticeSession = computed<PracticeSession | null>(() => {
-    const position = this.activePosition();
-    return position ? (this.practiceSessions()[practiceSessionKey(position)] ?? null) : null;
-  });
-  protected readonly selectedPracticeNode = computed<PracticeVariationNode | null>(() => {
-    const session = this.activePracticeSession();
-    return session?.nodes[session.selectedNodeId] ?? null;
-  });
-  protected readonly practiceMoveCount = computed(() => {
-    const session = this.activePracticeSession();
-    return session ? Math.max(0, Object.keys(session.nodes).length - 1) : 0;
-  });
-  protected readonly practiceInputLocked = computed(
-    () => this.practiceReplaying() || this.practiceAnalysis.state().phase === 'quick',
-  );
+  protected readonly practiceAnalysis = this.store.practiceAnalysis;
+  protected readonly coachAnalysis = this.store.coachAnalysis;
+  protected readonly game = this.store.game;
+  protected readonly loading = this.store.loading;
+  protected readonly currentPly = this.store.currentPly;
+  protected readonly orientation = this.store.orientation;
+  protected readonly learnerColor = this.store.learnerColor;
+  protected readonly boardTheme = this.store.boardTheme;
+  protected readonly mode = this.store.mode;
+  protected readonly trainingIndex = this.store.trainingIndex;
+  protected readonly puzzleStatus = this.store.puzzleStatus;
+  protected readonly pendingPromotion = this.store.pendingPromotion;
+  private readonly practiceSessions = this.store.practiceSessions;
+  private readonly practiceReplayFen = this.store.practiceReplayFen;
+  protected readonly practiceReplaying = this.store.practiceReplaying;
+  protected readonly promotionPieces = this.store.promotionPieces;
+  protected readonly positions = this.store.positions;
+  protected readonly activePosition = this.store.activePosition;
+  protected readonly activePracticeSession = this.store.activePracticeSession;
+  protected readonly selectedPracticeNode = this.store.selectedPracticeNode;
+  protected readonly practiceMoveCount = this.store.practiceMoveCount;
+  protected readonly practiceInputLocked = this.store.practiceInputLocked;
   protected readonly currentAnalysis = computed<MoveAnalysis | undefined>(() =>
     moveAnalysisForPly(this.coachAnalysis.analysis(), this.currentPly()),
   );
@@ -208,10 +173,6 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     const fen = game?.moves[ply - 1]?.fenAfter ?? game?.moves[0]?.fenBefore ?? STARTING_FEN;
     return turnColor(fen);
   });
-  private api: Api | null = null;
-  private apiElement: HTMLElement | null = null;
-  private resizeObserver: ResizeObserver | null = null;
-  private resizeFrame: number | null = null;
   private replayTimers: ReturnType<typeof setTimeout>[] = [];
   private shapes: DrawShape[] = [];
   private readonly ideaShapes = signal<DrawShape[]>([]);
@@ -229,22 +190,6 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       this.practiceReplaying();
       this.practiceAnalysis.state();
       this.ideaShapes();
-      const host = this.boardHost()?.nativeElement;
-      if (host && host !== this.apiElement) {
-        this.api?.destroy();
-        this.resizeObserver?.disconnect();
-        this.api = Chessground(host, this.boardConfig());
-        this.apiElement = host;
-        this.resizeObserver = new ResizeObserver(() => {
-          if (this.resizeFrame !== null) cancelAnimationFrame(this.resizeFrame);
-          this.resizeFrame = requestAnimationFrame(() => {
-            this.api?.state.dom.bounds.clear();
-            this.api?.redrawAll();
-            this.resizeFrame = null;
-          });
-        });
-        this.resizeObserver.observe(host);
-      }
       this.syncBoard();
     });
     effect(() => {
@@ -268,39 +213,15 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
-    const restored = await this.persistence.restore();
-    this.sound.setEnabled(restored.preferences.soundEnabled);
-    this.boardTheme.set(restored.preferences.boardTheme);
-    const platform = this.route.snapshot.paramMap.get('platform') as GameSource | null;
-    const gameId = this.route.snapshot.paramMap.get('gameId');
-    if ((platform === 'chess-com' || platform === 'lichess' || platform === 'local') && gameId) {
-      const [game, profiles] = await Promise.all([
-        this.repository.game(platform, gameId),
-        this.repository.profiles(),
-      ]);
-      this.game.set(game ?? null);
-      if (game) {
-        const color = learnerColorForGame(game, profiles) ?? null;
-        this.learnerColor.set(color);
-        if (color) {
-          this.orientation.set(color);
-          await this.coachAnalysis.load(game, color);
-        }
-      }
-    }
-    this.loading.set(false);
+    await this.store.initialize();
     if (this.coachAnalysis.state().phase !== 'complete') {
       void this.analyze();
     }
   }
 
   ngOnDestroy(): void {
-    this.coachAnalysis.cancel();
     this.clearReplayTimers();
-    this.practiceAnalysis.destroy();
-    if (this.resizeFrame !== null) cancelAnimationFrame(this.resizeFrame);
-    this.resizeObserver?.disconnect();
-    this.api?.destroy();
+    this.store.destroy();
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -333,7 +254,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   protected cancelPromotion(): void {
     if (!this.pendingPromotion()) return;
     this.pendingPromotion.set(null);
-    this.api?.cancelMove();
+    this.board()?.cancelMove();
     this.syncBoard();
   }
 
@@ -582,7 +503,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     return { q: 'Queen', r: 'Rook', b: 'Bishop', n: 'Knight' }[piece];
   }
 
-  private boardConfig(): Config {
+  protected boardConfig(): Config {
     return {
       fen: STARTING_FEN,
       orientation: this.orientation(),
@@ -614,7 +535,8 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   }
 
   private syncBoard(): void {
-    if (!this.api) return;
+    const board = this.board();
+    if (!board) return;
     if (this.mode() === 'practice') {
       this.syncPracticeBoard();
       return;
@@ -623,7 +545,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     const ply = this.currentPly();
     const move = game?.moves[ply - 1];
     const initialFen = game?.moves[0]?.fenBefore ?? STARTING_FEN;
-    this.api.set({
+    board.set({
       fen: move?.fenAfter ?? initialFen,
       orientation: this.orientation(),
       lastMove: move ? ([move.from, move.to] as [Key, Key]) : undefined,
@@ -637,15 +559,14 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
         autoShapes: this.mode() === 'analysis' ? this.ideaShapes() : [],
       },
     });
-    this.api.state.dom.bounds.clear();
-    this.api.redrawAll();
   }
 
   private syncPracticeBoard(): void {
     const position = this.activePosition();
     const session = this.activePracticeSession();
     const node = this.selectedPracticeNode();
-    if (!position || !session || !node || !this.api) return;
+    const board = this.board();
+    if (!position || !session || !node || !board) return;
     const fen = this.practiceReplayFen() ?? node.fen;
     const color = turnColor(fen);
     const hint = this.practiceHint();
@@ -658,7 +579,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
           : previousOpponentMove
             ? ([previousOpponentMove.from, previousOpponentMove.to] as [Key, Key])
             : undefined;
-    this.api.set({
+    board.set({
       fen,
       orientation: this.orientation(),
       turnColor: color,
@@ -676,8 +597,6 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
         autoShapes: hint ? [hint] : this.engineCandidateShapes(node.candidates),
       },
     });
-    this.api.state.dom.bounds.clear();
-    this.api.redrawAll();
   }
 
   private ideaArrowShape(arrow: MoveIdeaArrow): DrawShape {
@@ -756,6 +675,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       return null;
     }
     const best = parseUci(position.bestMove);
+    if (!best) return null;
     return { orig: best.from as Key, dest: best.to as Key, brush: 'green' };
   }
 
@@ -849,26 +769,4 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   private clearReplayTimers(): void {
     for (const timer of this.replayTimers.splice(0)) clearTimeout(timer);
   }
-}
-
-function legalDestinations(fen: string): Dests {
-  const chess = new Chess(fen);
-  const destinations: Dests = new Map();
-  for (const move of chess.moves({ verbose: true })) {
-    const from = move.from as Key;
-    destinations.set(from, [...(destinations.get(from) ?? []), move.to as Key]);
-  }
-  return destinations;
-}
-
-function parseUci(uci: string): MoveInput {
-  return {
-    from: uci.slice(0, 2) as Square,
-    to: uci.slice(2, 4) as Square,
-    ...(uci[4] ? { promotion: uci[4] as PromotionPiece } : {}),
-  };
-}
-
-function turnColor(fen: string): ChessColor {
-  return new Chess(fen).turn() === 'w' ? 'white' : 'black';
 }

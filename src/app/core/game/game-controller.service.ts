@@ -1,5 +1,5 @@
 import { Injectable, inject, signal, type Signal } from '@angular/core';
-import { Chess, type Color, type Move, type PieceSymbol, type Square } from 'chess.js';
+import { Chess, type Move } from 'chess.js';
 import { ENGINE_PORT } from '../engine/engine.types';
 import {
   PERSISTENCE_PORT,
@@ -8,17 +8,20 @@ import {
 } from '../persistence/persistence.types';
 import { SoundService, type SoundEvent } from '../sound/sound.service';
 import {
-  DEFAULT_PREFERENCES,
   type ChessColor,
   type DifficultyId,
   type GamePreferences,
   type GameResult,
   type GameViewState,
   type MoveInput,
-  type MoveRecord,
   type PendingPremove,
   type StartGameOptions,
 } from './game.types';
+import { chessColor, oppositeChessColor } from './chess-move';
+import { chooseChessColor, describeMove, resultTag } from './game-presentation';
+import { evaluateAutomaticResult } from './game-result';
+import { buildGameViewState } from './game-state';
+import { validatedPersistedChess } from './persisted-game-validation';
 
 const EMPTY_GAME_ID = 'setup';
 
@@ -30,7 +33,7 @@ export class GameController {
   private chess = new Chess();
   private requestId = 0;
   private initialization: Promise<void> | null = null;
-  private readonly mutableState = signal<GameViewState>(this.buildState());
+  private readonly mutableState = signal<GameViewState>(buildGameViewState(this.chess));
 
   readonly state: Signal<GameViewState> = this.mutableState.asReadonly();
 
@@ -380,17 +383,8 @@ export class GameController {
       return null;
     }
 
-    try {
-      const candidate = new Chess();
-      candidate.loadPgn(game.pgn);
-      const history = candidate.history({ verbose: true });
-      if (
-        candidate.fen() !== game.fen ||
-        history.length !== game.moves.length ||
-        history.some((move, index) => move.lan !== game.moves[index]?.lan)
-      ) {
-        throw new Error('Stored game is inconsistent.');
-      }
+    const candidate = validatedPersistedChess(game);
+    if (candidate) {
       this.chess = candidate;
       this.mutableState.set(
         this.buildState({
@@ -411,11 +405,10 @@ export class GameController {
         }),
       );
       return game;
-    } catch {
-      this.chess = new Chess();
-      void this.persistence.clearGame();
-      return null;
     }
+    this.chess = new Chess();
+    void this.persistence.clearGame();
+    return null;
   }
 
   private async afterCommittedMove(): Promise<void> {
@@ -476,21 +469,7 @@ export class GameController {
   }
 
   private evaluateAutomaticResult(): GameResult | null {
-    if (this.chess.isCheckmate()) {
-      const winner = this.opposite(this.toColor(this.chess.turn()));
-      return { winner, reason: 'checkmate', label: `${this.capitalize(winner)} wins by checkmate` };
-    }
-    if (this.chess.isStalemate()) {
-      return { winner: null, reason: 'stalemate', label: 'Draw by stalemate' };
-    }
-    if (this.chess.isInsufficientMaterial()) {
-      return {
-        winner: null,
-        reason: 'insufficient-material',
-        label: 'Draw by insufficient material',
-      };
-    }
-    return null;
+    return evaluateAutomaticResult(this.chess);
   }
 
   private finishGame(result: GameResult): void {
@@ -524,80 +503,7 @@ export class GameController {
   }
 
   private buildState(changes: Partial<GameViewState> = {}): GameViewState {
-    const previous = this.mutableState?.();
-    const playerColor = changes.playerColor ?? previous?.playerColor ?? 'white';
-    const preferences = changes.preferences ?? previous?.preferences ?? { ...DEFAULT_PREFERENCES };
-    const turn = this.toColor(this.chess.turn());
-    const history = this.chess.history({ verbose: true });
-    const last = history.at(-1);
-    const result = changes.result === undefined ? (previous?.result ?? null) : changes.result;
-    const phase = changes.phase ?? previous?.phase ?? 'setup';
-
-    return {
-      gameId: changes.gameId ?? previous?.gameId ?? EMPTY_GAME_ID,
-      phase,
-      engineStatus: changes.engineStatus ?? previous?.engineStatus ?? 'idle',
-      engineError:
-        changes.engineError === undefined ? (previous?.engineError ?? null) : changes.engineError,
-      fen: this.chess.fen(),
-      pgn: this.chess.pgn(),
-      moves: this.toMoveRecords(history),
-      playerColor,
-      turn,
-      orientation: changes.orientation ?? previous?.orientation ?? preferences.orientation,
-      difficulty: changes.difficulty ?? previous?.difficulty ?? preferences.difficulty,
-      pendingPremove:
-        changes.pendingPremove === undefined
-          ? (previous?.pendingPremove ?? null)
-          : changes.pendingPremove,
-      result,
-      lastMove: last ? [last.from, last.to] : null,
-      checkSquare: this.chess.inCheck()
-        ? (this.chess.findPiece({ type: 'k', color: this.chess.turn() })[0] ?? null)
-        : null,
-      canClaimDraw:
-        phase === 'active' &&
-        !result &&
-        (this.chess.isThreefoldRepetition() || this.chess.isDrawByFiftyMoves()),
-      isPlayerTurn: phase === 'active' && !result && turn === playerColor,
-      restored: changes.restored ?? previous?.restored ?? false,
-      announcement: changes.announcement ?? previous?.announcement ?? '',
-      preferences,
-      legalDestinations: this.legalDestinations(
-        turn === playerColor && phase === 'active' && !result,
-      ),
-    };
-  }
-
-  private legalDestinations(enabled: boolean): ReadonlyMap<Square, readonly Square[]> {
-    const destinations = new Map<Square, Square[]>();
-    if (!enabled) {
-      return destinations;
-    }
-    for (const move of this.chess.moves({ verbose: true })) {
-      const existing = destinations.get(move.from) ?? [];
-      if (!existing.includes(move.to)) {
-        existing.push(move.to);
-      }
-      destinations.set(move.from, existing);
-    }
-    return destinations;
-  }
-
-  private toMoveRecords(history: Move[]): MoveRecord[] {
-    return history.map((move, index) => ({
-      ply: index + 1,
-      color: this.toColor(move.color),
-      from: move.from,
-      to: move.to,
-      san: move.san,
-      lan: move.lan,
-      piece: move.piece,
-      ...(move.captured ? { captured: move.captured } : {}),
-      ...(move.promotion ? { promotion: move.promotion } : {}),
-      before: move.before,
-      after: move.after,
-    }));
+    return buildGameViewState(this.chess, this.mutableState?.(), changes);
   }
 
   private async persistGame(): Promise<void> {
@@ -644,15 +550,7 @@ export class GameController {
   }
 
   private describeMove(move: Move): string {
-    const pieceNames: Record<PieceSymbol, string> = {
-      p: 'pawn',
-      n: 'knight',
-      b: 'bishop',
-      r: 'rook',
-      q: 'queen',
-      k: 'king',
-    };
-    return `${this.capitalize(this.toColor(move.color))} ${pieceNames[move.piece]} ${move.from} to ${move.to}${this.chess.inCheck() ? ', check' : ''}.`;
+    return describeMove(move, this.chess.inCheck());
   }
 
   private setEngineError(error: unknown): void {
@@ -661,30 +559,18 @@ export class GameController {
   }
 
   private chooseColor(selection: StartGameOptions['colorSelection']): ChessColor {
-    if (selection !== 'random') {
-      return selection;
-    }
-    const value = new Uint8Array(1);
-    crypto.getRandomValues(value);
-    return (value[0] ?? 0) % 2 === 0 ? 'white' : 'black';
+    return chooseChessColor(selection);
   }
 
-  private toColor(color: Color): ChessColor {
-    return color === 'w' ? 'white' : 'black';
+  private toColor(color: 'w' | 'b'): ChessColor {
+    return chessColor(color);
   }
 
   private opposite(color: ChessColor): ChessColor {
-    return color === 'white' ? 'black' : 'white';
-  }
-
-  private capitalize(value: string): string {
-    return value.charAt(0).toUpperCase() + value.slice(1);
+    return oppositeChessColor(color);
   }
 
   private resultTag(result: GameResult): string {
-    if (!result.winner) {
-      return '1/2-1/2';
-    }
-    return result.winner === 'white' ? '1-0' : '0-1';
+    return resultTag(result);
   }
 }

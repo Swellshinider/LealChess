@@ -18,6 +18,7 @@ import type {
   TrainingPosition,
 } from '../domain/coach.types';
 import type { ChessColor } from '../../../shared/chess/chess.types';
+export { moveToUci } from '../../../core/game/chess-move';
 
 const ADVICE: Record<MistakeCategory, string> = {
   opening: 'Revisit opening principles and compare plans before committing to early moves.',
@@ -66,10 +67,6 @@ export function categorizeMistake(fen: string, ply: number, bestMoveSan: string)
   if (phase <= 8) return 'endgame';
   if (/[x+#=]/.test(bestMoveSan)) return 'tactical';
   return 'positional';
-}
-
-export function moveToUci(move: MoveInput): string {
-  return `${move.from}${move.to}${move.promotion ?? ''}`;
 }
 
 export function moveToSan(fen: string, move: MoveInput): string {

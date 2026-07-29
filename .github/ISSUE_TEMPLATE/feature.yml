@@ -1,0 +1,32 @@
+name: Feature request
+description: Propose a focused improvement.
+title: ''
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: User need
+      description: What problem should LealChess solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the smallest useful outcome.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: principles
+    attributes:
+      label: Project fit
+      options:
+        - label: I considered local-first privacy and persisted-data compatibility.
+          required: true
+        - label: I searched for an existing request.
+          required: true
