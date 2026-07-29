@@ -45,7 +45,6 @@ import type {
   ImportedGame,
   MoveAnalysis,
   MoveClassification,
-  MistakeCategory,
   PlatformPlayer,
   ReviewMoveClassification,
   TrainingPosition,
@@ -68,14 +67,29 @@ import type {
   PracticeSession,
   PracticeVariationNode,
 } from './practice.types';
+import { ReviewAnalysisPanelComponent } from './review-analysis-panel.component';
+import {
+  createGameReviewSummary,
+  createMoveExplanation,
+  evaluationForWhite,
+  type MoveIdeaArrow,
+} from './review-insights';
 import { reviewSoundEvents } from './review-sound';
+import { ReviewSummaryComponent } from './review-summary.component';
 
-type ReviewMode = 'review' | 'practice';
+type ReviewMode = 'summary' | 'analysis' | 'practice';
 type PuzzleStatus = 'ready' | 'incorrect' | 'correct' | 'revealed';
 
 @Component({
   selector: 'app-review-page',
-  imports: [ModalFocusDirective, PracticeMoveTreeComponent, RouterLink, SideNavigationComponent],
+  imports: [
+    ModalFocusDirective,
+    PracticeMoveTreeComponent,
+    ReviewAnalysisPanelComponent,
+    ReviewSummaryComponent,
+    RouterLink,
+    SideNavigationComponent,
+  ],
   providers: [
     PracticeAnalysisService,
     {
@@ -101,7 +115,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   protected readonly orientation = signal<ChessColor>('white');
   protected readonly learnerColor = signal<ChessColor | null>(null);
   protected readonly boardTheme = signal<BoardTheme>('tournament');
-  protected readonly mode = signal<ReviewMode>('review');
+  protected readonly mode = signal<ReviewMode>('summary');
   protected readonly trainingIndex = signal(0);
   protected readonly puzzleStatus = signal<PuzzleStatus>('ready');
   protected readonly pendingPromotion = signal<Omit<MoveInput, 'promotion'> | null>(null);
@@ -134,6 +148,48 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   protected readonly currentAnalysis = computed<MoveAnalysis | undefined>(() =>
     moveAnalysisForPly(this.coachAnalysis.analysis(), this.currentPly()),
   );
+  protected readonly reviewSummary = computed(() => {
+    const game = this.game();
+    return game ? createGameReviewSummary(game, this.coachAnalysis.analysis()) : null;
+  });
+  protected readonly moveExplanation = computed(() => {
+    const game = this.game();
+    return game
+      ? createMoveExplanation(game, this.coachAnalysis.analysis(), this.currentPly())
+      : null;
+  });
+  private readonly whiteEvaluationValue = computed(() => {
+    if (this.mode() !== 'analysis') return null;
+    const move = this.game()?.moves[this.currentPly() - 1];
+    const evaluation = this.currentAnalysis()?.playedEvaluation;
+    if (!move || !evaluation) return null;
+    return evaluationForWhite(move, evaluation);
+  });
+  protected readonly evaluationRailValueLabel = computed(() => {
+    const evaluation = this.currentAnalysis()?.playedEvaluation;
+    if (this.mode() !== 'analysis' || !evaluation) return '';
+    if (evaluation.score.kind === 'mate') return `M${Math.abs(evaluation.score.moves)}`;
+    return Math.abs(this.whiteEvaluationValue() ?? 0).toFixed(1);
+  });
+  protected readonly evaluationFavorsWhite = computed(
+    () => (this.whiteEvaluationValue() ?? 0) >= 0,
+  );
+  protected readonly evaluationRailLabel = computed(() => {
+    const value = this.whiteEvaluationValue();
+    if (value === null || Math.abs(value) < 0.05) return 'White evaluation, even';
+    return `White evaluation, ${this.evaluationRailValueLabel()} favoring ${
+      value > 0 ? 'White' : 'Black'
+    }`;
+  });
+  protected readonly evaluationScoreAtTop = computed(() => {
+    const whiteAtTop = this.orientation() === 'black';
+    return this.evaluationFavorsWhite() === whiteAtTop;
+  });
+  protected readonly evaluationPercent = computed(() => {
+    const whiteValue = this.whiteEvaluationValue();
+    if (whiteValue === null) return 50;
+    return Math.max(5, Math.min(95, 50 + 45 * Math.tanh(whiteValue / 5)));
+  });
   protected readonly learnerPlayer = computed<PlatformPlayer | null>(() => {
     const game = this.game();
     const color = this.learnerColor();
@@ -152,16 +208,13 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     const fen = game?.moves[ply - 1]?.fenAfter ?? game?.moves[0]?.fenBefore ?? STARTING_FEN;
     return turnColor(fen);
   });
-  protected readonly analysisMoves = computed(() => {
-    const game = this.game();
-    return game?.moves ?? [];
-  });
   private api: Api | null = null;
   private apiElement: HTMLElement | null = null;
   private resizeObserver: ResizeObserver | null = null;
   private resizeFrame: number | null = null;
   private replayTimers: ReturnType<typeof setTimeout>[] = [];
   private shapes: DrawShape[] = [];
+  private readonly ideaShapes = signal<DrawShape[]>([]);
 
   constructor() {
     effect(() => {
@@ -175,6 +228,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       this.practiceReplayFen();
       this.practiceReplaying();
       this.practiceAnalysis.state();
+      this.ideaShapes();
       const host = this.boardHost()?.nativeElement;
       if (host && host !== this.apiElement) {
         this.api?.destroy();
@@ -235,10 +289,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       }
     }
     this.loading.set(false);
-    if (
-      this.route.snapshot.queryParamMap.get('autoAnalyze') === 'true' &&
-      this.coachAnalysis.state().phase !== 'complete'
-    ) {
+    if (this.coachAnalysis.state().phase !== 'complete') {
       void this.analyze();
     }
   }
@@ -263,7 +314,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
           'button, a, input, select, textarea, summary, [contenteditable="true"], [role="dialog"]',
         ),
       );
-    if (this.mode() !== 'review' || this.pendingPromotion() || isInteractive) {
+    if (this.mode() !== 'analysis' || this.pendingPromotion() || isInteractive) {
       return;
     }
     const action: Record<string, () => void> = {
@@ -284,19 +335,6 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.pendingPromotion.set(null);
     this.api?.cancelMove();
     this.syncBoard();
-  }
-
-  protected handleModeKey(event: KeyboardEvent): void {
-    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-    event.preventDefault();
-    const wantsPractice = event.key === 'ArrowRight' || event.key === 'End';
-    if (wantsPractice && this.positions().length) {
-      this.enterPractice(this.trainingIndex());
-      queueMicrotask(() => document.getElementById('practice-tab')?.focus());
-    } else {
-      this.leavePractice();
-      queueMicrotask(() => document.getElementById('score-sheet-tab')?.focus());
-    }
   }
 
   @HostListener('document:pointerdown')
@@ -320,11 +358,37 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     const previousPly = this.currentPly();
     const nextPly = Math.max(0, Math.min(ply, maximum));
     if (nextPly === previousPly) return;
+    this.ideaShapes.set([]);
     this.currentPly.set(nextPly);
     const traversedMove = this.game()?.moves[Math.max(previousPly, nextPly) - 1];
     if (traversedMove) {
       for (const event of reviewSoundEvents(traversedMove)) this.sound.play(event);
     }
+  }
+
+  protected startAnalysis(): void {
+    if (this.coachAnalysis.state().phase !== 'complete') return;
+    this.ideaShapes.set([]);
+    this.mode.set('analysis');
+    this.currentPly.set(this.game()?.moves.length ? 1 : 0);
+  }
+
+  protected showSummary(): void {
+    this.clearReplayTimers();
+    this.practiceAnalysis.cancel();
+    this.pendingPromotion.set(null);
+    this.practiceReplayFen.set(null);
+    this.practiceReplaying.set(false);
+    this.ideaShapes.set([]);
+    this.currentPly.set(0);
+    this.mode.set('summary');
+  }
+
+  protected showMoveIdea(): void {
+    const explanation = this.moveExplanation();
+    if (!explanation) return;
+    const arrows = explanation.arrows.map((arrow) => this.ideaArrowShape(arrow));
+    this.ideaShapes.set(arrows);
   }
 
   protected enterPractice(index = 0): void {
@@ -333,6 +397,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.puzzleStatus.set('ready');
     this.shapes = [];
     this.pendingPromotion.set(null);
+    this.ideaShapes.set([]);
     this.ensureActiveSession();
     this.mode.set('practice');
     this.replayOpponentMove();
@@ -345,7 +410,9 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.practiceReplayFen.set(null);
     this.practiceReplaying.set(false);
     this.shapes = [];
-    this.mode.set('review');
+    const position = this.activePosition();
+    if (position) this.currentPly.set(position.ply);
+    this.mode.set('analysis');
   }
 
   protected previousPosition(): void {
@@ -500,44 +567,11 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     return node?.candidateDepth ? `Stockfish depth ${node.candidateDepth}` : '';
   }
 
-  protected analysisButtonLabel(): string {
-    const state = this.coachAnalysis.state();
-    return state.phase === 'partial' || state.phase === 'error'
-      ? 'Resume analysis'
-      : 'Analyze game';
-  }
-
   protected sourceLabel(): string {
     const platform = this.game()?.platform;
     if (platform === 'chess-com') return 'Chess.com';
     if (platform === 'lichess') return 'Lichess';
     return 'LealChess';
-  }
-
-  protected analysisProgress(): number {
-    const state = this.coachAnalysis.state();
-    return state.total ? Math.round((state.completed / state.total) * 100) : 0;
-  }
-
-  protected gameMomentCount(): number {
-    return (
-      this.coachAnalysis.analysis()?.moves.filter((move) => move.classification !== 'good')
-        .length ?? 0
-    );
-  }
-
-  protected gameSummary(): string {
-    const mistakes =
-      this.coachAnalysis.analysis()?.moves.filter((move) => move.category !== undefined) ?? [];
-    if (!mistakes.length) return 'No missed opportunities crossed the analysis thresholds.';
-    const counts = new Map<MistakeCategory, number>();
-    for (const move of mistakes) {
-      if (move.category) counts.set(move.category, (counts.get(move.category) ?? 0) + 1);
-    }
-    const [topCategory, count] = [...counts.entries()].sort(
-      (left, right) => right[1] - left[1] || left[0].localeCompare(right[0]),
-    )[0]!;
-    return `Most often: ${categoryLabel(topCategory)} — ${count} of ${mistakes.length} moments.`;
   }
 
   protected practiceIndexForPly(ply: number): number {
@@ -597,7 +631,11 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       movable: { color: undefined, dests: new Map() },
       draggable: { enabled: false },
       selectable: { enabled: false },
-      drawable: { enabled: true, shapes: this.shapes },
+      drawable: {
+        enabled: true,
+        shapes: this.shapes,
+        autoShapes: this.mode() === 'analysis' ? this.ideaShapes() : [],
+      },
     });
     this.api.state.dom.bounds.clear();
     this.api.redrawAll();
@@ -640,6 +678,15 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     });
     this.api.state.dom.bounds.clear();
     this.api.redrawAll();
+  }
+
+  private ideaArrowShape(arrow: MoveIdeaArrow): DrawShape {
+    return {
+      orig: arrow.from as Key,
+      dest: arrow.to as Key,
+      brush: arrow.kind === 'best' ? 'green' : 'yellow',
+      modifiers: { lineWidth: arrow.kind === 'best' ? 12 : 8 },
+    };
   }
 
   private handleTrainingMove(from: Key, to: Key): void {

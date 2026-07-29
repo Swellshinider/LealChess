@@ -1,0 +1,112 @@
+<section class="analysis-panel" aria-labelledby="guided-analysis-heading">
+  <header>
+    <button type="button" class="back-action" (click)="summaryRequested.emit()">
+      Game summary
+    </button>
+    <div>
+      <span>Game review</span>
+      <h2 id="guided-analysis-heading">Guided analysis</h2>
+    </div>
+    <small>{{ currentPly() }} / {{ game().moves.length }}</small>
+  </header>
+
+  <section class="coach-note" aria-live="polite" aria-atomic="true">
+    @if (explanation(); as idea) {
+      <div class="classification" [attr.data-classification]="idea.classification">
+        {{ classificationLabel(idea.classification) }}
+      </div>
+      <h3>{{ idea.title }}</h3>
+      <p>{{ idea.body }}</p>
+      @if (currentNote(); as note) {
+        <div class="evaluation">
+          <span>Before {{ evaluationLabel(note.bestEvaluation) }}</span>
+          <span>After {{ evaluationLabel(note.playedEvaluation) }}</span>
+        </div>
+      }
+    } @else {
+      <h3>Choose a move to review</h3>
+      <p>The coach note will explain the move’s purpose and compare it with Stockfish’s choice.</p>
+    }
+  </section>
+
+  <div class="guided-actions">
+    <button
+      type="button"
+      class="secondary-action"
+      [disabled]="!explanation()"
+      (click)="ideaRequested.emit()"
+    >
+      Show idea on board
+    </button>
+    <button
+      type="button"
+      class="primary-action"
+      [disabled]="currentPly() === game().moves.length"
+      (click)="requestPly(currentPly() + 1)"
+    >
+      Next move
+    </button>
+  </div>
+
+  <ol class="moves" aria-label="Analyzed moves">
+    @for (move of game().moves; track move.ply) {
+      <li
+        [attr.data-classification]="moveAnalysis(move.ply)?.reviewClassification ?? null"
+        [class.learner-move]="move.color === learnerColor()"
+      >
+        <span>{{ moveNumber(move.ply) }}</span>
+        <button
+          type="button"
+          [class.current]="currentPly() === move.ply"
+          [attr.aria-current]="currentPly() === move.ply ? 'step' : null"
+          [attr.aria-label]="
+            move.san +
+            (moveAnalysis(move.ply)
+              ? ', ' + classificationLabel(moveAnalysis(move.ply)!.reviewClassification)
+              : '')
+          "
+          (click)="requestPly(move.ply)"
+        >
+          {{ move.san }}
+          @if (moveAnalysis(move.ply); as note) {
+            <i aria-hidden="true">{{ classificationLabel(note.reviewClassification) }}</i>
+          }
+        </button>
+      </li>
+    }
+  </ol>
+
+  @if (canPractice()) {
+    <button type="button" class="practice-action" (click)="practiceRequested.emit(currentPly())">
+      Practice this position
+    </button>
+  }
+
+  <app-review-evaluation-timeline
+    [points]="evaluations()"
+    [currentPly]="currentPly()"
+    [selectable]="true"
+    (plySelected)="requestPly($event)"
+  />
+
+  <nav class="replay-controls" aria-label="Replay controls">
+    <button type="button" [disabled]="currentPly() === 0" (click)="requestPly(0)">First</button>
+    <button type="button" [disabled]="currentPly() === 0" (click)="requestPly(currentPly() - 1)">
+      Previous
+    </button>
+    <button
+      type="button"
+      [disabled]="currentPly() === game().moves.length"
+      (click)="requestPly(currentPly() + 1)"
+    >
+      Next
+    </button>
+    <button
+      type="button"
+      [disabled]="currentPly() === game().moves.length"
+      (click)="requestPly(game().moves.length)"
+    >
+      Last
+    </button>
+  </nav>
+</section>

@@ -12,11 +12,11 @@
     } @else {
       <main class="review-page">
         <header class="review-toolbar">
-          <a class="back-link" routerLink="/learn" aria-label="Back to Learn">← Learn</a>
+          <a class="back-link" routerLink="/learn" aria-label="Back to Learn">Learn</a>
           <div class="game-meta">
             <span>{{ sourceLabel() }}</span>
             <strong>{{ game()?.opening?.name ?? 'Opening not recorded' }}</strong>
-            <small> {{ game()?.opening?.eco }} · {{ game()?.speed }} · {{ game()?.result }} </small>
+            <small>{{ game()?.opening?.eco }} · {{ game()?.speed }} · {{ game()?.result }}</small>
           </div>
           <button type="button" class="toolbar-action" (click)="flipBoard()">Flip board</button>
         </header>
@@ -37,120 +37,153 @@
           </section>
         } @else {
           <section class="review-workspace" aria-label="Game review">
-            <section class="board-column" aria-label="Game position">
+            <section
+              class="board-column"
+              [class.has-evaluation]="mode() === 'analysis'"
+              aria-label="Game position"
+            >
               <div class="player-strip opponent" [class.active]="boardTurn() === opponentSide()">
                 <span class="player-avatar opponent-avatar" aria-hidden="true">
                   {{ playerInitials(opponentPlayer()) }}
                 </span>
                 <span>
                   <strong>{{ opponentPlayer()?.username }}</strong>
-                  <small>
-                    {{ opponentSide() }} · {{ opponentPlayer()?.rating ?? 'Unrated' }}
-                  </small>
+                  <small>{{ opponentSide() }} · {{ opponentPlayer()?.rating ?? 'Unrated' }}</small>
                 </span>
                 <span class="turn-indicator" aria-hidden="true"></span>
               </div>
 
-              <div class="board-stage">
-                <div
-                  #boardHost
-                  class="review-board"
-                  role="img"
-                  aria-label="Review chessboard"
-                  aria-describedby="review-board-description"
-                  [attr.data-board-theme]="boardTheme()"
-                ></div>
-                <p id="review-board-description" class="sr-only">
-                  {{ orientation() }} orientation.
-                  {{
-                    mode() === 'review'
-                      ? 'Showing ply ' + currentPly() + ' of ' + game()?.moves?.length + '.'
-                      : 'Practice position ' +
-                        (trainingIndex() + 1) +
-                        ' of ' +
-                        positions().length +
-                        '.'
-                  }}
-                  Right-drag to annotate the board.
-                </p>
-
-                @if (mode() === 'review' && currentAnalysis(); as note) {
-                  @if (currentMoveDestination(); as square) {
-                    <div
-                      class="review-classification"
-                      [attr.data-classification]="note.reviewClassification"
-                      [attr.style]="classificationPosition(square)"
-                      role="status"
-                      aria-live="polite"
-                    >
-                      {{ classificationLabel(note.reviewClassification) }}
-                    </div>
-                  }
-                }
-
-                @if (
-                  mode() === 'practice' &&
-                    !practiceReplaying() &&
-                    selectedPracticeNode()?.assessment;
-                  as assessment
-                ) {
-                  @if (selectedPracticeMoveDestination(); as square) {
-                    <div
-                      class="review-classification practice-classification"
-                      [attr.data-classification]="assessment.classification"
-                      [attr.style]="classificationPosition(square)"
-                      role="status"
-                      aria-live="polite"
-                    >
-                      {{ classificationLabel(assessment.classification) }}
-                    </div>
-                  }
-                }
-
-                @if (pendingPromotion()) {
+              <div class="board-workbench" [class.has-evaluation]="mode() === 'analysis'">
+                @if (mode() === 'analysis') {
                   <div
-                    appModalFocus
-                    class="promotion-backdrop"
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="promotion-title"
-                    aria-describedby="practice-promotion-help"
-                    tabindex="-1"
-                    (modalDismissed)="cancelPromotion()"
+                    class="evaluation-rail"
+                    role="img"
+                    [class.flipped]="orientation() === 'black'"
+                    [attr.aria-label]="evaluationRailLabel()"
                   >
-                    <div class="promotion-card">
-                      <span id="promotion-title">Choose promotion</span>
-                      <span id="practice-promotion-help" class="sr-only">
-                        Choose a piece with Tab, then press Enter. Press Escape to cancel.
-                      </span>
-                      <div class="promotion-pieces">
-                        @for (piece of promotionPieces; track piece) {
-                          <button
-                            type="button"
-                            [attr.data-modal-initial]="$first ? '' : null"
-                            (click)="choosePromotion(piece)"
-                          >
-                            <span aria-hidden="true">
-                              {{
-                                piece === 'q'
-                                  ? '♛'
-                                  : piece === 'r'
-                                    ? '♜'
-                                    : piece === 'b'
-                                      ? '♝'
-                                      : '♞'
-                              }}
-                            </span>
-                            {{ pieceLabel(piece) }}
-                          </button>
-                        }
-                      </div>
-                      <button type="button" class="secondary-action" (click)="cancelPromotion()">
-                        Cancel
-                      </button>
+                    <div
+                      class="evaluation-track"
+                      [class.flipped]="orientation() === 'black'"
+                      aria-hidden="true"
+                    >
+                      <i [style.height.%]="evaluationPercent()"></i>
+                      @if (evaluationRailValueLabel()) {
+                        <span
+                          class="evaluation-score"
+                          [class.top]="evaluationScoreAtTop()"
+                          [class.bottom]="!evaluationScoreAtTop()"
+                          [class.on-light]="evaluationFavorsWhite()"
+                        >
+                          {{ evaluationRailValueLabel() }}
+                        </span>
+                      }
                     </div>
                   </div>
                 }
+
+                <div class="board-stage">
+                  <div
+                    #boardHost
+                    class="review-board"
+                    role="img"
+                    aria-label="Review chessboard"
+                    aria-describedby="review-board-description"
+                    [attr.data-board-theme]="boardTheme()"
+                  ></div>
+                  <p id="review-board-description" class="sr-only">
+                    {{ orientation() }} orientation.
+                    @switch (mode()) {
+                      @case ('summary') {
+                        Showing the starting position while the game summary is open.
+                      }
+                      @case ('analysis') {
+                        Showing ply {{ currentPly() }} of {{ game()?.moves?.length }}.
+                      }
+                      @case ('practice') {
+                        Practice position {{ trainingIndex() + 1 }} of {{ positions().length }}.
+                      }
+                    }
+                    Right-drag to annotate the board.
+                  </p>
+
+                  @if (mode() === 'analysis' && currentAnalysis(); as note) {
+                    @if (currentMoveDestination(); as square) {
+                      <div
+                        class="review-classification"
+                        [attr.data-classification]="note.reviewClassification"
+                        [attr.style]="classificationPosition(square)"
+                        role="status"
+                        aria-live="polite"
+                      >
+                        {{ classificationLabel(note.reviewClassification) }}
+                      </div>
+                    }
+                  }
+
+                  @if (
+                    mode() === 'practice' &&
+                      !practiceReplaying() &&
+                      selectedPracticeNode()?.assessment;
+                    as assessment
+                  ) {
+                    @if (selectedPracticeMoveDestination(); as square) {
+                      <div
+                        class="review-classification practice-classification"
+                        [attr.data-classification]="assessment.classification"
+                        [attr.style]="classificationPosition(square)"
+                        role="status"
+                        aria-live="polite"
+                      >
+                        {{ classificationLabel(assessment.classification) }}
+                      </div>
+                    }
+                  }
+
+                  @if (pendingPromotion()) {
+                    <div
+                      appModalFocus
+                      class="promotion-backdrop"
+                      role="dialog"
+                      aria-modal="true"
+                      aria-labelledby="promotion-title"
+                      aria-describedby="practice-promotion-help"
+                      tabindex="-1"
+                      (modalDismissed)="cancelPromotion()"
+                    >
+                      <div class="promotion-card">
+                        <span id="promotion-title">Choose promotion</span>
+                        <span id="practice-promotion-help" class="sr-only">
+                          Choose a piece with Tab, then press Enter. Press Escape to cancel.
+                        </span>
+                        <div class="promotion-pieces">
+                          @for (piece of promotionPieces; track piece) {
+                            <button
+                              type="button"
+                              [attr.data-modal-initial]="$first ? '' : null"
+                              (click)="choosePromotion(piece)"
+                            >
+                              <span aria-hidden="true">
+                                {{
+                                  piece === 'q'
+                                    ? 'Queen'
+                                    : piece === 'r'
+                                      ? 'Rook'
+                                      : piece === 'b'
+                                        ? 'Bishop'
+                                        : 'Knight'
+                                }}
+                              </span>
+                              {{ pieceLabel(piece) }}
+                            </button>
+                          }
+                        </div>
+                        <button type="button" class="secondary-action" (click)="cancelPromotion()">
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </div>
               </div>
 
               <div class="player-strip" [class.active]="boardTurn() === learnerSide()">
@@ -166,284 +199,64 @@
             </section>
 
             <aside class="review-desk">
-              <div class="mode-switch" role="tablist" aria-label="Review mode">
-                <button
-                  type="button"
-                  id="score-sheet-tab"
-                  role="tab"
-                  aria-controls="score-sheet-panel"
-                  [class.active]="mode() === 'review'"
-                  [attr.aria-selected]="mode() === 'review'"
-                  [attr.tabindex]="mode() === 'review' ? 0 : -1"
-                  (keydown)="handleModeKey($event)"
-                  (click)="leavePractice()"
-                >
-                  Review
-                </button>
-                <button
-                  type="button"
-                  id="practice-tab"
-                  role="tab"
-                  aria-controls="practice-panel"
-                  [class.active]="mode() === 'practice'"
-                  [attr.aria-selected]="mode() === 'practice'"
-                  [attr.tabindex]="mode() === 'practice' ? 0 : -1"
-                  [disabled]="!positions().length"
-                  (keydown)="handleModeKey($event)"
-                  (click)="enterPractice(trainingIndex())"
-                >
-                  Practice
-                </button>
-              </div>
-
               <p class="sr-only" aria-live="polite" aria-atomic="true">
-                @if (mode() === 'review') {
+                @if (mode() === 'analysis') {
                   Position {{ currentPly() }} of {{ game()?.moves?.length }}.
                   {{
                     currentPly() === 0
                       ? 'Starting position.'
                       : game()?.moves?.[currentPly() - 1]?.san + '.'
                   }}
-                } @else {
+                } @else if (mode() === 'practice') {
                   Practice position {{ trainingIndex() + 1 }} of {{ positions().length }}.
                   {{ puzzleStatus() }}.
                 }
               </p>
 
-              @if (mode() === 'review') {
-                <section
-                  id="score-sheet-panel"
-                  class="score-sheet"
-                  role="tabpanel"
-                  aria-labelledby="score-sheet-tab"
-                >
-                  <section class="analysis-status" aria-labelledby="analysis-heading">
-                    <div class="analysis-copy">
-                      <span>Engine review</span>
-                      <h2 id="analysis-heading">
-                        @switch (coachAnalysis.state().phase) {
-                          @case ('complete') {
-                            {{ gameMomentCount() }} learning moments
-                          }
-                          @case ('running') {
-                            Analyzing your moves
-                          }
-                          @case ('starting') {
-                            Starting Stockfish
-                          }
-                          @case ('partial') {
-                            Analysis paused
-                          }
-                          @case ('error') {
-                            Analysis stopped
-                          }
-                          @default {
-                            Find the turning points
-                          }
-                        }
-                      </h2>
-                    </div>
-
-                    @if (
-                      coachAnalysis.state().phase === 'starting' ||
-                      coachAnalysis.state().phase === 'running' ||
-                      coachAnalysis.state().phase === 'partial' ||
-                      coachAnalysis.state().phase === 'error' ||
-                      coachAnalysis.state().phase === 'complete'
-                    ) {
-                      <div class="analysis-count">
-                        {{ coachAnalysis.state().completed }} / {{ coachAnalysis.state().total }}
-                      </div>
-                      <div
-                        class="analysis-rail"
-                        role="progressbar"
-                        aria-label="Game analysis progress"
-                        [attr.aria-valuemin]="0"
-                        [attr.aria-valuemax]="coachAnalysis.state().total"
-                        [attr.aria-valuenow]="coachAnalysis.state().completed"
-                        [attr.aria-valuetext]="analysisProgress() + '% complete'"
-                      >
-                        @for (move of analysisMoves(); track move.ply) {
-                          <span
-                            [class.complete]="reviewClassification(move.ply)"
-                            [attr.data-classification]="reviewClassification(move.ply) ?? null"
-                          ></span>
-                        }
-                      </div>
-                    }
-
-                    <div class="analysis-actions">
-                      @if (
-                        coachAnalysis.state().phase === 'starting' ||
-                        coachAnalysis.state().phase === 'running'
-                      ) {
-                        <span>{{ analysisProgress() }}%</span>
-                        <button type="button" class="text-action" (click)="cancelAnalysis()">
-                          Cancel
-                        </button>
-                      } @else if (coachAnalysis.state().phase !== 'complete') {
-                        <button type="button" class="primary-action" (click)="analyze()">
-                          {{ analysisButtonLabel() }}
-                        </button>
-                      } @else {
-                        <details class="analysis-summary">
-                          <summary>Game summary</summary>
-                          <p>{{ gameSummary() }}</p>
-                          <small>Stockfish depth {{ coachAnalysis.analysis()?.depth }}</small>
-                        </details>
-                      }
-                    </div>
-                    @if (coachAnalysis.state().error) {
-                      <p class="analysis-error" role="alert">{{ coachAnalysis.state().error }}</p>
-                    }
-                  </section>
-
-                  <div class="move-heading">
-                    <div>
-                      <span>Position</span>
-                      <strong>Ply {{ currentPly() }} of {{ game()?.moves?.length }}</strong>
-                    </div>
-                    <span>
-                      {{
-                        currentPly() === 0
-                          ? 'Starting position'
-                          : game()?.moves?.[currentPly() - 1]?.san
-                      }}
-                    </span>
-                  </div>
-
-                  <ol class="moves" aria-label="Moves">
-                    @for (move of game()?.moves; track move.ply) {
-                      <li
-                        [attr.data-classification]="reviewClassification(move.ply) ?? null"
-                        [class.learner-move]="move.color === learnerColor()"
-                      >
-                        <span>{{ moveNumber(move.ply) }}</span>
-                        <button
-                          type="button"
-                          [class.current]="currentPly() === move.ply"
-                          [attr.aria-current]="currentPly() === move.ply ? 'step' : null"
-                          [attr.aria-label]="
-                            moveAnalysis(move.ply)
-                              ? move.san +
-                                ', ' +
-                                classificationLabel(reviewClassification(move.ply)!)
-                              : move.san
-                          "
-                          (click)="goTo(move.ply)"
-                        >
-                          {{ move.san }}
-                          @if (reviewClassification(move.ply); as classification) {
-                            <i aria-hidden="true">{{ classificationLabel(classification)[0] }}</i>
-                          }
-                        </button>
-                      </li>
-                    }
-                  </ol>
-
-                  @if (currentAnalysis(); as note) {
-                    <section
-                      class="move-note"
-                      [attr.data-classification]="note.reviewClassification"
-                    >
-                      <div class="move-note-heading">
-                        <span>{{ classificationLabel(note.reviewClassification) }}</span>
-                        @if (note.category) {
-                          <strong>{{ categoryLabel(note.category) }}</strong>
-                        }
-                      </div>
-                      <div class="move-comparison">
-                        <span
-                          >Played <strong>{{ game()?.moves?.[note.ply - 1]?.san }}</strong></span
-                        >
-                        <span
-                          >Best <strong>{{ note.bestMoveSan }}</strong></span
-                        >
-                      </div>
-                      <details>
-                        <summary>Engine details</summary>
-                        <dl>
-                          <div>
-                            <dt>Evaluation</dt>
-                            <dd>
-                              {{ evaluationLabel(note.bestEvaluation) }} →
-                              {{ evaluationLabel(note.playedEvaluation) }}
-                            </dd>
-                          </div>
-                          @if (note.centipawnLoss !== undefined) {
-                            <div>
-                              <dt>Loss</dt>
-                              <dd>{{ note.centipawnLoss }} cp</dd>
-                            </div>
-                          }
-                        </dl>
-                      </details>
-                      @if (
-                        note.classification !== 'good' &&
-                        game()?.moves?.[note.ply - 1]?.color === learnerColor()
-                      ) {
-                        <button
-                          type="button"
-                          (click)="enterPractice(practiceIndexForPly(note.ply))"
-                        >
-                          Practice this position
-                        </button>
-                      }
-                    </section>
+              @if (mode() === 'summary') {
+                @if (reviewSummary(); as summary) {
+                  <app-review-summary
+                    [game]="game()!"
+                    [summary]="summary"
+                    [phase]="coachAnalysis.state().phase"
+                    [completed]="coachAnalysis.state().completed"
+                    [total]="coachAnalysis.state().total"
+                    [error]="coachAnalysis.state().error"
+                    [depth]="coachAnalysis.analysis()?.depth"
+                    (analysisRequested)="analyze()"
+                    (cancelRequested)="cancelAnalysis()"
+                    (startRequested)="startAnalysis()"
+                  />
+                }
+              } @else if (mode() === 'analysis') {
+                @if (coachAnalysis.analysis(); as analysis) {
+                  @if (reviewSummary(); as summary) {
+                    <app-review-analysis-panel
+                      [game]="game()!"
+                      [analysis]="analysis"
+                      [currentPly]="currentPly()"
+                      [learnerColor]="learnerColor()!"
+                      [explanation]="moveExplanation()"
+                      [evaluations]="summary.evaluations"
+                      (summaryRequested)="showSummary()"
+                      (plyRequested)="goTo($event)"
+                      (ideaRequested)="showMoveIdea()"
+                      (practiceRequested)="enterPractice(practiceIndexForPly($event))"
+                    />
                   }
-
-                  <div class="replay-controls" aria-label="Replay controls">
-                    <button
-                      type="button"
-                      (click)="goTo(0)"
-                      [disabled]="currentPly() === 0"
-                      aria-label="First position"
-                    >
-                      |←
-                    </button>
-                    <button
-                      type="button"
-                      (click)="goTo(currentPly() - 1)"
-                      [disabled]="currentPly() === 0"
-                      aria-label="Previous move"
-                    >
-                      ←
-                    </button>
-                    <button
-                      type="button"
-                      (click)="goTo(currentPly() + 1)"
-                      [disabled]="currentPly() === game()?.moves?.length"
-                      aria-label="Next move"
-                    >
-                      →
-                    </button>
-                    <button
-                      type="button"
-                      (click)="goTo(game()?.moves?.length ?? 0)"
-                      [disabled]="currentPly() === game()?.moves?.length"
-                      aria-label="Last position"
-                    >
-                      →|
-                    </button>
-                  </div>
-                  <p class="keyboard-help" tabindex="0" aria-label="Replay keyboard shortcuts">
-                    Arrow keys move one ply · Home / End jump to the edges · Right-drag to annotate
-                  </p>
-                </section>
+                }
               } @else {
-                <section
-                  id="practice-panel"
-                  class="practice-sheet"
-                  role="tabpanel"
-                  aria-labelledby="practice-tab"
-                >
+                <section class="practice-sheet" aria-labelledby="practice-heading">
                   @if (activePosition(); as position) {
                     <div class="practice-heading">
+                      <button type="button" class="back-to-analysis" (click)="leavePractice()">
+                        Back to analysis
+                      </button>
                       <p class="folio">
                         Position {{ trainingIndex() + 1 }} / {{ positions().length }} ·
                         {{ moveNumber(position.ply) }}
                       </p>
-                      <h2>Find a better move</h2>
+                      <h2 id="practice-heading">Find a better move</h2>
                       <p class="practice-context">
                         You played
                         <strong>{{ game()?.moves?.[position.ply - 1]?.san }}</strong>

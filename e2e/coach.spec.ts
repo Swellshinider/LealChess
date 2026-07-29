@@ -129,18 +129,9 @@ test('imports both platforms, persists and deduplicates games, then replays move
   }
   await drawReviewArrow(page, 'c7', 'g5');
   await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(1);
-  await expect(page.getByText('Ply 0 of 4', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Next move' }).click();
-  await expect(page.getByText('Ply 1 of 4', { exact: true })).toBeVisible();
-  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(1);
-  await page.getByLabel('Replay keyboard shortcuts').focus();
-  await page.keyboard.press('End');
-  await expect(page.getByText('Ply 4 of 4', { exact: true })).toBeVisible();
   await expect(
-    page.locator('[aria-live="polite"]').filter({ hasText: 'Position 4 of 4' }),
-  ).toBeAttached();
-  await page.getByRole('button', { name: 'f3' }).click();
-  await expect(page.getByText('Ply 1 of 4', { exact: true })).toBeVisible();
+    page.getByRole('heading', { name: /Reading the whole game|Your game at a glance/ }),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Flip board' }).click();
   await expect(page.getByRole('img', { name: 'Review chessboard' })).toHaveAttribute(
     'aria-describedby',
@@ -203,29 +194,26 @@ test('analyzes locally, caches the result, and opens a missed position', async (
   await page.goto('/learn');
   await page.getByRole('link', { name: /Open review/ }).click();
 
-  await page.getByRole('button', { name: 'Analyze game' }).click();
-  await expect(page.getByRole('heading', { name: /learning moments/ })).toBeVisible({
+  await expect(page.getByRole('heading', { name: 'Your game at a glance' })).toBeVisible({
     timeout: 30_000,
   });
-  await expect(page.getByRole('progressbar', { name: 'Game analysis progress' })).toHaveAttribute(
-    'aria-valuetext',
-    '100% complete',
-  );
+  await page.getByRole('button', { name: 'Start analysis' }).click();
+  await expect(page.getByRole('heading', { name: 'Guided analysis' })).toBeVisible();
+  await expect(page.locator('.evaluation-rail')).toBeVisible();
+  await expect(page.locator('.evaluation-rail')).toHaveAttribute('aria-label', /White evaluation/);
+  await expectPlayerStripsToClearEvaluationRail(page);
   await page.getByRole('button', { name: 'f3' }).click();
   await expect(page.locator('.review-classification')).toBeVisible();
   await expectBoardOverlayWithinBounds(page, '.review-classification');
+  await expect(page.locator('.coach-note')).toContainText(
+    /stronger continuation|engine’s top move/,
+  );
   await page.getByRole('button', { name: 'e5' }).click();
   await expect(page.locator('.review-classification')).toBeVisible();
-  await expect(page.locator('.move-note')).toContainText(/Book|Best|Excellent|Good/);
-  await page.getByRole('tab', { name: 'Practice' }).click();
+  await expect(page.locator('.coach-note')).toContainText(/Book|Best|Excellent|Good/);
+  await page.getByRole('button', { name: 'f3' }).click();
+  await page.getByRole('button', { name: 'Practice this position' }).click();
   await expect(page.getByRole('heading', { name: 'Find a better move' })).toBeVisible();
-  const practiceTab = page.getByRole('tab', { name: 'Practice' });
-  await expect(practiceTab).toHaveAttribute('aria-selected', 'true');
-  await practiceTab.focus();
-  await page.keyboard.press('ArrowLeft');
-  await expect(page.getByRole('tab', { name: 'Review' })).toHaveAttribute('aria-selected', 'true');
-  await page.keyboard.press('ArrowRight');
-  await expect(practiceTab).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByText(/Move a piece for/)).toHaveCount(0);
   const previousPosition = page.getByRole('button', { name: 'Previous position' });
   const nextPosition = page.getByRole('button', { name: 'Next position' });
@@ -259,11 +247,13 @@ test('analyzes locally, caches the result, and opens a missed position', async (
   await page.getByRole('button', { name: 'Reveal move' }).focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Back to analysis' }).click();
+  await expect(page.getByRole('heading', { name: 'Guided analysis' })).toBeVisible();
   await assertNoSeriousA11yViolations(page);
 
   await page.reload();
-  await expect(page.getByRole('heading', { name: /learning moments/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Analyze game' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Your game at a glance' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Start analysis' })).toBeVisible();
 });
 
 test('keeps a successful platform import when the other platform fails', async ({ page }) => {
@@ -481,6 +471,25 @@ async function expectReviewWorkspaceToFitViewport(page: Page): Promise<void> {
   expect(geometry.documentHeight).toBeLessThanOrEqual(geometry.clientHeight + 1);
   expect(geometry.boardBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
   expect(geometry.deskBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
+}
+
+async function expectPlayerStripsToClearEvaluationRail(page: Page): Promise<void> {
+  const geometry = await page.evaluate(() => {
+    const rail = document.querySelector<HTMLElement>('.evaluation-rail')!.getBoundingClientRect();
+    const board = document.querySelector<HTMLElement>('.board-stage')!.getBoundingClientRect();
+    return [...document.querySelectorAll<HTMLElement>('.board-column > .player-strip')].map(
+      (strip) => {
+        const bounds = strip.getBoundingClientRect();
+        return {
+          left: bounds.left,
+          clearsRail: bounds.left >= rail.right,
+          alignsWithBoard: Math.abs(bounds.left - board.left) <= 1,
+        };
+      },
+    );
+  });
+  expect(geometry).toHaveLength(2);
+  expect(geometry.every((strip) => strip.clearsRail && strip.alignsWithBoard)).toBe(true);
 }
 
 async function seedBoardTheme(
