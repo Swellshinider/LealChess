@@ -122,6 +122,8 @@ app-review-page {
   }
 
   .board-column {
+    --evaluation-gutter: 0px;
+
     align-self: center;
     display: flex;
     flex-direction: column;
@@ -129,6 +131,10 @@ app-review-page {
     max-width: 790px;
     min-width: 0;
     width: min(100%, calc(100dvh - var(--review-padding) - var(--review-padding) - 62px - 80px));
+
+    &.has-evaluation {
+      --evaluation-gutter: 34px;
+    }
   }
 
   .player-strip {
@@ -136,6 +142,7 @@ app-review-page {
     color: var(--paper);
     display: flex;
     gap: 9px;
+    margin-left: var(--evaluation-gutter);
     min-height: 40px;
     padding: 4px 2px;
 
@@ -196,6 +203,77 @@ app-review-page {
     min-width: 0;
     position: relative;
     width: 100%;
+  }
+
+  .board-workbench {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+    width: 100%;
+
+    &.has-evaluation {
+      gap: 6px;
+      grid-template-columns: 28px minmax(0, 1fr);
+    }
+  }
+
+  .evaluation-rail {
+    align-self: stretch;
+    display: flex;
+    justify-content: center;
+    min-height: 0;
+    position: relative;
+  }
+
+  .evaluation-track {
+    background: var(--surface-lowest);
+    border: 1px solid var(--outline-variant);
+    display: flex;
+    flex: 1;
+    height: 100%;
+    max-width: 28px;
+    min-height: 0;
+    position: relative;
+    width: 28px;
+
+    i {
+      background: var(--paper);
+      bottom: 0;
+      left: 0;
+      position: absolute;
+      transition: height 260ms ease;
+      width: 100%;
+    }
+
+    &.flipped i {
+      bottom: auto;
+      top: 0;
+    }
+  }
+
+  .evaluation-score {
+    color: var(--paper);
+    font-family: var(--font-utility);
+    font-size: 0.58rem;
+    font-weight: 700;
+    left: 50%;
+    position: absolute;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 80%);
+    transform: translateX(-50%);
+    z-index: 1;
+
+    &.top {
+      top: 7px;
+    }
+
+    &.bottom {
+      bottom: 7px;
+    }
+
+    &.on-light {
+      color: var(--night);
+      text-shadow: 0 1px 1px rgb(255 255 255 / 45%);
+    }
   }
 
   .review-board {
@@ -935,6 +1013,19 @@ app-review-page {
 
     .board-column {
       width: 100%;
+
+      &.has-evaluation {
+        --evaluation-gutter: 28px;
+      }
+    }
+
+    .board-workbench.has-evaluation {
+      grid-template-columns: 22px minmax(0, 1fr);
+    }
+
+    .evaluation-track {
+      max-width: 22px;
+      width: 22px;
     }
 
     .review-desk {
@@ -973,8 +1064,21 @@ app-review-page {
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .review-classification {
+    .review-classification,
+    .evaluation-track i {
       animation: none;
+      transition: none;
     }
+  }
+
+  .back-to-analysis {
+    align-self: flex-start;
+    background: transparent;
+    border: 1px solid rgb(200 213 207 / 22%);
+    color: var(--paper);
+    font-family: var(--font-utility);
+    font-size: 0.56rem;
+    min-height: 34px;
+    padding: 6px 9px;
   }
 }

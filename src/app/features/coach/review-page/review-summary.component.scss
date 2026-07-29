@@ -1,0 +1,242 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+.summary-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+}
+
+.summary-header,
+.analysis-progress,
+app-review-evaluation-timeline,
+.players-summary,
+.takeaway,
+footer {
+  border-bottom: 1px solid rgb(200 213 207 / 13%);
+  padding: 14px 16px;
+}
+
+.summary-header {
+  align-items: start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 1.45rem;
+    line-height: 1;
+    margin: 3px 0 0;
+  }
+}
+
+.eyebrow {
+  color: var(--primary);
+  font-family: var(--font-utility);
+  font-size: 0.56rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.result {
+  background: var(--surface-container-high);
+  color: var(--paper);
+  font-family: var(--font-utility);
+  font-size: 0.65rem;
+  padding: 5px 7px;
+}
+
+.analysis-progress {
+  display: grid;
+  gap: 9px;
+
+  p {
+    color: var(--mist);
+    font-size: 0.72rem;
+    line-height: 1.4;
+    margin: 0;
+  }
+}
+
+.progress-copy {
+  align-items: center;
+  color: var(--mist);
+  display: flex;
+  font-family: var(--font-utility);
+  font-size: 0.58rem;
+  justify-content: space-between;
+
+  strong {
+    color: var(--paper);
+  }
+}
+
+.progress-track {
+  background: var(--surface-container-highest);
+  height: 6px;
+  overflow: hidden;
+
+  span {
+    background: var(--primary);
+    display: block;
+    height: 100%;
+    transition: width 160ms ease-out;
+  }
+}
+
+.analysis-error {
+  color: #f2b0aa !important;
+}
+
+.primary-action,
+.text-action {
+  font-weight: 700;
+  min-height: 38px;
+}
+
+.primary-action {
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  color: var(--on-primary);
+  padding: 8px 13px;
+}
+
+.text-action {
+  background: transparent;
+  border: 0;
+  color: var(--primary);
+  justify-self: start;
+  padding: 4px 0;
+}
+
+.players-summary {
+  display: grid;
+  gap: 7px;
+}
+
+.player-heading,
+.player-ratings,
+.classification-row {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(92px, 1fr) 72px 72px;
+
+  strong {
+    min-width: 0;
+    overflow: hidden;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.player-heading {
+  color: var(--paper);
+  font-family: var(--font-utility);
+  font-size: 0.62rem;
+}
+
+.player-ratings,
+.classification-row {
+  color: var(--mist);
+  font-family: var(--font-utility);
+  font-size: 0.58rem;
+
+  strong {
+    color: var(--paper);
+  }
+}
+
+.classification-row {
+  border-left: 3px solid var(--classification-color, var(--outline-variant));
+  padding-left: 7px;
+
+  &[data-classification='book'],
+  &[data-classification='brilliant'],
+  &[data-classification='great'],
+  &[data-classification='best'] {
+    --classification-color: var(--primary);
+  }
+
+  &[data-classification='excellent'],
+  &[data-classification='good'] {
+    --classification-color: var(--primary-container);
+  }
+
+  &[data-classification='inaccuracy'] {
+    --classification-color: #d6b05c;
+  }
+
+  &[data-classification='mistake'],
+  &[data-classification='miss'] {
+    --classification-color: #d47b43;
+  }
+
+  &[data-classification='blunder'] {
+    --classification-color: var(--danger);
+  }
+}
+
+.takeaway {
+  color: var(--mist);
+
+  p {
+    color: var(--paper);
+    line-height: 1.42;
+    margin: 6px 0 13px;
+  }
+
+  dl {
+    display: grid;
+    gap: 7px;
+    margin: 0;
+  }
+
+  dl div {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 78px minmax(0, 1fr);
+  }
+
+  dt,
+  dd {
+    font-family: var(--font-utility);
+    font-size: 0.56rem;
+    margin: 0;
+  }
+
+  dd {
+    color: var(--paper);
+    text-align: right;
+  }
+}
+
+footer {
+  border-bottom: 0;
+  display: grid;
+  gap: 9px;
+  margin-top: auto;
+
+  small {
+    color: var(--mist);
+    font-family: var(--font-utility);
+    font-size: 0.54rem;
+  }
+}
+
+.start-analysis {
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-track span {
+    transition: none;
+  }
+}

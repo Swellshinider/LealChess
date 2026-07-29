@@ -1,0 +1,51 @@
+<section class="evaluation-timeline">
+  <div class="timeline-labels" aria-hidden="true">
+    <span>White</span>
+    <span>Game pulse</span>
+    <span>Black</span>
+  </div>
+
+  <div class="timeline-chart">
+    <svg
+      viewBox="0 0 100 44"
+      preserveAspectRatio="none"
+      role="img"
+      [attr.aria-label]="accessibleLabel()"
+    >
+      <line class="zero-line" x1="0" y1="22" x2="100" y2="22"></line>
+      @if (polyline()) {
+        <polyline class="evaluation-line" [attr.points]="polyline()"></polyline>
+      }
+      @if (currentPoint(); as point) {
+        <line
+          class="current-line"
+          [attr.x1]="pointX(point)"
+          y1="0"
+          [attr.x2]="pointX(point)"
+          y2="44"
+        ></line>
+        <circle
+          class="current-point"
+          [attr.cx]="pointX(point)"
+          [attr.cy]="pointY(point)"
+          r="2.1"
+        ></circle>
+      }
+    </svg>
+
+    @if (selectable()) {
+      <ol class="timeline-targets" aria-label="Evaluation points">
+        @for (point of points(); track point.ply) {
+          <li [style.left.%]="pointX(point)" [style.top.%]="pointY(point) / 0.44">
+            <button
+              type="button"
+              [class.current]="point.ply === currentPly()"
+              [attr.aria-label]="'Go to move ' + point.ply"
+              (click)="select(point)"
+            ></button>
+          </li>
+        }
+      </ol>
+    }
+  </div>
+</section>

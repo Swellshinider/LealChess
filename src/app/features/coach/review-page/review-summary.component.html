@@ -1,0 +1,112 @@
+<section class="summary-panel" aria-labelledby="summary-heading">
+  <header class="summary-header">
+    <div>
+      <span class="eyebrow">Game review</span>
+      <h2 id="summary-heading">
+        @switch (phase()) {
+          @case ('complete') {
+            Your game at a glance
+          }
+          @case ('starting') {
+            Waking up Stockfish
+          }
+          @case ('running') {
+            Reading the whole game
+          }
+          @case ('error') {
+            Review paused
+          }
+          @default {
+            Preparing your review
+          }
+        }
+      </h2>
+    </div>
+    <span class="result">{{ game().result }}</span>
+  </header>
+
+  @if (phase() !== 'complete') {
+    <section class="analysis-progress" aria-live="polite">
+      <div class="progress-copy">
+        <span>{{ completed() }} / {{ total() }} moves</span>
+        <strong>{{ progress() }}%</strong>
+      </div>
+      <div
+        class="progress-track"
+        role="progressbar"
+        aria-label="Automatic game evaluation"
+        [attr.aria-valuemin]="0"
+        [attr.aria-valuemax]="total()"
+        [attr.aria-valuenow]="completed()"
+      >
+        <span [style.width.%]="progress()"></span>
+      </div>
+      <p>The review is saved as it runs, so an interrupted game can continue from the next move.</p>
+      @if (error()) {
+        <p class="analysis-error" role="alert">{{ error() }}</p>
+        <button type="button" class="primary-action" (click)="analysisRequested.emit()">
+          Retry evaluation
+        </button>
+      } @else if (analysisActive()) {
+        <button type="button" class="text-action" (click)="cancelRequested.emit()">
+          Pause evaluation
+        </button>
+      } @else {
+        <button type="button" class="primary-action" (click)="analysisRequested.emit()">
+          Continue evaluation
+        </button>
+      }
+    </section>
+  }
+
+  <app-review-evaluation-timeline
+    [points]="summary().evaluations"
+    aria-label="Game evaluation summary"
+  />
+
+  <section class="players-summary" aria-label="Player review summary">
+    <div class="player-heading">
+      <span></span>
+      <strong>{{ game().white.username }}</strong>
+      <strong>{{ game().black.username }}</strong>
+    </div>
+    <div class="player-ratings">
+      <span>Rating</span>
+      <strong>{{ game().white.rating ?? 'Unrated' }}</strong>
+      <strong>{{ game().black.rating ?? 'Unrated' }}</strong>
+    </div>
+    @for (classification of visibleClassifications(); track classification) {
+      <div class="classification-row" [attr.data-classification]="classification">
+        <span>{{ classificationLabel(classification) }}</span>
+        <strong>{{ summary().white.counts[classification] }}</strong>
+        <strong>{{ summary().black.counts[classification] }}</strong>
+      </div>
+    }
+  </section>
+
+  <section class="takeaway">
+    <span class="eyebrow">Main takeaway</span>
+    <p>{{ summary().takeaway }}</p>
+    <dl>
+      <div>
+        <dt>Opening</dt>
+        <dd>{{ game().opening?.name ?? 'Opening not recorded' }}</dd>
+      </div>
+      <div>
+        <dt>Time control</dt>
+        <dd>{{ game().speed }} · {{ game().timeControl }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  <footer>
+    @if (phase() === 'complete') {
+      <small>Stockfish depth {{ depth() }}</small>
+      <button type="button" class="primary-action start-analysis" (click)="startRequested.emit()">
+        Start analysis
+      </button>
+    } @else {
+      <small>Guided analysis unlocks when the full evaluation is ready.</small>
+    }
+  </footer>
+</section>

@@ -11,6 +11,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Automatic game-review summaries with evaluation timelines, per-player move classifications, and
+  locally generated coaching explanations for every analyzed move.
+- An Explorer-style evaluation rail beside the board during guided game analysis.
 - A Help page with release and repository details, plus a dedicated recovery page for unknown URLs.
 - Completed Stockfish games can be archived, opened directly in Review, and analyzed automatically.
 - Archived LealChess, Chess.com, and Lichess games can be deleted with their saved analysis.
@@ -36,6 +39,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Align Review player identities with the board so they no longer overlap the evaluation rail.
 - Keep Review board coordinates visible and the desktop workspace within the viewport.
 - Classify complete opening lines as Book and include opponent moves in game-review analysis.
 - Match Explorer square ordering and coordinate contrast with Play and Review.
