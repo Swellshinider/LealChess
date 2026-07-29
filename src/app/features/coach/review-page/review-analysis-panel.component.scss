@@ -19,7 +19,6 @@ header {
   grid-template-columns: auto minmax(0, 1fr) auto;
   padding: 11px 14px;
 
-  span,
   small {
     color: var(--mist);
     font-family: var(--font-utility);
@@ -31,7 +30,7 @@ header {
     font-family: var(--font-display);
     font-size: 1.2rem;
     line-height: 1;
-    margin: 2px 0 0;
+    margin: 0;
   }
 }
 
@@ -77,19 +76,6 @@ header {
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-
-  &[data-classification='inaccuracy'] {
-    --classification-color: #d6b05c;
-  }
-
-  &[data-classification='mistake'],
-  &[data-classification='miss'] {
-    --classification-color: #d47b43;
-  }
-
-  &[data-classification='blunder'] {
-    --classification-color: #dc8179;
-  }
 }
 
 .evaluation {
@@ -103,8 +89,7 @@ header {
 
 .guided-actions {
   display: grid;
-  gap: 8px;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   padding: 10px 12px 4px;
 
   button {
@@ -136,31 +121,6 @@ header {
     border-left: 3px solid var(--classification-color, transparent);
     display: grid;
     grid-template-columns: 27px minmax(0, 1fr);
-
-    &[data-classification='book'],
-    &[data-classification='brilliant'],
-    &[data-classification='great'],
-    &[data-classification='best'] {
-      --classification-color: var(--primary);
-    }
-
-    &[data-classification='excellent'],
-    &[data-classification='good'] {
-      --classification-color: var(--primary-container);
-    }
-
-    &[data-classification='inaccuracy'] {
-      --classification-color: #d6b05c;
-    }
-
-    &[data-classification='mistake'],
-    &[data-classification='miss'] {
-      --classification-color: #d47b43;
-    }
-
-    &[data-classification='blunder'] {
-      --classification-color: var(--danger);
-    }
   }
 
   > li > span {
@@ -185,7 +145,7 @@ header {
   }
 
   i {
-    color: var(--mist);
+    color: var(--classification-color, var(--mist));
     display: block;
     font-family: var(--font-utility);
     font-size: 0.46rem;

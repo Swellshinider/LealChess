@@ -110,7 +110,7 @@ test('imports both platforms, persists and deduplicates games, then replays move
   );
   await expect(page.locator('.review-board coords.files coord').nth(1)).toHaveCSS(
     'color',
-    'rgb(23, 36, 44)',
+    'rgb(24, 27, 21)',
   );
   if (!testInfo.project.name.includes('mobile')) {
     await expectReviewWorkspaceToFitViewport(page);
@@ -157,10 +157,10 @@ test('shows rating progress and filters the game archive', async ({ page }) => {
   const whitePiece = page.locator('.game-list article').first().locator('.piece-white');
   const blackPiece = page.locator('.game-list article').first().locator('.piece-black');
   await expect(whitePiece).toHaveText('♙');
-  await expect(whitePiece).toHaveCSS('color', 'rgb(237, 240, 236)');
+  await expect(whitePiece).toHaveCSS('color', 'rgb(244, 241, 230)');
   await expect(whitePiece).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   await expect(blackPiece).toHaveText('♟');
-  await expect(blackPiece).toHaveCSS('color', 'rgb(1, 16, 23)');
+  await expect(blackPiece).toHaveCSS('color', 'rgb(12, 14, 11)');
   await expect(blackPiece).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
 
   await page.getByRole('combobox', { name: 'Result', exact: true }).selectOption('loss');
@@ -198,7 +198,13 @@ test('analyzes locally, caches the result, and opens a missed position', async (
     timeout: 30_000,
   });
   await page.getByRole('button', { name: 'Start analysis' }).click();
-  await expect(page.getByRole('heading', { name: 'Guided analysis' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Game review', exact: true })).toBeVisible();
+  await expect(page.getByText('Guided analysis', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Next move', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Show idea on board' })).toBeVisible();
+  await expect(page.getByText('White advantage ↑', { exact: true })).toBeVisible();
+  await expect(page.getByText('Black advantage ↓', { exact: true })).toBeVisible();
+  await expect(page.getByText('Equal', { exact: true })).toBeVisible();
   await expect(page.locator('.evaluation-rail')).toBeVisible();
   await expect(page.locator('.evaluation-rail')).toHaveAttribute('aria-label', /White evaluation/);
   await expectPlayerStripsToClearEvaluationRail(page);
@@ -248,7 +254,7 @@ test('analyzes locally, caches the result, and opens a missed position', async (
   await page.keyboard.press('Enter');
   await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(1);
   await page.getByRole('button', { name: 'Back to analysis' }).click();
-  await expect(page.getByRole('heading', { name: 'Guided analysis' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Game review', exact: true })).toBeVisible();
   await assertNoSeriousA11yViolations(page);
 
   await page.reload();

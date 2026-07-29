@@ -23,10 +23,12 @@ export class ReviewEvaluationTimelineComponent {
   );
   protected readonly accessibleLabel = computed(() => {
     const points = this.points();
-    if (!points.length) return 'Evaluation timeline has no analyzed moves yet.';
+    const orientation =
+      'Values above the center line favor White; values below the center line favor Black.';
+    if (!points.length) return `Game pulse. ${orientation} No analyzed moves yet.`;
     const last = points.at(-1)!;
     const side = last.value > 0.35 ? 'White' : last.value < -0.35 ? 'Black' : 'Neither side';
-    return `Evaluation timeline across ${points.length} moves. ${side} has the final advantage shown.`;
+    return `Game pulse across ${points.length} moves. ${orientation} ${side} has the final advantage shown.`;
   });
 
   protected pointX(point: ReviewEvaluationPoint): number {

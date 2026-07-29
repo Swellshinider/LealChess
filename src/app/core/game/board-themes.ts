@@ -8,7 +8,7 @@ export interface BoardThemeDefinition {
 }
 
 export const BOARD_THEMES: readonly BoardThemeDefinition[] = [
-  { id: 'tournament', label: 'Tournament', light: '#c8d5cf', dark: '#527a78' },
+  { id: 'tournament', label: 'Tournament', light: '#d7ddc0', dark: '#637a52' },
   { id: 'classic', label: 'Classic', light: '#d8c3a1', dark: '#8b6547' },
   { id: 'high-contrast', label: 'High contrast', light: '#f4f5f5', dark: '#416773' },
   { id: 'rosewood', label: 'Rosewood', light: '#e8d8bc', dark: '#8a4752' },

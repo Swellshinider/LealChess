@@ -335,38 +335,10 @@ app-review-page {
     z-index: 12;
   }
 
-  .review-classification,
-  .analysis-rail span,
-  .move-note {
-    &[data-classification='book'],
-    &[data-classification='brilliant'],
-    &[data-classification='great'],
-    &[data-classification='best'] {
-      --classification-color: #315f5d;
-    }
-
-    &[data-classification='excellent'],
-    &[data-classification='good'] {
-      --classification-color: #416361;
-    }
-
-    &[data-classification='inaccuracy'] {
-      --classification-color: #8a6b27;
-    }
-
-    &[data-classification='mistake'],
-    &[data-classification='miss'] {
-      --classification-color: #9a572f;
-    }
-
-    &[data-classification='blunder'] {
-      --classification-color: var(--danger);
-    }
-  }
-
   .review-classification {
     background: var(--classification-color, var(--surface-lowest));
     border-color: rgb(255 255 255 / 20%);
+    color: var(--on-classification);
     animation: classification-in 160ms ease-out;
   }
 
@@ -554,34 +526,9 @@ app-review-page {
 
     li {
       align-items: center;
-      border-left: 3px solid transparent;
+      border-left: 3px solid var(--classification-color, transparent);
       display: grid;
       grid-template-columns: 30px minmax(0, 1fr);
-
-      &[data-classification='book'],
-      &[data-classification='brilliant'],
-      &[data-classification='great'],
-      &[data-classification='best'] {
-        border-color: #315f5d;
-      }
-
-      &[data-classification='excellent'],
-      &[data-classification='good'] {
-        border-color: #416361;
-      }
-
-      &[data-classification='inaccuracy'] {
-        border-color: #8a6b27;
-      }
-
-      &[data-classification='mistake'],
-      &[data-classification='miss'] {
-        border-color: #9a572f;
-      }
-
-      &[data-classification='blunder'] {
-        border-color: var(--danger);
-      }
     }
 
     > li > span {
@@ -776,7 +723,7 @@ app-review-page {
     padding: 9px 12px;
 
     &[data-status='incorrect'] {
-      border-color: #9a572f;
+      border-color: var(--classification-mistake);
     }
 
     &[data-status='correct'] {

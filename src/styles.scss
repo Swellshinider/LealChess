@@ -11,27 +11,39 @@
 @import '@lichess-org/chessground/assets/chessground.cburnett.css';
 
 :root {
-  --surface: #05151d;
-  --surface-lowest: #011017;
-  --surface-low: #0d1e25;
-  --surface-container: #112229;
-  --surface-container-high: #1c2c34;
-  --surface-container-highest: #27373f;
-  --outline: #8a9291;
-  --outline-variant: #404848;
-  --night: #17242c;
-  --carbon: #24343c;
-  --paper: #edf0ec;
-  --mist: #c8d5cf;
-  --primary: #a5cecc;
-  --on-primary: #093635;
-  --primary-container: #527a78;
-  --on-primary-container: #e5fffd;
+  --surface: #141711;
+  --surface-lowest: #0c0e0b;
+  --surface-low: #1c2018;
+  --surface-container: #23281f;
+  --surface-container-high: #30372b;
+  --surface-container-highest: #3b4435;
+  --outline: #9aa18f;
+  --outline-variant: #4d5646;
+  --night: #181b15;
+  --carbon: #293026;
+  --paper: #f4f1e6;
+  --mist: #c9cbbb;
+  --primary: #70d69d;
+  --on-primary: #082516;
+  --primary-container: #367958;
+  --on-primary-container: #e4ffec;
   --teal: var(--primary-container);
-  --amber: #fdba5a;
-  --danger: #a84d45;
-  --board-light: #c8d5cf;
-  --board-dark: #527a78;
+  --amber: #f2bd55;
+  --danger: #e76861;
+  --on-danger: #181b15;
+  --classification-book: #b69cff;
+  --classification-brilliant: #4fd8e8;
+  --classification-great: #65b9ff;
+  --classification-best: #70d69d;
+  --classification-excellent: #a8d86f;
+  --classification-good: #8fb58b;
+  --classification-inaccuracy: #f2bd55;
+  --classification-mistake: #f19756;
+  --classification-miss: #ef7668;
+  --classification-blunder: #e76861;
+  --on-classification: #181b15;
+  --board-light: #d7ddc0;
+  --board-dark: #637a52;
   --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
   --font-body: 'Atkinson Hyperlegible', system-ui, sans-serif;
   --font-utility: 'IBM Plex Mono', ui-monospace, monospace;
@@ -43,8 +55,8 @@
 
 [data-board-theme='tournament'],
 [data-theme='tournament'] {
-  --board-light: #c8d5cf;
-  --board-dark: #527a78;
+  --board-light: #d7ddc0;
+  --board-dark: #637a52;
 }
 
 [data-board-theme='classic'],
@@ -75,6 +87,46 @@
 [data-theme='blue-steel'] {
   --board-light: #c9d8e2;
   --board-dark: #4c657a;
+}
+
+[data-classification='book'] {
+  --classification-color: var(--classification-book);
+}
+
+[data-classification='brilliant'] {
+  --classification-color: var(--classification-brilliant);
+}
+
+[data-classification='great'] {
+  --classification-color: var(--classification-great);
+}
+
+[data-classification='best'] {
+  --classification-color: var(--classification-best);
+}
+
+[data-classification='excellent'] {
+  --classification-color: var(--classification-excellent);
+}
+
+[data-classification='good'] {
+  --classification-color: var(--classification-good);
+}
+
+[data-classification='inaccuracy'] {
+  --classification-color: var(--classification-inaccuracy);
+}
+
+[data-classification='mistake'] {
+  --classification-color: var(--classification-mistake);
+}
+
+[data-classification='miss'] {
+  --classification-color: var(--classification-miss);
+}
+
+[data-classification='blunder'] {
+  --classification-color: var(--classification-blunder);
 }
 
 * {
@@ -137,8 +189,8 @@ app-review-page {
   }
 
   .review-page {
-    --inaccuracy: #d6b05c;
-    --mistake: #d47b43;
+    --inaccuracy: var(--classification-inaccuracy);
+    --mistake: var(--classification-mistake);
 
     container-type: inline-size;
     min-width: 0;
@@ -226,7 +278,7 @@ app-learn-page {
     .danger {
       background: var(--danger);
       border-color: var(--danger);
-      color: var(--paper);
+      color: var(--on-danger);
     }
 
     button:disabled {
