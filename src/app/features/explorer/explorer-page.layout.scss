@@ -497,46 +497,12 @@ app-explorer-page {
   }
 
   .move-badge {
-    border-left: 3px solid var(--outline);
-    color: var(--mist);
+    border-left: 3px solid var(--classification-color, var(--outline));
+    color: var(--classification-color, var(--mist));
     font-size: 0.57rem;
     justify-self: end;
     padding-left: 6px;
     text-transform: uppercase;
-
-    &[data-classification='book'],
-    &[data-classification='best'],
-    &[data-classification='excellent'] {
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-
-    &[data-classification='brilliant'],
-    &[data-classification='great'] {
-      border-color: #74d8c1;
-      color: #74d8c1;
-    }
-
-    &[data-classification='good'] {
-      border-color: #9fba9a;
-      color: #9fba9a;
-    }
-
-    &[data-classification='inaccuracy'],
-    &[data-classification='miss'] {
-      border-color: #d6b05c;
-      color: #d6b05c;
-    }
-
-    &[data-classification='mistake'] {
-      border-color: #d47b43;
-      color: #e59660;
-    }
-
-    &[data-classification='blunder'] {
-      border-color: #dc8179;
-      color: #dc8179;
-    }
   }
 
   .analysis-error {
@@ -551,7 +517,7 @@ app-explorer-page {
     button {
       background: var(--danger);
       border: 0;
-      color: var(--paper);
+      color: var(--on-danger);
       min-height: 36px;
       padding: 0 11px;
     }

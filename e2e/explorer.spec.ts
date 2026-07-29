@@ -15,7 +15,7 @@ test('imports and restores a PGN, then exposes the full position editor', async 
   await expect(page.getByRole('img', { name: /Analysis chessboard/ })).toBeVisible();
   await expect(page.locator('.explorer-board cg-board')).toHaveCSS(
     'background-image',
-    /rgb\(82, 122, 120\).*rgb\(200, 213, 207\)/,
+    /rgb\(99, 122, 82\).*rgb\(215, 221, 192\)/,
   );
   await expect(page.locator('.explorer-board coords.files coord').nth(0)).toHaveCSS(
     'color',
@@ -23,7 +23,7 @@ test('imports and restores a PGN, then exposes the full position editor', async 
   );
   await expect(page.locator('.explorer-board coords.files coord').nth(1)).toHaveCSS(
     'color',
-    'rgb(23, 36, 44)',
+    'rgb(24, 27, 21)',
   );
   await expect(page.locator('.explorer-board-frame')).toHaveCSS('border-top-style', 'none');
   await expect(page.locator('.analysis-ledger')).toHaveCSS('border-top-style', 'none');

@@ -7,30 +7,60 @@
   gap: 5px;
 }
 
-.timeline-labels {
-  color: var(--mist);
-  display: grid;
+.timeline-heading {
+  color: var(--primary);
   font-family: var(--font-utility);
   font-size: 0.52rem;
-  grid-template-columns: 1fr auto 1fr;
+  letter-spacing: 0.06em;
+  text-align: center;
   text-transform: uppercase;
-
-  span:nth-child(2) {
-    color: var(--primary);
-    letter-spacing: 0.06em;
-    text-align: center;
-  }
-
-  span:last-child {
-    text-align: right;
-  }
 }
 
 .timeline-chart {
-  background: var(--surface-lowest);
+  background:
+    linear-gradient(
+      to bottom,
+      rgb(244 241 230 / 10%) 0%,
+      rgb(244 241 230 / 4%) 49.5%,
+      rgb(182 156 255 / 5%) 50.5%,
+      rgb(182 156 255 / 13%) 100%
+    ),
+    var(--surface-lowest);
   height: 70px;
   overflow: hidden;
   position: relative;
+}
+
+.advantage-label,
+.equal-label {
+  font-family: var(--font-utility);
+  font-size: 0.45rem;
+  letter-spacing: 0.03em;
+  pointer-events: none;
+  position: absolute;
+  text-transform: uppercase;
+  z-index: 2;
+}
+
+.advantage-label {
+  left: 6px;
+}
+
+.white-advantage {
+  color: var(--paper);
+  top: 5px;
+}
+
+.black-advantage {
+  bottom: 5px;
+  color: var(--classification-book);
+}
+
+.equal-label {
+  color: var(--amber);
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 svg {
@@ -41,17 +71,27 @@ svg {
 }
 
 .zero-line {
-  stroke: rgb(200 213 207 / 18%);
-  stroke-width: 0.6;
+  stroke: var(--amber);
+  stroke-dasharray: 2 2;
+  stroke-opacity: 0.58;
+  stroke-width: 0.7;
 }
 
 .evaluation-line {
   fill: none;
-  stroke: var(--primary);
+  stroke: url('#evaluation-pulse-gradient');
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.6;
   vector-effect: non-scaling-stroke;
+}
+
+.white-stop {
+  stop-color: var(--paper);
+}
+
+.black-stop {
+  stop-color: var(--classification-book);
 }
 
 .current-line {

@@ -158,29 +158,8 @@ footer {
   border-left: 3px solid var(--classification-color, var(--outline-variant));
   padding-left: 7px;
 
-  &[data-classification='book'],
-  &[data-classification='brilliant'],
-  &[data-classification='great'],
-  &[data-classification='best'] {
-    --classification-color: var(--primary);
-  }
-
-  &[data-classification='excellent'],
-  &[data-classification='good'] {
-    --classification-color: var(--primary-container);
-  }
-
-  &[data-classification='inaccuracy'] {
-    --classification-color: #d6b05c;
-  }
-
-  &[data-classification='mistake'],
-  &[data-classification='miss'] {
-    --classification-color: #d47b43;
-  }
-
-  &[data-classification='blunder'] {
-    --classification-color: var(--danger);
+  > span {
+    color: var(--classification-color, var(--mist));
   }
 }
 

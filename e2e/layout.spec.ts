@@ -161,10 +161,14 @@ async function clickSettingsSquare(page: import('@playwright/test').Page, square
   }
   const file = square.charCodeAt(0) - 97;
   const rank = Number(square[1]);
-  await page.mouse.click(
-    board.x + ((file + 0.5) * board.width) / 8,
-    board.y + ((8 - rank + 0.5) * board.height) / 8,
-  );
+  const x = board.x + ((file + 0.5) * board.width) / 8;
+  const y = board.y + ((8 - rank + 0.5) * board.height) / 8;
+  const hasTouch = await page.evaluate(() => navigator.maxTouchPoints > 0);
+  if (hasTouch) {
+    await page.touchscreen.tap(x, y);
+  } else {
+    await page.mouse.click(x, y);
+  }
 }
 
 async function expectWorkspaceToFitViewport(page: import('@playwright/test').Page) {

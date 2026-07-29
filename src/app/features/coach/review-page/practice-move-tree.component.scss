@@ -92,31 +92,6 @@ button {
     font-size: 0.48rem;
     font-style: normal;
   }
-
-  &[data-classification='book'],
-  &[data-classification='brilliant'],
-  &[data-classification='great'],
-  &[data-classification='best'] {
-    --classification-color: #77aaa5;
-  }
-
-  &[data-classification='excellent'],
-  &[data-classification='good'] {
-    --classification-color: #8cb2a9;
-  }
-
-  &[data-classification='inaccuracy'] {
-    --classification-color: #d3a747;
-  }
-
-  &[data-classification='mistake'],
-  &[data-classification='miss'] {
-    --classification-color: #d78757;
-  }
-
-  &[data-classification='blunder'] {
-    --classification-color: var(--danger);
-  }
 }
 
 .start-node {

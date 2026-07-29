@@ -11,9 +11,9 @@ test('starts as White, supports click moves, premoves, annotations, and restorat
 }, testInfo) => {
   await startGame(page, 'White', 'Expert');
   await expect(page.locator('coords.files coord').nth(0)).toHaveCSS('color', 'rgb(255, 255, 255)');
-  await expect(page.locator('coords.files coord').nth(1)).toHaveCSS('color', 'rgb(23, 36, 44)');
+  await expect(page.locator('coords.files coord').nth(1)).toHaveCSS('color', 'rgb(24, 27, 21)');
   await expect(page.locator('coords.ranks coord').nth(0)).toHaveCSS('color', 'rgb(255, 255, 255)');
-  await expect(page.locator('coords.ranks coord').nth(1)).toHaveCSS('color', 'rgb(23, 36, 44)');
+  await expect(page.locator('coords.ranks coord').nth(1)).toHaveCSS('color', 'rgb(24, 27, 21)');
   await clickSquare(page, 'e2');
   const legalDestinations = page.locator('square.move-dest');
   await expect(legalDestinations).toHaveCount(2);
@@ -56,7 +56,7 @@ test('reviews, archives, and deletes a completed Stockfish game', async ({ page 
   await page.getByRole('button', { name: 'Resign', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Keep playing' })).toHaveCSS(
     'color',
-    'rgb(23, 36, 44)',
+    'rgb(24, 27, 21)',
   );
   await page.getByRole('button', { name: 'Resign game' }).click();
   await expect(page.getByRole('heading', { name: 'You resigned' })).toBeVisible();

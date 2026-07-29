@@ -1,12 +1,9 @@
-<section class="analysis-panel" aria-labelledby="guided-analysis-heading">
+<section class="analysis-panel" aria-labelledby="game-review-heading">
   <header>
     <button type="button" class="back-action" (click)="summaryRequested.emit()">
       Game summary
     </button>
-    <div>
-      <span>Game review</span>
-      <h2 id="guided-analysis-heading">Guided analysis</h2>
-    </div>
+    <h2 id="game-review-heading">Game review</h2>
     <small>{{ currentPly() }} / {{ game().moves.length }}</small>
   </header>
 
@@ -37,14 +34,6 @@
       (click)="ideaRequested.emit()"
     >
       Show idea on board
-    </button>
-    <button
-      type="button"
-      class="primary-action"
-      [disabled]="currentPly() === game().moves.length"
-      (click)="requestPly(currentPly() + 1)"
-    >
-      Next move
     </button>
   </div>
 
