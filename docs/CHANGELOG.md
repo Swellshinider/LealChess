@@ -13,11 +13,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Missing opening names and ECO codes are detected locally when a game review is opened and saved
   for future reviews and opening statistics.
+- Game Review analysis now supports persistent, nested variations with live three-line Stockfish
+  evaluations, ranked arrows within user-created branches, and safe subtree removal.
 
 ### Changed
 
 - Renamed Game pulse to Advantage graph, removed territory labels, and added a solid gray center
   line that remains readable across both advantage regions.
+- Replaced the read-only Game Review move grid with an accessible unified score that keeps the
+  imported game immutable while making every reviewed position playable.
 
 ### Fixed
 

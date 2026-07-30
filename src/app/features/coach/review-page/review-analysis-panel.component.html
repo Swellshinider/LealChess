@@ -37,33 +37,45 @@
     </button>
   </div>
 
-  <ol class="moves" aria-label="Analyzed moves">
-    @for (move of game().moves; track move.ply) {
-      <li
-        [attr.data-classification]="moveAnalysis(move.ply)?.reviewClassification ?? null"
-        [class.learner-move]="move.color === learnerColor()"
-      >
-        <span>{{ moveNumber(move.ply) }}</span>
-        <button
-          type="button"
-          [class.current]="currentPly() === move.ply"
-          [attr.aria-current]="currentPly() === move.ply ? 'step' : null"
-          [attr.aria-label]="
-            move.san +
-            (moveAnalysis(move.ply)
-              ? ', ' + classificationLabel(moveAnalysis(move.ply)!.reviewClassification)
-              : '')
-          "
-          (click)="requestPly(move.ply)"
-        >
-          {{ move.san }}
-          @if (moveAnalysis(move.ply); as note) {
-            <i aria-hidden="true">{{ classificationLabel(note.reviewClassification) }}</i>
-          }
-        </button>
-      </li>
+  <section class="live-analysis" aria-labelledby="live-analysis-heading">
+    <div class="candidate-heading">
+      <h3 id="live-analysis-heading">Engine candidates</h3>
+      <small aria-live="polite">
+        @if (liveState().phase === 'analyzing') {
+          Depth {{ liveState().depth ?? 0 }} · analyzing
+        } @else if (liveState().phase === 'complete' && liveState().depth) {
+          Stockfish depth {{ liveState().depth }}
+        } @else if (liveState().phase === 'error') {
+          Analysis unavailable
+        }
+      </small>
+    </div>
+    @if (liveState().candidates.length) {
+      <ol>
+        @for (line of liveState().candidates; track line.rank) {
+          <li>
+            <span>{{ line.rank }}</span>
+            <i [style.height]="candidateRuleWidth(line.rank)" aria-hidden="true"></i>
+            <strong>{{ candidateEvaluationLabel(line) }}</strong>
+            <span>{{ line.san.join(' ') }}</span>
+          </li>
+        }
+      </ol>
+    } @else if (liveState().phase === 'complete') {
+      <p class="terminal-position">The game ends in this position.</p>
     }
-  </ol>
+    @if (liveState().error) {
+      <p class="analysis-error">{{ liveState().error }}</p>
+      <button type="button" class="retry-action" (click)="retryRequested.emit()">Retry</button>
+    }
+  </section>
+
+  <app-review-move-tree
+    [session]="session()"
+    [analysis]="analysis()"
+    (nodeSelected)="nodeRequested.emit($event)"
+    (removeRequested)="removeVariationRequested.emit($event)"
+  />
 
   @if (canPractice()) {
     <button type="button" class="practice-action" (click)="practiceRequested.emit(currentPly())">

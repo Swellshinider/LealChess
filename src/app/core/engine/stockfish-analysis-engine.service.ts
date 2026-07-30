@@ -3,6 +3,7 @@ import type {
   AnalysisEnginePort,
   PositionAnalysisRequest,
   PositionAnalysisResult,
+  PositionAnalysisSnapshot,
 } from './analysis-engine.types';
 import { parseBestMove } from './uci-parser';
 import { parseAnalysisInfo, type UciAnalysisInfo } from './uci-analysis-parser';
@@ -29,6 +30,10 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
         resolve: (value: PositionAnalysisResult) => void;
         reject: (error: Error) => void;
         infos: Map<number, UciAnalysisInfo>;
+        batches: Map<number, Map<number, UciAnalysisInfo>>;
+        multiPv: number;
+        onProgress?: (snapshot: PositionAnalysisSnapshot) => void;
+        lastProgressDepth: number;
         abort?: () => void;
         signal?: AbortSignal;
         cancelled?: boolean;
@@ -64,6 +69,10 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
         abort: request.signal ? abort : undefined,
         signal: request.signal,
         infos: new Map(),
+        batches: new Map(),
+        multiPv: request.multiPv ?? 1,
+        onProgress: request.onProgress,
+        lastProgressDepth: 0,
       };
       request.signal?.addEventListener('abort', abort, { once: true });
       const forcedMove = request.searchMove ? ` searchmoves ${request.searchMove}` : '';
@@ -135,7 +144,12 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
 
     const info = parseAnalysisInfo(line);
     if (info && !info.bounded && this.active) {
-      this.active.infos.set(info.multiPv ?? 1, info);
+      const rank = info.multiPv ?? 1;
+      this.active.infos.set(rank, info);
+      const depthBatch = this.active.batches.get(info.evaluation.depth) ?? new Map();
+      depthBatch.set(rank, info);
+      this.active.batches.set(info.evaluation.depth, depthBatch);
+      this.emitProgress(info.evaluation.depth);
       return;
     }
 
@@ -145,7 +159,11 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
       this.finishActive(undefined, abortError());
       return;
     }
-    const infoResult = this.active.infos.get(1);
+    const completeBatch = [...this.active.batches.entries()]
+      .filter(([, batch]) => batch.has(1))
+      .sort(([left], [right]) => right - left)[0]?.[1];
+    const finalInfos = completeBatch ?? this.active.infos;
+    const infoResult = finalInfos.get(1);
     if (!infoResult) {
       this.finishActive(undefined, new Error('Stockfish returned no evaluation.'));
       return;
@@ -157,7 +175,7 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
       ...(infoResult.expectedPoints === undefined
         ? {}
         : { expectedPoints: infoResult.expectedPoints }),
-      variations: [...this.active.infos.entries()]
+      variations: [...finalInfos.entries()]
         .sort(([left], [right]) => left - right)
         .map(([rank, variation]) => ({
           rank,
@@ -168,6 +186,44 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
             : { expectedPoints: variation.expectedPoints }),
         })),
     });
+  }
+
+  private emitProgress(depth: number): void {
+    const active = this.active;
+    if (!active || active.cancelled || !active.onProgress || depth <= active.lastProgressDepth) {
+      return;
+    }
+    const batch = active.batches.get(depth);
+    if (!batch || batch.size < active.multiPv) return;
+    const variations = Array.from({ length: active.multiPv }, (_, index) => {
+      const rank = index + 1;
+      const variation = batch.get(rank);
+      return variation
+        ? {
+            rank,
+            evaluation: variation.evaluation,
+            principalVariation: variation.principalVariation,
+            ...(variation.expectedPoints === undefined
+              ? {}
+              : { expectedPoints: variation.expectedPoints }),
+          }
+        : null;
+    });
+    if (variations.some((variation) => variation === null)) return;
+    active.lastProgressDepth = depth;
+    const complete = variations.filter(
+      (variation): variation is NonNullable<typeof variation> => variation !== null,
+    );
+    const snapshot: PositionAnalysisSnapshot = {
+      depth,
+      evaluation: complete[0]!.evaluation,
+      variations: complete,
+    };
+    try {
+      active.onProgress(snapshot);
+    } catch {
+      // A view callback must not interrupt the engine search or its final promise.
+    }
   }
 
   private finishActive(result?: PositionAnalysisResult, error?: Error): void {

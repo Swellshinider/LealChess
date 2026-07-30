@@ -53,6 +53,10 @@ class FakeStockfishWorker {
     this.emit('error', new Event('error'));
   }
 
+  sendLine(data: string): void {
+    this.message(data);
+  }
+
   private message(data: string): void {
     this.emit('message', new MessageEvent('message', { data }));
   }
@@ -215,5 +219,38 @@ describe('StockfishAnalysisEngineService', () => {
 
     await expect(analysis).rejects.toMatchObject({ name: 'AbortError' });
     expect(workers[0]?.messages).toContain('stop');
+  });
+
+  it('streams only complete, increasing MultiPV depth batches and still resolves normally', async () => {
+    const workers = setupFactory(STOCKFISH_ANALYSIS_WORKER_FACTORY, 'manual');
+    const service = TestBed.runInInjectionContext(() => new StockfishAnalysisEngineService());
+    const progress = vi.fn();
+    const analysis = service.analyze({
+      fen: 'test-fen',
+      depth: 16,
+      multiPv: 3,
+      onProgress: progress,
+    });
+    await vi.waitFor(() =>
+      expect(workers[0]?.messages.some((message) => message.startsWith('go depth'))).toBe(true),
+    );
+
+    workers[0]?.sendLine('info depth 8 multipv 1 score cp 20 pv e2e4 e7e5');
+    workers[0]?.sendLine('info depth 8 multipv 2 score cp 10 pv d2d4 d7d5');
+    expect(progress).not.toHaveBeenCalled();
+    workers[0]?.sendLine('info depth 8 multipv 3 score cp 5 pv g1f3 g8f6');
+    workers[0]?.sendLine('info depth 7 multipv 1 score cp 18 pv e2e4');
+    workers[0]?.sendLine('info depth 7 multipv 2 score cp 8 pv d2d4');
+    workers[0]?.sendLine('info depth 7 multipv 3 score cp 4 pv g1f3');
+    workers[0]?.sendLine('info depth 16 multipv 1 score cp 25 pv e2e4 e7e5');
+    workers[0]?.sendLine('info depth 16 multipv 2 score cp 12 pv d2d4 d7d5');
+    workers[0]?.sendLine('info depth 16 multipv 3 score cp 7 pv g1f3 g8f6');
+    workers[0]?.sendLine('bestmove e2e4');
+
+    await expect(analysis).resolves.toMatchObject({
+      bestMove: { from: 'e2', to: 'e4' },
+      variations: [{ rank: 1 }, { rank: 2 }, { rank: 3 }],
+    });
+    expect(progress.mock.calls.map(([snapshot]) => snapshot.depth)).toEqual([8, 16]);
   });
 });

@@ -10,10 +10,18 @@ import type {
 import { isConcernClassification } from '../analysis/review-classification';
 import type { MoveExplanation, ReviewEvaluationPoint } from './review-insights';
 import { ReviewEvaluationTimelineComponent } from './review-evaluation-timeline.component';
+import { ReviewMoveTreeComponent } from './review-move-tree.component';
+import type {
+  ReviewAnalysisSession,
+  ReviewCandidateLine,
+  ReviewMoveNode,
+} from './review-analysis-session.types';
+import type { ReviewLiveAnalysisState } from './review-live-analysis.service';
+import { turnColor } from '../../../core/game/chess-move';
 
 @Component({
   selector: 'app-review-analysis-panel',
-  imports: [ReviewEvaluationTimelineComponent],
+  imports: [ReviewEvaluationTimelineComponent, ReviewMoveTreeComponent],
   templateUrl: './review-analysis-panel.component.html',
   styleUrl: './review-analysis-panel.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,10 +33,16 @@ export class ReviewAnalysisPanelComponent {
   readonly learnerColor = input.required<ChessColor>();
   readonly explanation = input<MoveExplanation | null>(null);
   readonly evaluations = input.required<ReviewEvaluationPoint[]>();
+  readonly session = input.required<ReviewAnalysisSession>();
+  readonly selectedNode = input.required<ReviewMoveNode>();
+  readonly liveState = input.required<ReviewLiveAnalysisState>();
   readonly summaryRequested = output<void>();
   readonly plyRequested = output<number>();
   readonly ideaRequested = output<void>();
   readonly practiceRequested = output<number>();
+  readonly nodeRequested = output<string>();
+  readonly removeVariationRequested = output<string>();
+  readonly retryRequested = output<void>();
 
   protected readonly currentNote = computed<MoveAnalysis | undefined>(() =>
     (this.analysis().reviewMoves ?? this.analysis().moves).find(
@@ -39,11 +53,14 @@ export class ReviewAnalysisPanelComponent {
   protected readonly canPractice = computed(() => {
     const note = this.currentNote();
     const move = this.currentMove();
-    return Boolean(
-      note &&
-      move?.color === this.learnerColor() &&
-      isConcernClassification(note.reviewClassification) &&
-      note.category,
+    return (
+      this.selectedNode().source === 'imported' &&
+      Boolean(
+        note &&
+        move?.color === this.learnerColor() &&
+        isConcernClassification(note.reviewClassification) &&
+        note.category,
+      )
     );
   });
 
@@ -69,5 +86,20 @@ export class ReviewAnalysisPanelComponent {
 
   protected requestPly(ply: number): void {
     this.plyRequested.emit(Math.max(0, Math.min(ply, this.game().moves.length)));
+  }
+
+  protected candidateEvaluationLabel(line: ReviewCandidateLine): string {
+    const score = line.evaluation.score;
+    const whiteRelative =
+      turnColor(this.selectedNode().fen) === 'white'
+        ? score
+        : score.kind === 'mate'
+          ? { kind: 'mate' as const, moves: -score.moves }
+          : { kind: 'centipawn' as const, value: -score.value };
+    return this.evaluationLabel({ ...line.evaluation, score: whiteRelative });
+  }
+
+  protected candidateRuleWidth(rank: number): string {
+    return `${{ 1: 14, 2: 9, 3: 5 }[rank] ?? 5}px`;
   }
 }

@@ -8,6 +8,7 @@ export interface PositionAnalysisRequest {
   searchMove?: string;
   signal?: AbortSignal;
   multiPv?: number;
+  onProgress?: (snapshot: PositionAnalysisSnapshot) => void;
 }
 
 export interface AnalysisVariation {
@@ -23,6 +24,12 @@ export interface PositionAnalysisResult {
   principalVariation: string[];
   expectedPoints?: number;
   variations?: AnalysisVariation[];
+}
+
+export interface PositionAnalysisSnapshot {
+  depth: number;
+  evaluation: EngineEvaluation;
+  variations: AnalysisVariation[];
 }
 
 export interface AnalysisEnginePort {

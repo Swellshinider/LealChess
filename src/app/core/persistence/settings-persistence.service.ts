@@ -34,7 +34,14 @@ export class SettingsPersistenceService {
 
   async clearAll(): Promise<void> {
     const database = await this.database.open();
-    const stores = ['state', 'coachProfiles', 'importedGames', 'gameAnalyses'] as const;
+    const stores = [
+      'state',
+      'coachProfiles',
+      'importedGames',
+      'gameAnalyses',
+      'explorerSessions',
+      'reviewAnalysisSessions',
+    ] as const;
     const transaction = database.transaction(stores, 'readwrite');
     await Promise.all(stores.map((store) => transaction.objectStore(store).clear()));
     await transaction.done;

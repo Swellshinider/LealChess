@@ -49,6 +49,15 @@ describe('CoachRepositoryService', () => {
     database.close();
   });
 
+  it('adds review analysis sessions when migrating a version-4 database', async () => {
+    const versionFour = await openVersionFour();
+    versionFour.close();
+    const database = await TestBed.inject(LealChessDatabaseService).open();
+
+    expect(database.objectStoreNames.contains('reviewAnalysisSessions')).toBe(true);
+    expect(database.objectStoreNames.contains('explorerSessions')).toBe(true);
+  });
+
   it('deduplicates imports, preserves first import, and unions profile associations', async () => {
     const repository = TestBed.inject(CoachRepositoryService);
     await expect(repository.saveSuccessfulImport(profile, [game()])).resolves.toEqual({
@@ -158,6 +167,25 @@ describe('CoachRepositoryService', () => {
     const local = localGame();
     await repository.saveLocalGame(local);
     await repository.saveAnalysis(analysis(local.key));
+    await database.put('reviewAnalysisSessions', {
+      importedGameKey: local.key,
+      schemaVersion: 1,
+      analysisVersion: 'test',
+      mainlineFingerprint: '',
+      rootId: 'root',
+      selectedNodeId: 'root',
+      nodes: {
+        root: {
+          id: 'root',
+          parentId: null,
+          children: [],
+          fen: '',
+          ply: 0,
+          candidates: [],
+        },
+      },
+      updatedAt: '',
+    });
     await database.put('state', {
       key: 'active-game',
       value: {
@@ -179,6 +207,7 @@ describe('CoachRepositoryService', () => {
 
     await expect(repository.game('local', local.platformGameId)).resolves.toBeUndefined();
     await expect(repository.analysis(local.key)).resolves.toBeUndefined();
+    await expect(database.get('reviewAnalysisSessions', local.key)).resolves.toBeUndefined();
     await expect(database.get('state', 'active-game')).resolves.toBeUndefined();
   });
 
@@ -288,6 +317,22 @@ function openVersionTwo(): Promise<IDBDatabase> {
       const games = request.result.createObjectStore('importedGames', { keyPath: 'key' });
       games.createIndex('by-profile-key', 'profileKeys', { multiEntry: true });
       games.put(game());
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function openVersionFour(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('leal-chess', 4);
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore('state', { keyPath: 'key' });
+      request.result.createObjectStore('coachProfiles', { keyPath: 'platform' });
+      const games = request.result.createObjectStore('importedGames', { keyPath: 'key' });
+      games.createIndex('by-profile-key', 'profileKeys', { multiEntry: true });
+      request.result.createObjectStore('gameAnalyses', { keyPath: 'importedGameKey' });
+      request.result.createObjectStore('explorerSessions', { keyPath: 'id' });
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);

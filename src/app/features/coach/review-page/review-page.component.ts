@@ -60,6 +60,18 @@ import {
 import { reviewSoundEvents } from './review-sound';
 import { ReviewSummaryComponent } from './review-summary.component';
 import { ReviewPageStore } from './review-page.store';
+import {
+  commitReviewMove,
+  removeReviewVariation,
+  selectReviewNode,
+  updateReviewNode,
+} from './review-analysis-session';
+import { ReviewAnalysisRepositoryService } from './review-analysis-repository.service';
+import {
+  REVIEW_LIVE_ANALYSIS_ENGINE_PORT,
+  ReviewLiveAnalysisService,
+} from './review-live-analysis.service';
+import type { ReviewCandidateLine } from './review-analysis-session.types';
 
 @Component({
   selector: 'app-review-page',
@@ -74,9 +86,15 @@ import { ReviewPageStore } from './review-page.store';
   ],
   providers: [
     PracticeAnalysisService,
+    ReviewAnalysisRepositoryService,
+    ReviewLiveAnalysisService,
     ReviewPageStore,
     {
       provide: PRACTICE_ANALYSIS_ENGINE_PORT,
+      useClass: StockfishAnalysisEngineService,
+    },
+    {
+      provide: REVIEW_LIVE_ANALYSIS_ENGINE_PORT,
       useClass: StockfishAnalysisEngineService,
     },
   ],
@@ -110,8 +128,13 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   protected readonly selectedPracticeNode = this.store.selectedPracticeNode;
   protected readonly practiceMoveCount = this.store.practiceMoveCount;
   protected readonly practiceInputLocked = this.store.practiceInputLocked;
+  protected readonly reviewSession = this.store.reviewSession;
+  protected readonly selectedReviewNode = this.store.selectedReviewNode;
+  protected readonly liveAnalysis = inject(ReviewLiveAnalysisService);
   protected readonly currentAnalysis = computed<MoveAnalysis | undefined>(() =>
-    moveAnalysisForPly(this.coachAnalysis.analysis(), this.currentPly()),
+    this.selectedReviewNode()?.source === 'imported'
+      ? moveAnalysisForPly(this.coachAnalysis.analysis(), this.currentPly())
+      : undefined,
   );
   protected readonly reviewSummary = computed(() => {
     const game = this.game();
@@ -119,19 +142,33 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   });
   protected readonly moveExplanation = computed(() => {
     const game = this.game();
-    return game
+    return game && this.selectedReviewNode()?.source === 'imported'
       ? createMoveExplanation(game, this.coachAnalysis.analysis(), this.currentPly())
       : null;
   });
   private readonly whiteEvaluationValue = computed(() => {
     if (this.mode() !== 'analysis') return null;
+    const selected = this.selectedReviewNode();
+    const live =
+      this.liveAnalysis.state().nodeId === selected?.id
+        ? this.liveAnalysis.state().candidates[0]?.evaluation
+        : selected?.candidates[0]?.evaluation;
+    if (selected && live) {
+      const score = live.score;
+      const value = score.kind === 'mate' ? Math.sign(score.moves) * 100 : score.value / 100;
+      return turnColor(selected.fen) === 'white' ? value : -value;
+    }
     const move = this.game()?.moves[this.currentPly() - 1];
     const evaluation = this.currentAnalysis()?.playedEvaluation;
     if (!move || !evaluation) return null;
     return evaluationForWhite(move, evaluation);
   });
   protected readonly evaluationRailValueLabel = computed(() => {
-    const evaluation = this.currentAnalysis()?.playedEvaluation;
+    const selected = this.selectedReviewNode();
+    const evaluation =
+      (this.liveAnalysis.state().nodeId === selected?.id
+        ? this.liveAnalysis.state().candidates[0]?.evaluation
+        : selected?.candidates[0]?.evaluation) ?? this.currentAnalysis()?.playedEvaluation;
     if (this.mode() !== 'analysis' || !evaluation) return '';
     if (evaluation.score.kind === 'mate') return `M${Math.abs(evaluation.score.moves)}`;
     return Math.abs(this.whiteEvaluationValue() ?? 0).toFixed(1);
@@ -168,6 +205,9 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   });
   protected readonly boardTurn = computed<ChessColor>(() => {
     if (this.mode() === 'practice') return turnColor(this.practiceFen());
+    if (this.mode() === 'analysis' && this.selectedReviewNode()) {
+      return turnColor(this.selectedReviewNode()!.fen);
+    }
     const game = this.game();
     const ply = this.currentPly();
     const fen = game?.moves[ply - 1]?.fenAfter ?? game?.moves[0]?.fenBefore ?? STARTING_FEN;
@@ -189,6 +229,8 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       this.practiceReplayFen();
       this.practiceReplaying();
       this.practiceAnalysis.state();
+      this.reviewSession();
+      this.liveAnalysis.state();
       this.ideaShapes();
       this.syncBoard();
     });
@@ -210,6 +252,21 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
         ),
       );
     });
+    effect(() => {
+      const state = this.liveAnalysis.state();
+      if (!state.nodeId || (state.phase !== 'complete' && state.phase !== 'error')) return;
+      untracked(() => {
+        const session = this.reviewSession();
+        if (!session?.nodes[state.nodeId!]) return;
+        this.reviewSession.set(
+          updateReviewNode(session, state.nodeId!, {
+            candidates: state.candidates,
+            candidateDepth: state.depth,
+            analysisError: state.error,
+          }),
+        );
+      });
+    });
   }
 
   async ngOnInit(): Promise<void> {
@@ -221,7 +278,8 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.clearReplayTimers();
-    this.store.destroy();
+    this.liveAnalysis.destroy();
+    void this.store.destroy();
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -278,9 +336,14 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     const maximum = this.game()?.moves.length ?? 0;
     const previousPly = this.currentPly();
     const nextPly = Math.max(0, Math.min(ply, maximum));
-    if (nextPly === previousPly) return;
+    const session = this.reviewSession();
+    const importedNode = session
+      ? Object.values(session.nodes).find((candidate) => candidate.importedPly === nextPly)
+      : undefined;
+    if (nextPly === previousPly && importedNode?.id === session?.selectedNodeId) return;
     this.ideaShapes.set([]);
     this.currentPly.set(nextPly);
+    if (importedNode) this.selectAnalysisNode(importedNode.id, false);
     const traversedMove = this.game()?.moves[Math.max(previousPly, nextPly) - 1];
     if (traversedMove) {
       for (const event of reviewSoundEvents(traversedMove)) this.sound.play(event);
@@ -291,7 +354,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     if (this.coachAnalysis.state().phase !== 'complete') return;
     this.ideaShapes.set([]);
     this.mode.set('analysis');
-    this.currentPly.set(this.game()?.moves.length ? 1 : 0);
+    this.goToImportedPly(this.game()?.moves.length ? 1 : 0);
   }
 
   protected showSummary(): void {
@@ -303,6 +366,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.ideaShapes.set([]);
     this.currentPly.set(0);
     this.mode.set('summary');
+    this.liveAnalysis.cancel();
   }
 
   protected showMoveIdea(): void {
@@ -334,6 +398,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     const position = this.activePosition();
     if (position) this.currentPly.set(position.ply);
     this.mode.set('analysis');
+    this.goToImportedPly(position?.ply ?? 0);
   }
 
   protected previousPosition(): void {
@@ -393,7 +458,8 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     const pending = this.pendingPromotion();
     if (!pending) return;
     this.pendingPromotion.set(null);
-    this.gradeMove({ ...pending, promotion: piece });
+    if (this.mode() === 'analysis') this.commitAnalysisMove({ ...pending, promotion: piece });
+    else this.gradeMove({ ...pending, promotion: piece });
   }
 
   protected flipBoard(): void {
@@ -432,7 +498,9 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   }
 
   protected currentMoveDestination(): string | null {
-    return this.game()?.moves[this.currentPly() - 1]?.to ?? null;
+    return this.selectedReviewNode()?.source === 'imported'
+      ? (this.game()?.moves[this.currentPly() - 1]?.to ?? null)
+      : null;
   }
 
   protected reviewClassification(ply: number): ReviewMoveClassification | undefined {
@@ -515,7 +583,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       },
       movable: {
         color: undefined,
-        events: { after: (from, to) => this.handleTrainingMove(from, to) },
+        events: { after: (from, to) => this.handleBoardMove(from, to) },
       },
       draggable: { enabled: false },
       selectable: { enabled: false },
@@ -541,6 +609,10 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       this.syncPracticeBoard();
       return;
     }
+    if (this.mode() === 'analysis') {
+      this.syncAnalysisBoard();
+      return;
+    }
     const game = this.game();
     const ply = this.currentPly();
     const move = game?.moves[ply - 1];
@@ -559,6 +631,127 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
         autoShapes: this.mode() === 'analysis' ? this.ideaShapes() : [],
       },
     });
+  }
+
+  protected selectAnalysisNode(nodeId: string, playSound = true): void {
+    const session = this.reviewSession();
+    const node = session?.nodes[nodeId];
+    if (!session || !node) return;
+    this.liveAnalysis.cancel();
+    this.pendingPromotion.set(null);
+    this.ideaShapes.set([]);
+    this.reviewSession.set(selectReviewNode(session, nodeId));
+    if (node.source === 'imported') this.currentPly.set(node.importedPly ?? node.ply);
+    if (playSound && node.move) this.sound.play('move');
+    this.analyzeSelectedReviewNode();
+  }
+
+  protected retryLiveAnalysis(): void {
+    this.analyzeSelectedReviewNode();
+  }
+
+  protected removeAnalysisVariation(nodeId: string): void {
+    const session = this.reviewSession();
+    const node = session?.nodes[nodeId];
+    if (
+      !session ||
+      node?.source !== 'manual' ||
+      !confirm('Remove this variation and all of its continuations?')
+    ) {
+      return;
+    }
+    this.liveAnalysis.cancel();
+    const next = removeReviewVariation(session, nodeId);
+    this.reviewSession.set(next);
+    this.analyzeSelectedReviewNode();
+  }
+
+  private goToImportedPly(ply: number): void {
+    const session = this.reviewSession();
+    if (!session) return;
+    const node = Object.values(session.nodes).find((candidate) => candidate.importedPly === ply);
+    if (node) this.selectAnalysisNode(node.id, false);
+  }
+
+  private analyzeSelectedReviewNode(): void {
+    const node = this.selectedReviewNode();
+    if (!node) return;
+    if (node.candidateDepth === 16 && !node.analysisError) {
+      this.liveAnalysis.state.set({
+        phase: 'complete',
+        nodeId: node.id,
+        depth: node.candidateDepth,
+        candidates: node.candidates,
+      });
+      return;
+    }
+    this.liveAnalysis.analyze(node.id, node.fen);
+  }
+
+  private syncAnalysisBoard(): void {
+    const node = this.selectedReviewNode();
+    const board = this.board();
+    if (!node || !board) return;
+    const color = turnColor(node.fen);
+    const candidates =
+      this.liveAnalysis.state().nodeId === node.id
+        ? this.liveAnalysis.state().candidates
+        : node.candidates;
+    board.set({
+      fen: node.fen,
+      orientation: this.orientation(),
+      turnColor: color,
+      lastMove: node.move
+        ? ([node.move.from as Key, node.move.to as Key] as [Key, Key])
+        : undefined,
+      movable: { color, dests: legalDestinations(node.fen), showDests: true },
+      draggable: { enabled: true },
+      selectable: { enabled: true },
+      drawable: {
+        enabled: true,
+        shapes: this.shapes,
+        autoShapes: this.ideaShapes().length
+          ? this.ideaShapes()
+          : node.source === 'manual'
+            ? this.engineCandidateShapes(candidates)
+            : [],
+      },
+    });
+  }
+
+  private handleBoardMove(from: Key, to: Key): void {
+    if (this.mode() === 'analysis') {
+      const node = this.selectedReviewNode();
+      if (!node) return;
+      const piece = new Chess(node.fen).get(from as Square);
+      const move = { from: from as Square, to: to as Square };
+      if (
+        piece?.type === 'p' &&
+        ((piece.color === 'w' && to.endsWith('8')) || (piece.color === 'b' && to.endsWith('1')))
+      ) {
+        this.pendingPromotion.set(move);
+        return;
+      }
+      this.commitAnalysisMove(move);
+      return;
+    }
+    this.handleTrainingMove(from, to);
+  }
+
+  private commitAnalysisMove(move: MoveInput): void {
+    const session = this.reviewSession();
+    const parent = this.selectedReviewNode();
+    if (!session || !parent) return;
+    try {
+      new Chess(parent.fen).move(move);
+      const committed = commitReviewMove(session, move);
+      this.reviewSession.set(committed.session);
+      this.ideaShapes.set([]);
+      this.sound.play('move');
+      this.analyzeSelectedReviewNode();
+    } catch {
+      this.syncBoard();
+    }
   }
 
   private syncPracticeBoard(): void {
@@ -696,8 +889,10 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     };
   }
 
-  private engineCandidateShapes(lines: PracticeCandidateLine[]): DrawShape[] {
-    const widths = [14, 10, 6];
+  private engineCandidateShapes(
+    lines: Array<PracticeCandidateLine | ReviewCandidateLine>,
+  ): DrawShape[] {
+    const widths = [14, 9, 5];
     return lines.map((line, index) => ({
       orig: line.firstMove.from as Key,
       dest: line.firstMove.to as Key,

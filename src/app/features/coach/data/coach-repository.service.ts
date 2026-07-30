@@ -82,12 +82,13 @@ export class CoachRepositoryService {
   async deleteGame(game: ImportedGame): Promise<void> {
     const database = await this.database.open();
     const transaction = database.transaction(
-      ['state', 'importedGames', 'gameAnalyses'],
+      ['state', 'importedGames', 'gameAnalyses', 'reviewAnalysisSessions'],
       'readwrite',
     );
     await Promise.all([
       transaction.objectStore('importedGames').delete(game.key),
       transaction.objectStore('gameAnalyses').delete(game.key),
+      transaction.objectStore('reviewAnalysisSessions').delete(game.key),
     ]);
 
     if (game.platform === 'local') {

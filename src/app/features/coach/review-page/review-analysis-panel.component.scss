@@ -6,7 +6,7 @@
 
 .analysis-panel {
   display: grid;
-  grid-template-rows: auto auto auto minmax(96px, 1fr) auto auto auto;
+  grid-template-rows: auto auto auto auto minmax(96px, 1fr) auto auto auto;
   height: 100%;
   min-height: 0;
 }
@@ -105,55 +105,72 @@ header {
   color: var(--on-primary);
 }
 
-.moves {
-  align-content: start;
-  display: grid;
-  grid-auto-rows: min-content;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  list-style: none;
-  margin: 0;
-  min-height: 0;
-  overflow: auto;
-  padding: 8px;
+.live-analysis {
+  border-bottom: 1px solid rgb(200 213 207 / 13%);
+  padding: 9px 12px;
+
+  ol {
+    display: grid;
+    gap: 5px;
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+  }
 
   li {
     align-items: center;
-    border-left: 3px solid var(--classification-color, transparent);
     display: grid;
-    grid-template-columns: 27px minmax(0, 1fr);
+    font-size: 0.65rem;
+    gap: 7px;
+    grid-template-columns: 14px 14px 42px minmax(0, 1fr);
   }
 
-  > li > span {
-    color: var(--mist);
-    font-family: var(--font-utility);
-    font-size: 0.52rem;
-    text-align: right;
-  }
-
-  button {
-    background: transparent;
-    border: 0;
-    color: var(--paper);
-    min-width: 0;
-    padding: 6px;
-    text-align: left;
-
-    &:hover,
-    &.current {
-      background: var(--surface-container-high);
-    }
-  }
-
-  i {
-    color: var(--classification-color, var(--mist));
+  li > i {
+    align-self: center;
+    background: #74c892;
+    border-radius: 99px;
     display: block;
-    font-family: var(--font-utility);
-    font-size: 0.46rem;
-    font-style: normal;
+    width: 14px;
+  }
+
+  li > span:last-child {
+    color: var(--mist);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+}
+
+.candidate-heading {
+  align-items: baseline;
+  display: flex;
+  justify-content: space-between;
+
+  h3 {
+    font-family: var(--font-display);
+    font-size: 0.88rem;
+    margin: 0;
+  }
+
+  small {
+    color: var(--mist);
+    font-family: var(--font-utility);
+    font-size: 0.48rem;
+  }
+}
+
+.terminal-position,
+.analysis-error {
+  color: var(--mist);
+  font-size: 0.65rem;
+  margin: 7px 0 0;
+}
+
+.retry-action {
+  background: transparent;
+  border: 0;
+  color: var(--primary);
+  padding: 4px 0;
 }
 
 .practice-action {

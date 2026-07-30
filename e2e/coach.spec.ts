@@ -226,6 +226,39 @@ test('analyzes locally, caches the result, and opens a concern position', async 
   await expect(page.locator('.evaluation-rail')).toBeVisible();
   await expect(page.locator('.evaluation-rail')).toHaveAttribute('aria-label', /White evaluation/);
   await expectPlayerStripsToClearEvaluationRail(page);
+  await expect(page.locator('.live-analysis li')).toHaveCount(3, { timeout: 30_000 });
+  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(0);
+
+  await moveReviewPiece(page, 'c7', 'c5');
+  await expect(page.locator('.score li[data-source="manual"]')).toHaveCount(1);
+  await expect(page.locator('.live-analysis li')).toHaveCount(3, { timeout: 30_000 });
+  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(3);
+  await expect
+    .poll(() =>
+      page
+        .locator('.review-board svg.cg-shapes line')
+        .evaluateAll((lines) =>
+          lines
+            .map((line) => Number(line.getAttribute('stroke-width')) * 64)
+            .sort((left, right) => right - left),
+        ),
+    )
+    .toEqual([14, 9, 5]);
+
+  await moveReviewPiece(page, 'e2', 'e4');
+  await expect(page.locator('.score li[data-source="manual"]')).toHaveCount(2);
+  await page.waitForTimeout(400);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Your game at a glance' })).toBeVisible({
+    timeout: 30_000,
+  });
+  await page.getByRole('button', { name: 'Start analysis' }).click();
+  await expect(page.locator('.score li[data-source="manual"]')).toHaveCount(2);
+  await page.locator('.score li[data-source="manual"] .move').last().click();
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByRole('button', { name: 'Remove this variation and all continuations' }).click();
+  await expect(page.locator('.score li[data-source="manual"]')).toHaveCount(1);
+
   await page.getByRole('button', { name: 'f3' }).click();
   await expect(page.locator('.review-classification')).toBeVisible();
   await expectBoardOverlayWithinBounds(page, '.review-classification');
@@ -488,8 +521,8 @@ async function drawReviewArrow(page: Page, from: string, to: string): Promise<vo
 }
 
 async function moveReviewPiece(page: Page, from: string, to: string): Promise<void> {
-  const reviewBoard = page.locator('.review-board cg-board');
-  await expect(reviewBoard).toBeVisible();
+  const reviewBoard = page.locator('.review-board');
+  await expect(reviewBoard.locator('cg-board')).toBeVisible();
   await reviewBoard.scrollIntoViewIfNeeded();
   const board = await reviewBoard.boundingBox();
   if (!board) throw new Error('Review board is not visible.');

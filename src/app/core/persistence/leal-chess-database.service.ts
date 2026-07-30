@@ -8,9 +8,10 @@ import type {
 import type { GamePreferences } from '../game/game.types';
 import type { ImportPreferences, PersistedGame } from './persistence.types';
 import type { ExplorerSession } from '../../features/explorer/explorer.types';
+import type { ReviewAnalysisSession } from '../../features/coach/review-page/review-analysis-session.types';
 
 export const LEAL_CHESS_DATABASE_NAME = 'leal-chess';
-export const LEAL_CHESS_DATABASE_VERSION = 4;
+export const LEAL_CHESS_DATABASE_VERSION = 5;
 export const PROFILE_KEYS_INDEX = 'by-profile-key';
 
 export interface LealChessDatabase extends DBSchema {
@@ -37,6 +38,10 @@ export interface LealChessDatabase extends DBSchema {
   explorerSessions: {
     key: ExplorerSession['id'];
     value: ExplorerSession;
+  };
+  reviewAnalysisSessions: {
+    key: ReviewAnalysisSession['importedGameKey'];
+    value: ReviewAnalysisSession;
   };
 }
 
@@ -65,6 +70,9 @@ export class LealChessDatabaseService {
           }
           if (!database.objectStoreNames.contains('explorerSessions')) {
             database.createObjectStore('explorerSessions', { keyPath: 'id' });
+          }
+          if (!database.objectStoreNames.contains('reviewAnalysisSessions')) {
+            database.createObjectStore('reviewAnalysisSessions', { keyPath: 'importedGameKey' });
           }
         },
       },

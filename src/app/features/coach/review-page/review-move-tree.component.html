@@ -1,0 +1,48 @@
+<ol class="score" role="tree" aria-label="Game score and analysis variations">
+  @for (entry of entries(); track entry.node.id) {
+    <li
+      role="treeitem"
+      [attr.aria-level]="entry.variationDepth + 1"
+      [attr.aria-current]="session().selectedNodeId === entry.node.id ? 'step' : null"
+      [attr.data-source]="entry.node.source"
+      [attr.data-color]="entry.node.color"
+      [attr.data-classification]="classification(entry.node) ?? null"
+      [class.selected-path]="path().has(entry.node.id)"
+      [style.--variation-depth]="entry.variationDepth"
+    >
+      @if (entry.node.source === 'manual') {
+        <span class="parenthesis" aria-hidden="true">(</span>
+      }
+      <span class="move-number">{{ moveNumber(entry.node) }}</span>
+      <button
+        type="button"
+        class="move"
+        [class.current]="session().selectedNodeId === entry.node.id"
+        [attr.aria-label]="
+          entry.node.san +
+          (classification(entry.node) ? ', ' + classificationLabel(entry.node) : '') +
+          (entry.node.source === 'manual' ? ', variation' : '')
+        "
+        (click)="nodeSelected.emit(entry.node.id)"
+      >
+        {{ entry.node.san }}
+        @if (classification(entry.node)) {
+          <i aria-hidden="true">{{ classificationLabel(entry.node) }}</i>
+        }
+      </button>
+      @if (entry.node.source === 'manual') {
+        <span class="parenthesis" aria-hidden="true">)</span>
+        @if (session().selectedNodeId === entry.node.id) {
+          <button
+            type="button"
+            class="remove"
+            aria-label="Remove this variation and all continuations"
+            (click)="removeRequested.emit(entry.node.id)"
+          >
+            Remove variation
+          </button>
+        }
+      }
+    </li>
+  }
+</ol>

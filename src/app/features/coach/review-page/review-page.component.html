@@ -231,18 +231,28 @@
               } @else if (mode() === 'analysis') {
                 @if (coachAnalysis.analysis(); as analysis) {
                   @if (reviewSummary(); as summary) {
-                    <app-review-analysis-panel
-                      [game]="game()!"
-                      [analysis]="analysis"
-                      [currentPly]="currentPly()"
-                      [learnerColor]="learnerColor()!"
-                      [explanation]="moveExplanation()"
-                      [evaluations]="summary.evaluations"
-                      (summaryRequested)="showSummary()"
-                      (plyRequested)="goTo($event)"
-                      (ideaRequested)="showMoveIdea()"
-                      (practiceRequested)="enterPractice(practiceIndexForPly($event))"
-                    />
+                    @if (reviewSession(); as session) {
+                      @if (selectedReviewNode(); as selectedNode) {
+                        <app-review-analysis-panel
+                          [game]="game()!"
+                          [analysis]="analysis"
+                          [session]="session"
+                          [selectedNode]="selectedNode"
+                          [liveState]="liveAnalysis.state()"
+                          [currentPly]="currentPly()"
+                          [learnerColor]="learnerColor()!"
+                          [explanation]="moveExplanation()"
+                          [evaluations]="summary.evaluations"
+                          (summaryRequested)="showSummary()"
+                          (plyRequested)="goTo($event)"
+                          (nodeRequested)="selectAnalysisNode($event)"
+                          (removeVariationRequested)="removeAnalysisVariation($event)"
+                          (retryRequested)="retryLiveAnalysis()"
+                          (ideaRequested)="showMoveIdea()"
+                          (practiceRequested)="enterPractice(practiceIndexForPly($event))"
+                        />
+                      }
+                    }
                   }
                 }
               } @else {
