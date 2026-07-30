@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 30-07-2026
+## [0.1.0] - 2026-07-30
 
 ### Added
 
@@ -29,6 +29,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Grouped Game Review branches into compact, wrapping variation lines with unobtrusive removal
   controls, made engine candidates playable from the board, and reduced the board-idea action.
 - Replaced the remaining browser-native confirmations with accessible dialogs matching LealChess.
+- Updated the repository contribution policy and branch protection to use merge commits for pull
+  requests.
 
 ### Fixed
 
@@ -38,6 +40,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   are correctly flagged, even when expected-points values are saturated, with readable concern
   labels in the active move list.
 - Opening-book explanations no longer recommend an engine continuation over established theory.
+- Restored GitHub Actions startup by correcting the third-party action allowlist.
 
 ## [Unreleased] - 29-07-2026
 
@@ -185,3 +188,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   move sounds and right-click annotations.
 - Correct the board square orientation and improve coordinate, legal-move, and dialog contrast.
 - Allow new games to accept moves after a completed match.
+
+[Unreleased]: https://github.com/Swellshinider/LealChess/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Swellshinider/LealChess/releases/tag/v0.1.0

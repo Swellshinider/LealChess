@@ -107,7 +107,7 @@ test('launches each workspace and provides project information', async ({ page }
   await page.goto('/help');
   await expect(page).toHaveURL(/\/about$/);
   await expect(page.getByRole('heading', { name: 'About' })).toBeVisible();
-  await expect(page.getByText('v0.1.0-beta', { exact: true })).toBeVisible();
+  await expect(page.getByText('v0.1.0', { exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Swellshinider/LealChess' })).toHaveAttribute(
     'href',
     'https://github.com/Swellshinider/LealChess',
