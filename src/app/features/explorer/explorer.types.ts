@@ -4,7 +4,7 @@ import type { MoveInput } from '../../core/game/game.types';
 import type { ChessColor } from '../../shared/chess/chess.types';
 
 export const EXPLORER_SESSION_SCHEMA_VERSION = 1;
-export const EXPLORER_ANALYSIS_VERSION = 'stockfish-18-depth-14-classification-1';
+export const EXPLORER_ANALYSIS_VERSION = 'stockfish-18-single-depth-14-classification-2';
 
 export type ExplorerSource = 'starting-position' | 'fen' | 'pgn' | 'setup';
 export type ExplorerMoveSource = 'imported' | 'manual';

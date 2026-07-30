@@ -7,6 +7,8 @@ export interface ReviewClassificationInput {
   playedExpectedPoints: number;
   secondBestExpectedPoints?: number;
   soundSacrifice: boolean;
+  outcomeEquivalentMate: boolean;
+  lostForcedMate: boolean;
 }
 
 export function classifyReviewMoveQuality(
@@ -14,6 +16,8 @@ export function classifyReviewMoveQuality(
 ): ReviewMoveClassification {
   const epsilon = 1e-9;
   if (input.book) return 'book';
+  if (input.outcomeEquivalentMate) return 'best';
+  if (input.lostForcedMate) return 'miss';
   const loss = Math.max(0, input.bestExpectedPoints - input.playedExpectedPoints);
   if (
     loss <= 0.02 + epsilon &&

@@ -103,7 +103,7 @@ export function createMoveExplanation(
   const piece = chess.get(move.from);
   const title = moveIdeaTitle(move, note, piece?.type);
   const arrows: MoveIdeaArrow[] = [{ from: move.from, to: move.to, kind: 'played' }];
-  if (note.bestMove !== note.playedMove) {
+  if (note.bestMove !== note.playedMove && note.reviewClassification !== 'best') {
     const best = parseUci(note.bestMove);
     if (best) arrows.push({ ...best, kind: 'best' });
   }
@@ -202,6 +202,10 @@ function moveIdeaBody(move: ImportedMove, note: MoveAnalysis): string {
   const evaluationDrop = evaluationDropText(note);
   const mateTransition = forcedMateTransition(move, note);
 
+  if (move.san.includes('#')) {
+    return 'It delivers checkmate and ends the game immediately.';
+  }
+
   switch (note.reviewClassification) {
     case 'inaccuracy':
       return `${move.san} is playable but imprecise. ${note.bestMoveSan} was the more accurate continuation.${mateTransition}${evaluationDrop} It leaves ${move.color} with ${position}.`;
@@ -215,6 +219,14 @@ function moveIdeaBody(move: ImportedMove, note: MoveAnalysis): string {
 
   if (note.bestMove === note.playedMove) {
     return `It matches the engine’s top move and leaves ${move.color} with ${position}.`;
+  }
+
+  if (
+    note.reviewClassification === 'best' &&
+    note.playedEvaluation.score.kind === 'mate' &&
+    note.playedEvaluation.score.moves > 0
+  ) {
+    return `It preserves the best winning outcome and leaves ${move.color} with ${position}.`;
   }
 
   return `The idea is playable, but ${note.bestMoveSan} was the stronger continuation.${mateTransition}${evaluationDrop} It leaves ${move.color} with ${position}.`;

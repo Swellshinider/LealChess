@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { botMoveTimeMs, type BotRating } from './bot-rating';
 import type { EngineMove, EnginePort, EngineSearchRequest } from './engine.types';
-import { STOCKFISH_WORKER_FACTORY } from './stockfish-worker';
+import { STOCKFISH_PLAY_WORKER_FACTORY } from './stockfish-worker';
 import { parseBestMove } from './uci-parser';
 
 type Waiter = {
@@ -13,7 +13,7 @@ type Waiter = {
 
 @Injectable()
 export class StockfishEngineService implements EnginePort {
-  private readonly createWorker = inject(STOCKFISH_WORKER_FACTORY);
+  private readonly createWorker = inject(STOCKFISH_PLAY_WORKER_FACTORY);
   private worker: Worker | null = null;
   private waiters: Waiter[] = [];
   private activeSearch: {

@@ -13,6 +13,12 @@ export function classifyReviewMove(
   const bestExpectedPoints = expectedPoints(best);
   const playedExpectedPoints = expectedPoints(played);
   const secondBest = best.variations?.find((variation) => variation.rank === 2);
+  const bestWinningMate = winningMateDistance(best);
+  const playedWinningMate = winningMateDistance(played);
+  const outcomeEquivalentMate =
+    new Chess(move.fenAfter).isCheckmate() ||
+    (playedWinningMate !== undefined &&
+      (bestWinningMate === undefined || playedWinningMate <= bestWinningMate));
 
   return classifyReviewMoveQuality({
     book,
@@ -26,6 +32,8 @@ export function classifyReviewMove(
         }
       : {}),
     soundSacrifice: isSoundSacrifice(move) && bestExpectedPoints - playedExpectedPoints <= 0.02,
+    outcomeEquivalentMate,
+    lostForcedMate: bestWinningMate !== undefined && playedWinningMate === undefined,
   });
 }
 
@@ -36,6 +44,12 @@ function expectedPoints(result: PositionAnalysisResult): number {
 function evaluationExpected(evaluation: PositionAnalysisResult['evaluation']): number {
   if (evaluation.score.kind === 'mate') return evaluation.score.moves > 0 ? 1 : 0;
   return 1 / (1 + Math.exp(-evaluation.score.value / 240));
+}
+
+function winningMateDistance(result: PositionAnalysisResult): number | undefined {
+  return result.evaluation.score.kind === 'mate' && result.evaluation.score.moves > 0
+    ? result.evaluation.score.moves
+    : undefined;
 }
 
 function isSoundSacrifice(move: ImportedMove): boolean {

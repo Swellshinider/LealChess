@@ -122,6 +122,44 @@ describe('review insights', () => {
     expect(explanation?.body).toContain('It gives up a forced mate.');
     expect(explanation?.body).not.toContain('evaluation drop');
   });
+
+  it('does not recommend an alternative when a non-top move preserves a faster mate', () => {
+    const game = importedGame('1. e3 *');
+    const analysis = gameAnalysis(game, [
+      note(game, 1, 'best', {
+        bestMove: 'e2e4',
+        bestMoveSan: 'e4',
+        bestEvaluation: { score: { kind: 'mate', moves: 3 }, depth: 16 },
+        playedEvaluation: { score: { kind: 'mate', moves: 2 }, depth: 16 },
+      }),
+    ]);
+
+    const explanation = createMoveExplanation(game, analysis, 1);
+
+    expect(explanation?.body).toBe(
+      'It preserves the best winning outcome and leaves white with a forced mate in 2.',
+    );
+    expect(explanation?.body).not.toContain('stronger continuation');
+    expect(explanation?.arrows).toEqual([{ from: 'e2', to: 'e3', kind: 'played' }]);
+  });
+
+  it('ends an immediate checkmate explanation without continuation advice', () => {
+    const game = importedGame('1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. Qxf7# *');
+    const ply = game.moves.length;
+    const analysis = gameAnalysis(game, [
+      note(game, ply, 'best', {
+        bestMove: 'h5h7',
+        bestMoveSan: 'Qh7#',
+        bestEvaluation: { score: { kind: 'mate', moves: 1 }, depth: 16 },
+        playedEvaluation: { score: { kind: 'mate', moves: 1 }, depth: 16 },
+      }),
+    ]);
+
+    const explanation = createMoveExplanation(game, analysis, ply);
+
+    expect(explanation?.body).toBe('It delivers checkmate and ends the game immediately.');
+    expect(explanation?.arrows).toEqual([{ from: 'h5', to: 'f7', kind: 'played' }]);
+  });
 });
 
 function importedGame(moves: string): ImportedGame {

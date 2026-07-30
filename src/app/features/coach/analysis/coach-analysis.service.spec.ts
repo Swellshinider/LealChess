@@ -51,7 +51,7 @@ class FakeAnalysisEngine implements AnalysisEnginePort {
       },
       evaluation: {
         score: { kind: 'centipawn', value: played ? -100 : 30 },
-        depth: 14,
+        depth: 16,
       },
       principalVariation: [bestMove],
     });
@@ -94,11 +94,14 @@ describe('CoachAnalysisService', () => {
       'best',
     ]);
     expect(engine.requests.filter((request) => !request.searchMove)).toEqual([
-      expect.objectContaining({ multiPv: 2 }),
-      expect.objectContaining({ multiPv: 2 }),
-      expect.objectContaining({ multiPv: 2 }),
+      expect.objectContaining({ depth: 16, multiPv: 2 }),
+      expect.objectContaining({ depth: 16, multiPv: 2 }),
+      expect.objectContaining({ depth: 16, multiPv: 2 }),
     ]);
     expect(service.analysis()).toMatchObject({
+      schemaVersion: 4,
+      engineVersion: 'stockfish-18-single@18.0.8',
+      depth: 16,
       status: 'complete',
       totalUserMoves: 2,
       moves: [

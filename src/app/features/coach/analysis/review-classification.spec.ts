@@ -41,6 +41,26 @@ describe('review move classification', () => {
       expect(classifyReviewMove(baseMove(), best, played)).toBe(classification);
     },
   );
+
+  it.each([
+    ['best', mateResult('d2d4', 3), mateResult('e2e4', 2)],
+    ['best', result('d2d4', 0.99, 0.98), mateResult('e2e4', 4)],
+    ['excellent', mateResult('d2d4', 3), mateResult('e2e4', 4)],
+    ['miss', mateResult('d2d4', 5), centipawnResult('e2e4', 1279, 0.99)],
+  ] satisfies Array<[ReviewMoveClassification, PositionAnalysisResult, PositionAnalysisResult]>)(
+    'classifies mate transitions as %s',
+    (classification, best, played) => {
+      expect(classifyReviewMove(baseMove(), best, played)).toBe(classification);
+    },
+  );
+
+  it('treats an immediate checkmate as best even when Stockfish ranks another move first', () => {
+    const move = moveFrom('rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq - 0 2', 'Qh4#');
+
+    expect(
+      classifyReviewMove(move, mateResult('d8h4', 1), centipawnResult('d8h4', 900, 0.98)),
+    ).toBe('best');
+  });
 });
 
 function result(
@@ -74,6 +94,26 @@ function result(
             },
           ],
         }),
+  };
+}
+
+function mateResult(bestMove: string, moves: number): PositionAnalysisResult {
+  const resultValue = result(bestMove, moves > 0 ? 1 : 0);
+  return {
+    ...resultValue,
+    evaluation: { score: { kind: 'mate', moves }, depth: 14 },
+  };
+}
+
+function centipawnResult(
+  bestMove: string,
+  value: number,
+  expectedPoints: number,
+): PositionAnalysisResult {
+  const resultValue = result(bestMove, expectedPoints);
+  return {
+    ...resultValue,
+    evaluation: { score: { kind: 'centipawn', value }, depth: 14 },
   };
 }
 

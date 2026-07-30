@@ -19,6 +19,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Upgraded Review, Practice, and Explorer analysis to full Stockfish, with completed game reviews
+  calculated at depth 16.
 - Redesigned Game pulse as a neutral territory chart with focused markers for noteworthy moves.
 - Made move-review explanations match their classifications, with readable evaluation drops and
   explicit forced-mate transitions.
@@ -36,6 +38,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Classified equivalent checkmates as best moves without unnecessary alternatives, and marked
+  abandoned forced mates as missed opportunities.
 - Allow the initial match setup to be dismissed while Stockfish continues loading, with keyboard
   focus restored to New game.
 - Updated vulnerable transitive dependencies used by development tooling.
