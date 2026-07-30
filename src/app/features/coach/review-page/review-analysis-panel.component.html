@@ -14,28 +14,22 @@
       </div>
       <h3>{{ idea.title }}</h3>
       <p>{{ idea.body }}</p>
-      @if (currentNote(); as note) {
-        <div class="evaluation">
-          <span>Before {{ evaluationLabel(note.bestEvaluation) }}</span>
-          <span>After {{ evaluationLabel(note.playedEvaluation) }}</span>
-        </div>
-      }
+      <div class="coach-note-footer">
+        @if (currentNote(); as note) {
+          <div class="evaluation">
+            <span>Before {{ evaluationLabel(note.bestEvaluation) }}</span>
+            <span>After {{ evaluationLabel(note.playedEvaluation) }}</span>
+          </div>
+        }
+        <button type="button" class="secondary-action" (click)="ideaRequested.emit()">
+          Show idea on board
+        </button>
+      </div>
     } @else {
       <h3>Choose a move to review</h3>
       <p>The coach note will explain the move’s purpose and compare it with Stockfish’s choice.</p>
     }
   </section>
-
-  <div class="guided-actions">
-    <button
-      type="button"
-      class="secondary-action"
-      [disabled]="!explanation()"
-      (click)="ideaRequested.emit()"
-    >
-      Show idea on board
-    </button>
-  </div>
 
   <section class="live-analysis" aria-labelledby="live-analysis-heading">
     <div class="candidate-heading">

@@ -8,6 +8,68 @@ import { ReviewAnalysisPanelComponent } from './review-analysis-panel.component'
 describe('ReviewAnalysisPanelComponent', () => {
   afterEach(() => TestBed.resetTestingModule());
 
+  it('places the board idea action beside the move evaluation', async () => {
+    await TestBed.configureTestingModule({
+      imports: [ReviewAnalysisPanelComponent],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(ReviewAnalysisPanelComponent);
+    const imported = game();
+    const session = createReviewAnalysisSession(imported);
+    const requested = vi.fn();
+    fixture.componentInstance.ideaRequested.subscribe(requested);
+    fixture.componentRef.setInput('game', imported);
+    fixture.componentRef.setInput('analysis', {
+      ...analysis(imported),
+      reviewMoves: [
+        {
+          importedGameKey: imported.key,
+          ply: 1,
+          playedMove: 'e2e4',
+          bestMove: 'e2e4',
+          bestMoveSan: 'e4',
+          principalVariation: ['e2e4'],
+          bestEvaluation: {
+            depth: 16,
+            score: { kind: 'centipawn', value: 25 },
+          },
+          playedEvaluation: {
+            depth: 16,
+            score: { kind: 'centipawn', value: 25 },
+          },
+          centipawnLoss: 0,
+          classification: 'good',
+          reviewClassification: 'best',
+        },
+      ],
+    });
+    fixture.componentRef.setInput('currentPly', 1);
+    fixture.componentRef.setInput('learnerColor', 'white');
+    fixture.componentRef.setInput('explanation', {
+      classification: 'best',
+      title: 'A strong move',
+      body: 'This keeps the position balanced.',
+    });
+    fixture.componentRef.setInput('evaluations', []);
+    fixture.componentRef.setInput('session', session);
+    fixture.componentRef.setInput('selectedNode', session.nodes[session.rootId]);
+    fixture.componentRef.setInput('liveState', {
+      phase: 'idle',
+      nodeId: session.rootId,
+      candidates: [],
+    });
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    const footer = host.querySelector<HTMLElement>('.coach-note-footer')!;
+    const action = footer.querySelector<HTMLButtonElement>('.secondary-action')!;
+
+    expect(footer.querySelector('.evaluation')).not.toBeNull();
+    expect(action.textContent).toContain('Show idea on board');
+
+    action.click();
+
+    expect(requested).toHaveBeenCalledOnce();
+  });
+
   it('emits the first move when an engine candidate is clicked', async () => {
     await TestBed.configureTestingModule({
       imports: [ReviewAnalysisPanelComponent],

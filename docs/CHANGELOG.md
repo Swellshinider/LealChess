@@ -18,6 +18,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Moved the board-idea action beside the reviewed move evaluation for a more compact coaching
+  summary.
 - Renamed Game pulse to Advantage graph, removed territory labels, and added a solid gray center
   line that remains readable across both advantage regions.
 - Replaced the read-only Game Review move grid with an accessible unified score that keeps the
