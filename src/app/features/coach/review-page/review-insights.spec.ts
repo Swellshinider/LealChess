@@ -119,8 +119,82 @@ describe('review insights', () => {
 
     const explanation = createMoveExplanation(game, analysis, 1);
 
-    expect(explanation?.body).toContain('It gives up a forced mate.');
+    expect(explanation?.body).toContain('It gives up a forced checkmate.');
     expect(explanation?.body).not.toContain('evaluation drop');
+  });
+
+  it('explains a newly allowed mate once, with the correct side and distance', () => {
+    const game = importedGame('1. e3 *');
+    game.moves[0] = {
+      ...game.moves[0]!,
+      san: 'Qxe7',
+    };
+    const analysis = gameAnalysis(game, [
+      note(game, 1, 'blunder', {
+        bestMove: 'f1f2',
+        bestMoveSan: 'Rf2',
+        bestEvaluation: evaluation(-537),
+        playedEvaluation: { score: { kind: 'mate', moves: -1 }, depth: 16 },
+      }),
+    ]);
+
+    const explanation = createMoveExplanation(game, analysis, 1);
+
+    expect(explanation?.body).toBe(
+      'Qxe7 is a blunder. Rf2 was much stronger. It allows Black to force checkmate in 1.',
+    );
+    expect(explanation?.body.match(/force checkmate/g)).toHaveLength(1);
+    expect(explanation?.body).not.toContain('against it');
+  });
+
+  it('names White as the mating side after a Black blunder', () => {
+    const game = importedGame('1. e4 e5 *');
+    const analysis = gameAnalysis(game, [
+      note(game, 2, 'blunder', {
+        bestMove: 'c7c5',
+        bestMoveSan: 'c5',
+        bestEvaluation: evaluation(-200),
+        playedEvaluation: { score: { kind: 'mate', moves: -2 }, depth: 16 },
+      }),
+    ]);
+
+    expect(createMoveExplanation(game, analysis, 2)?.body).toContain(
+      'It allows White to force checkmate in 2.',
+    );
+  });
+
+  it('describes shortened unavoidable mate without contradictory advice', () => {
+    const game = importedGame('1. e3 *');
+    const analysis = gameAnalysis(game, [
+      note(game, 1, 'mistake', {
+        bestMove: 'e2e4',
+        bestMoveSan: 'e4',
+        bestEvaluation: { score: { kind: 'mate', moves: -6 }, depth: 16 },
+        playedEvaluation: { score: { kind: 'mate', moves: -2 }, depth: 16 },
+      }),
+    ]);
+
+    expect(createMoveExplanation(game, analysis, 1)?.body).toBe(
+      'e3 is a mistake. e4 was stronger. It lets Black force checkmate in 2 instead of 6.',
+    );
+  });
+
+  it('does not recommend an alternative for equally long unavoidable mate', () => {
+    const game = importedGame('1. e3 *');
+    const analysis = gameAnalysis(game, [
+      note(game, 1, 'best', {
+        bestMove: 'e2e4',
+        bestMoveSan: 'e4',
+        bestEvaluation: { score: { kind: 'mate', moves: -4 }, depth: 16 },
+        playedEvaluation: { score: { kind: 'mate', moves: -4 }, depth: 16 },
+      }),
+    ]);
+
+    const explanation = createMoveExplanation(game, analysis, 1);
+    expect(explanation?.body).toBe(
+      'It preserves the longest defense against Black’s forced checkmate.',
+    );
+    expect(explanation?.body).not.toContain('stronger continuation');
   });
 
   it('does not recommend an alternative when a non-top move preserves a faster mate', () => {

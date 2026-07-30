@@ -14,6 +14,7 @@ import { CoachImportService } from '../data/coach-import.service';
 import type { GameAnalysis, ImportedGame } from '../domain/coach.types';
 import type { GameSource } from '../domain/coach.types';
 import { categoryLabel } from '../analysis/analysis-rules';
+import { isConcernClassification } from '../analysis/review-classification';
 import {
   DEFAULT_LEARN_GAME_FILTERS,
   availableGameSpeeds,
@@ -91,7 +92,9 @@ export class LearnPageComponent implements OnInit {
     if (analysis.status === 'partial') {
       return `${analysis.moves.length} of ${analysis.totalUserMoves} moves analyzed`;
     }
-    const moments = analysis.moves.filter((move) => move.classification !== 'good').length;
+    const moments = analysis.moves.filter((move) =>
+      isConcernClassification(move.reviewClassification),
+    ).length;
     return moments === 1 ? '1 learning moment' : `${moments} learning moments`;
   }
 

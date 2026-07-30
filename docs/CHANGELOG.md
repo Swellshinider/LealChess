@@ -19,6 +19,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Renamed Game pulse to Advantage graph, removed territory labels, and added a solid gray center
   line that remains readable across both advantage regions.
 
+### Fixed
+
+- Unified Review, Practice, and Explorer move classifications so moves that allow forced checkmate
+  are correctly flagged, even when expected-points values are saturated, with readable concern
+  labels in the active move list.
+
 ## [Unreleased] - 29-07-2026
 
 ### Added

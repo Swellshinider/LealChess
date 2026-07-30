@@ -114,6 +114,10 @@ export type ReviewMoveClassification =
   | 'mistake'
   | 'miss'
   | 'blunder';
+export type ConcernMoveClassification = Extract<
+  ReviewMoveClassification,
+  'inaccuracy' | 'mistake' | 'miss' | 'blunder'
+>;
 export type MistakeCategory = 'opening' | 'tactical' | 'positional' | 'endgame';
 export type AnalysisStatus = 'partial' | 'complete';
 
@@ -157,7 +161,7 @@ export interface TrainingPosition {
   ply: number;
   fen: string;
   category: MistakeCategory;
-  classification: Exclude<MoveClassification, 'good'>;
+  classification: ConcernMoveClassification;
   playedMove: string;
   bestMove: string;
   bestMoveSan: string;

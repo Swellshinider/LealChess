@@ -1,25 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { EngineEvaluation, GameAnalysis } from '../domain/coach.types';
-import { categorizeMistake, classifyMove, learningPriorities } from './analysis-rules';
+import type { EngineEvaluation, GameAnalysis, ImportedGame } from '../domain/coach.types';
+import { categorizeMistake, learningPriorities, trainingPositions } from './analysis-rules';
 
 describe('analysis rules', () => {
-  it.each([
-    [49, 'good'],
-    [50, 'inaccuracy'],
-    [100, 'mistake'],
-    [200, 'blunder'],
-  ] as const)('classifies a %i centipawn loss as %s', (loss, classification) => {
-    expect(classifyMove(cp(100), cp(100 - loss))).toEqual({
-      classification,
-      centipawnLoss: loss,
-    });
-  });
-
-  it('treats a changed mate outcome as a blunder without fake centipawn loss', () => {
-    expect(classifyMove(mate(3), cp(400))).toEqual({ classification: 'blunder' });
-    expect(classifyMove(mate(3), mate(8))).toEqual({ classification: 'good' });
-  });
-
   it('categorizes opening, endgame, tactical, and positional moments', () => {
     const middlegame = 'r3k2r/ppp2ppp/2npbn2/8/3P4/2N1PN2/PPP2PPP/R2QKB1R w KQkq - 0 12';
     expect(categorizeMistake(middlegame, 14, 'Nxd5')).toBe('opening');
@@ -36,14 +19,25 @@ describe('analysis rules', () => {
     ]);
     expect(priorities).toMatchObject([{ category: 'tactical', moments: 2, games: 2 }]);
   });
+
+  it('uses the canonical concern label for training positions', () => {
+    const item = analysis('one', 'tactical');
+    item.moves[0] = {
+      ...item.moves[0]!,
+      classification: 'mistake',
+      reviewClassification: 'miss',
+    };
+    const game = {
+      key: 'one',
+      moves: [{ ply: 1, fenBefore: 'fen' }],
+    } as ImportedGame;
+
+    expect(trainingPositions(game, item)).toMatchObject([{ classification: 'miss' }]);
+  });
 });
 
 function cp(value: number): EngineEvaluation {
   return { score: { kind: 'centipawn', value }, depth: 14 };
-}
-
-function mate(moves: number): EngineEvaluation {
-  return { score: { kind: 'mate', moves }, depth: 14 };
 }
 
 function analysis(

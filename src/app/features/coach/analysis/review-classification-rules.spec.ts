@@ -11,15 +11,11 @@ const base: ReviewClassificationInput = {
   playedExpectedPoints: 0.65,
   secondBestExpectedPoints: 0.64,
   soundSacrifice: false,
-  outcomeEquivalentMate: false,
-  lostForcedMate: false,
 };
 
 describe('classifyReviewMoveQuality', () => {
   it('uses the special-classification precedence', () => {
     expect(classifyReviewMoveQuality({ ...base, book: true })).toBe('book');
-    expect(classifyReviewMoveQuality({ ...base, outcomeEquivalentMate: true })).toBe('best');
-    expect(classifyReviewMoveQuality({ ...base, lostForcedMate: true })).toBe('miss');
     expect(
       classifyReviewMoveQuality({
         ...base,

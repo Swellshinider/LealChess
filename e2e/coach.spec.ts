@@ -200,7 +200,7 @@ test('shows rating progress and filters the game archive', async ({ page }) => {
   await assertNoSeriousA11yViolations(page);
 });
 
-test('analyzes locally, caches the result, and opens a missed position', async ({
+test('analyzes locally, caches the result, and opens a concern position', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'Real analysis worker smoke test');
@@ -235,19 +235,16 @@ test('analyzes locally, caches the result, and opens a missed position', async (
   await page.getByRole('button', { name: 'e5' }).click();
   await expect(page.locator('.review-classification')).toBeVisible();
   await expect(page.locator('.coach-note')).toContainText(/Book|Best|Excellent|Good/);
-  await page.getByRole('button', { name: 'f3' }).click();
+  await page.getByRole('button', { name: 'g4' }).click();
+  await expect(page.locator('.review-classification')).toHaveText('Blunder');
   await page.getByRole('button', { name: 'Practice this position' }).click();
   await expect(page.getByRole('heading', { name: 'Find a better move' })).toBeVisible();
   await expect(page.getByText(/Move a piece for/)).toHaveCount(0);
   const previousPosition = page.getByRole('button', { name: 'Previous position' });
   const nextPosition = page.getByRole('button', { name: 'Next position' });
   await expect(previousPosition).toBeDisabled();
-  await nextPosition.click();
-  await expect(previousPosition).toBeEnabled();
+  await expect(nextPosition).toBeDisabled();
   await expect(page.getByText(/Replaying the opponent’s last move/)).toHaveCount(0);
-  await expect(page.locator('.review-board square.last-move')).toHaveCount(2);
-  await previousPosition.click();
-  await expect(previousPosition).toBeDisabled();
   await moveReviewPiece(page, 'a2', 'a3');
   await expect(page.locator('.practice-classification')).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole('heading', { name: 'Three ways forward' })).toBeVisible();
@@ -256,6 +253,11 @@ test('analyzes locally, caches the result, and opens a missed position', async (
   await expect(page.getByText('2 moves across your variations')).toBeVisible({
     timeout: 15_000,
   });
+  await expect(page.getByRole('treeitem', { name: /^Nc6,/ })).toHaveAttribute(
+    'data-classification',
+    /.+/,
+    { timeout: 15_000 },
+  );
   await page.getByRole('treeitem', { name: 'Start' }).click();
   await moveReviewPiece(page, 'c2', 'c4');
   await expect(page.getByText('3 moves across your variations')).toBeVisible({

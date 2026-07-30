@@ -1,8 +1,30 @@
 import { Chess, type Color, type PieceSymbol } from 'chess.js';
 import type { PositionAnalysisResult } from '../../../core/engine/analysis-engine.types';
-import type { ImportedMove, ReviewMoveClassification } from '../domain/coach.types';
-import { moveToUci } from './analysis-rules';
+import { moveToUci } from '../../../core/game/chess-move';
+import type {
+  ConcernMoveClassification,
+  ImportedMove,
+  MoveClassification,
+  ReviewMoveClassification,
+} from '../domain/coach.types';
+import { FORCED_MATE_THRESHOLDS } from './analysis.constants';
 import { classifyReviewMoveQuality } from './review-classification-rules';
+
+export interface MoveAssessment {
+  classification: ReviewMoveClassification;
+  centipawnLoss?: number;
+  concern: boolean;
+}
+
+export type MateComparison =
+  | 'none'
+  | 'delivered'
+  | 'winning-equivalent'
+  | 'winning-mate-lost'
+  | 'winning-mate-reversed'
+  | 'losing-mate-new'
+  | 'losing-mate-equivalent'
+  | 'losing-mate-shortened';
 
 export function classifyReviewMove(
   move: ImportedMove,
@@ -10,17 +32,29 @@ export function classifyReviewMove(
   played: PositionAnalysisResult,
   book = false,
 ): ReviewMoveClassification {
+  return assessMove(move, best, played, book).classification;
+}
+
+export function assessMove(
+  move: ImportedMove,
+  best: PositionAnalysisResult,
+  played: PositionAnalysisResult,
+  book = false,
+): MoveAssessment {
+  const mateComparison = compareMateOutcomes(move, best.evaluation, played.evaluation);
+  const forcedClassification = classifyForcedOutcome(mateComparison, best, played);
+  const centipawnLoss =
+    best.evaluation.score.kind === 'centipawn' && played.evaluation.score.kind === 'centipawn'
+      ? Math.max(0, best.evaluation.score.value - played.evaluation.score.value)
+      : undefined;
+  if (forcedClassification) {
+    return assessment(forcedClassification, centipawnLoss);
+  }
+
   const bestExpectedPoints = expectedPoints(best);
   const playedExpectedPoints = expectedPoints(played);
   const secondBest = best.variations?.find((variation) => variation.rank === 2);
-  const bestWinningMate = winningMateDistance(best);
-  const playedWinningMate = winningMateDistance(played);
-  const outcomeEquivalentMate =
-    new Chess(move.fenAfter).isCheckmate() ||
-    (playedWinningMate !== undefined &&
-      (bestWinningMate === undefined || playedWinningMate <= bestWinningMate));
-
-  return classifyReviewMoveQuality({
+  const classification = classifyReviewMoveQuality({
     book,
     playedBestMove: best.bestMove ? moveToUci(best.bestMove) === move.uci : false,
     bestExpectedPoints,
@@ -32,9 +66,98 @@ export function classifyReviewMove(
         }
       : {}),
     soundSacrifice: isSoundSacrifice(move) && bestExpectedPoints - playedExpectedPoints <= 0.02,
-    outcomeEquivalentMate,
-    lostForcedMate: bestWinningMate !== undefined && playedWinningMate === undefined,
   });
+  return assessment(classification, centipawnLoss);
+}
+
+export function compareMateOutcomes(
+  move: Pick<ImportedMove, 'fenAfter'>,
+  best: PositionAnalysisResult['evaluation'],
+  played: PositionAnalysisResult['evaluation'],
+): MateComparison {
+  if (new Chess(move.fenAfter).isCheckmate()) return 'delivered';
+
+  const bestMate = best.score.kind === 'mate' ? best.score.moves : undefined;
+  const playedMate = played.score.kind === 'mate' ? played.score.moves : undefined;
+  if (playedMate !== undefined && playedMate > 0) {
+    return bestMate === undefined || bestMate <= 0 || playedMate <= bestMate
+      ? 'winning-equivalent'
+      : 'none';
+  }
+  if (bestMate !== undefined && bestMate > 0) {
+    return playedMate !== undefined && playedMate < 0
+      ? 'winning-mate-reversed'
+      : 'winning-mate-lost';
+  }
+  if (playedMate !== undefined && playedMate < 0) {
+    if (bestMate === undefined || bestMate >= 0) return 'losing-mate-new';
+    return Math.abs(playedMate) >= Math.abs(bestMate)
+      ? 'losing-mate-equivalent'
+      : 'losing-mate-shortened';
+  }
+  return 'none';
+}
+
+export function legacyClassification(classification: ReviewMoveClassification): MoveClassification {
+  if (classification === 'miss') return 'mistake';
+  return isConcernClassification(classification) ? classification : 'good';
+}
+
+export function isConcernClassification(
+  classification: ReviewMoveClassification,
+): classification is ConcernMoveClassification {
+  return ['inaccuracy', 'mistake', 'miss', 'blunder'].includes(classification);
+}
+
+function classifyForcedOutcome(
+  comparison: MateComparison,
+  best: PositionAnalysisResult,
+  played: PositionAnalysisResult,
+): ReviewMoveClassification | undefined {
+  switch (comparison) {
+    case 'delivered':
+    case 'winning-equivalent':
+    case 'losing-mate-equivalent':
+      return 'best';
+    case 'winning-mate-reversed':
+      return 'blunder';
+    case 'winning-mate-lost':
+      return 'miss';
+    case 'losing-mate-shortened': {
+      const bestMoves = Math.abs(mateMoves(best)!);
+      const playedMoves = Math.abs(mateMoves(played)!);
+      if (playedMoves === 1) return 'blunder';
+      return bestMoves - playedMoves >= 3 ? 'mistake' : 'inaccuracy';
+    }
+    case 'losing-mate-new': {
+      const playedMoves = Math.abs(mateMoves(played)!);
+      if (playedMoves === 1) return 'blunder';
+      const bestScore =
+        best.evaluation.score.kind === 'centipawn'
+          ? best.evaluation.score.value
+          : Number.POSITIVE_INFINITY;
+      if (bestScore >= FORCED_MATE_THRESHOLDS.seriousError) return 'blunder';
+      if (bestScore >= FORCED_MATE_THRESHOLDS.inaccuracy) return 'mistake';
+      return 'inaccuracy';
+    }
+    case 'none':
+      return undefined;
+  }
+}
+
+function assessment(
+  classification: ReviewMoveClassification,
+  centipawnLoss: number | undefined,
+): MoveAssessment {
+  return {
+    classification,
+    ...(centipawnLoss === undefined ? {} : { centipawnLoss }),
+    concern: isConcernClassification(classification),
+  };
+}
+
+function mateMoves(result: PositionAnalysisResult): number | undefined {
+  return result.evaluation.score.kind === 'mate' ? result.evaluation.score.moves : undefined;
 }
 
 function expectedPoints(result: PositionAnalysisResult): number {
@@ -44,12 +167,6 @@ function expectedPoints(result: PositionAnalysisResult): number {
 function evaluationExpected(evaluation: PositionAnalysisResult['evaluation']): number {
   if (evaluation.score.kind === 'mate') return evaluation.score.moves > 0 ? 1 : 0;
   return 1 / (1 + Math.exp(-evaluation.score.value / 240));
-}
-
-function winningMateDistance(result: PositionAnalysisResult): number | undefined {
-  return result.evaluation.score.kind === 'mate' && result.evaluation.score.moves > 0
-    ? result.evaluation.score.moves
-    : undefined;
 }
 
 function isSoundSacrifice(move: ImportedMove): boolean {
