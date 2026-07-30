@@ -16,7 +16,7 @@ Keep `main` releasable. Require one approving review, resolved conversations, an
 and `browser` checks. Review architecture direction, keyboard and screen-reader behavior,
 local-first privacy, and IndexedDB compatibility in addition to the code.
 
-Use squash merging only, with the pull request title as the squash subject. Keep subjects concise
+Use merge commits only, with the pull request title as the merge subject. Keep subjects concise
 and free of conventional-commit prefixes. Delete merged branches.
 
 ## Releases
@@ -48,7 +48,7 @@ The repository can remain private while preparing these files. GitHub Free prote
 ### General
 
 - Keep `main` as the default branch.
-- Allow squash merging only and use pull request titles for squash commits.
+- Allow merge commits only and use pull request titles for merge commits.
 - Enable branch updates, auto-merge, and automatic deletion of merged branches.
 - Disable Discussions, Projects, and Wiki.
 - Verify the description, topics, GPL license detection, and community profile.
@@ -62,7 +62,7 @@ Target `main` and disallow bypass, including administrator bypass:
 - Do not require CODEOWNERS.
 - Require all conversations to be resolved.
 - Require strict `quality` and `browser` status checks.
-- Require linear history.
+- Allow merge commits only.
 - Block force pushes and deletion.
 
 Only enable the approval rule after confirming a second collaborator can approve changes;
