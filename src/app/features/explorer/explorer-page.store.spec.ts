@@ -28,7 +28,7 @@ describe('ExplorerPageStore', () => {
                 premovesEnabled: true,
                 boardTheme: 'rosewood',
                 orientation: 'white',
-                difficulty: 'casual',
+                botRating: 1500,
               },
             }),
           },

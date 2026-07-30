@@ -13,10 +13,20 @@ export class ReviewEvaluationTimelineComponent {
   readonly selectable = input(false);
   readonly plySelected = output<number>();
 
-  protected readonly polyline = computed(() =>
-    this.points()
-      .map((point) => `${this.pointX(point)},${this.pointY(point)}`)
-      .join(' '),
+  protected readonly areaPath = computed(() => {
+    const points = this.points();
+    if (!points.length) return '';
+    const boundary = points
+      .map((point) => `L ${this.pointX(point)} ${this.pointY(point)}`)
+      .join(' ');
+    return `M 0 0 L 0 ${this.pointY(points[0]!)} ${boundary} L 100 0 Z`;
+  });
+  protected readonly keyPoints = computed(() =>
+    this.points().filter((point) =>
+      ['brilliant', 'great', 'inaccuracy', 'mistake', 'miss', 'blunder'].includes(
+        point.classification,
+      ),
+    ),
   );
   protected readonly currentPoint = computed(() =>
     this.points().find((point) => point.ply === this.currentPly()),

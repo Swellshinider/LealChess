@@ -55,7 +55,7 @@ describe('review insights', () => {
     expect(createMoveExplanation(game, analysis, ply)).toMatchObject({ title });
   });
 
-  it('contrasts a played move with the stronger engine continuation', () => {
+  it('describes mistakes directly with a readable pawn-unit evaluation drop', () => {
     const game = importedGame('1. e3 *');
     const analysis = gameAnalysis(game, [
       note(game, 1, 'mistake', {
@@ -68,12 +68,59 @@ describe('review insights', () => {
 
     const explanation = createMoveExplanation(game, analysis, 1);
 
+    expect(explanation?.title).toBe('e3 is a mistake');
+    expect(explanation?.body).toContain('e3 is a mistake');
     expect(explanation?.body).toContain('e4 was the stronger continuation');
-    expect(explanation?.body).toContain('120 centipawns');
+    expect(explanation?.body).toContain('evaluation drop of about 1.2 pawns');
+    expect(explanation?.body).not.toContain('centipawns');
     expect(explanation?.arrows).toEqual([
       { from: 'e2', to: 'e3', kind: 'played' },
       { from: 'e2', to: 'e4', kind: 'best' },
     ]);
+  });
+
+  it.each([
+    [
+      'inaccuracy',
+      'e3 is an inaccuracy',
+      'e3 is playable but imprecise. e4 was the more accurate continuation.',
+    ],
+    ['mistake', 'e3 is a mistake', 'e3 is a mistake. e4 was the stronger continuation.'],
+    ['miss', 'e3 misses an opportunity', 'e3 misses the opportunity that e4 created.'],
+    ['blunder', 'e3 is a blunder', 'e3 is a blunder. e4 was much stronger.'],
+  ] as const)(
+    'keeps a %s explanation consistent with its classification',
+    (classification, title, body) => {
+      const game = importedGame('1. e3 *');
+      const analysis = gameAnalysis(game, [
+        note(game, 1, classification, {
+          bestMove: 'e2e4',
+          bestMoveSan: 'e4',
+        }),
+      ]);
+
+      const explanation = createMoveExplanation(game, analysis, 1);
+
+      expect(explanation?.title).toBe(title);
+      expect(explanation?.body).toContain(body);
+    },
+  );
+
+  it('describes a lost forced mate separately from centipawn loss', () => {
+    const game = importedGame('1. e3 *');
+    const analysis = gameAnalysis(game, [
+      note(game, 1, 'miss', {
+        bestMove: 'e2e4',
+        bestMoveSan: 'e4',
+        bestEvaluation: { score: { kind: 'mate', moves: 3 }, depth: 14 },
+        playedEvaluation: evaluation(80),
+      }),
+    ]);
+
+    const explanation = createMoveExplanation(game, analysis, 1);
+
+    expect(explanation?.body).toContain('It gives up a forced mate.');
+    expect(explanation?.body).not.toContain('evaluation drop');
   });
 });
 

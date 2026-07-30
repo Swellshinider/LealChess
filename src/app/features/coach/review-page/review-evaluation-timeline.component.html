@@ -12,17 +12,18 @@
       role="img"
       [attr.aria-label]="accessibleLabel()"
     >
-      <defs>
-        <linearGradient id="evaluation-pulse-gradient" x1="0" y1="0" x2="0" y2="1">
-          <stop class="white-stop" offset="0%"></stop>
-          <stop class="white-stop" offset="48%"></stop>
-          <stop class="black-stop" offset="52%"></stop>
-          <stop class="black-stop" offset="100%"></stop>
-        </linearGradient>
-      </defs>
+      @if (areaPath()) {
+        <path class="white-territory" [attr.d]="areaPath()"></path>
+      }
       <line class="zero-line" x1="0" y1="22" x2="100" y2="22"></line>
-      @if (polyline()) {
-        <polyline class="evaluation-line" [attr.points]="polyline()"></polyline>
+      @for (point of keyPoints(); track point.ply) {
+        <circle
+          class="key-point"
+          [attr.data-classification]="point.classification"
+          [attr.cx]="pointX(point)"
+          [attr.cy]="pointY(point)"
+          r="1.55"
+        ></circle>
       }
       @if (currentPoint(); as point) {
         <line

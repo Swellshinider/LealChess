@@ -60,6 +60,7 @@ export interface ImportedGame {
   firstImportedAt: string;
   lastImportedAt: string;
   learnerColor?: ChessColor;
+  botRating?: number;
 }
 
 export interface ImportRequest {

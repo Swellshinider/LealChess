@@ -28,7 +28,7 @@ export function buildGameViewState(
     playerColor,
     turn,
     orientation: changes.orientation ?? previous?.orientation ?? preferences.orientation,
-    difficulty: changes.difficulty ?? previous?.difficulty ?? preferences.difficulty,
+    botRating: changes.botRating ?? previous?.botRating ?? preferences.botRating,
     pendingPremove:
       changes.pendingPremove === undefined
         ? (previous?.pendingPremove ?? null)

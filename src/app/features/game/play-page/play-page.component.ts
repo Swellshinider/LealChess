@@ -26,6 +26,7 @@ import { NewGameDialogComponent } from '../new-game-dialog/new-game-dialog.compo
 export class PlayPageComponent implements OnInit, OnDestroy {
   protected readonly controller = inject(GameController);
   protected readonly newGameOpen = signal(false);
+  protected readonly setupDismissed = signal(false);
   protected readonly reviewPending = signal(false);
   protected readonly reviewError = signal<string | null>(null);
   protected readonly state = this.controller.state;
@@ -55,10 +56,12 @@ export class PlayPageComponent implements OnInit, OnDestroy {
   }
 
   protected closeNewGame(): void {
-    if (this.state().phase !== 'setup') {
-      this.newGameOpen.set(false);
-      requestAnimationFrame(() => this.newGameTrigger?.focus());
-    }
+    this.newGameOpen.set(false);
+    this.setupDismissed.set(true);
+    requestAnimationFrame(() => {
+      const fallback = document.querySelector<HTMLElement>('[data-new-game-control]');
+      (this.newGameTrigger ?? fallback)?.focus();
+    });
   }
 
   protected startGame(options: StartGameOptions): void {

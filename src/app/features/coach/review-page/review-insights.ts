@@ -170,6 +170,16 @@ function moveIdeaTitle(
   note: MoveAnalysis,
   piece: PieceSymbol | undefined,
 ): string {
+  switch (note.reviewClassification) {
+    case 'inaccuracy':
+      return `${move.san} is an inaccuracy`;
+    case 'mistake':
+      return `${move.san} is a mistake`;
+    case 'miss':
+      return `${move.san} misses an opportunity`;
+    case 'blunder':
+      return `${move.san} is a blunder`;
+  }
   if (move.san.includes('#')) return `${move.san} ends the game`;
   if (/^O-O(?:-O)?/.test(move.san)) return `${move.san} brings the king to safety`;
   if (move.san.includes('=')) return `${move.san} promotes the pawn`;
@@ -189,15 +199,58 @@ function moveIdeaTitle(
 
 function moveIdeaBody(move: ImportedMove, note: MoveAnalysis): string {
   const position = moverPositionLabel(note.playedEvaluation);
+  const evaluationDrop = evaluationDropText(note);
+  const mateTransition = forcedMateTransition(move, note);
+
+  switch (note.reviewClassification) {
+    case 'inaccuracy':
+      return `${move.san} is playable but imprecise. ${note.bestMoveSan} was the more accurate continuation.${mateTransition}${evaluationDrop} It leaves ${move.color} with ${position}.`;
+    case 'mistake':
+      return `${move.san} is a mistake. ${note.bestMoveSan} was the stronger continuation.${mateTransition}${evaluationDrop} It leaves ${move.color} with ${position}.`;
+    case 'miss':
+      return `${move.san} misses the opportunity that ${note.bestMoveSan} created.${mateTransition}${evaluationDrop} The lost opportunity leaves ${move.color} with ${position}.`;
+    case 'blunder':
+      return `${move.san} is a blunder. ${note.bestMoveSan} was much stronger.${mateTransition}${evaluationDrop} It leaves ${move.color} with ${position}.`;
+  }
+
   if (note.bestMove === note.playedMove) {
     return `It matches the engine’s top move and leaves ${move.color} with ${position}.`;
   }
 
-  const loss =
-    note.centipawnLoss === undefined || note.centipawnLoss === 0
-      ? ''
-      : ` The move gives up about ${note.centipawnLoss} centipawns.`;
-  return `The idea is playable, but ${note.bestMoveSan} was the stronger continuation.${loss} It leaves ${move.color} with ${position}.`;
+  return `The idea is playable, but ${note.bestMoveSan} was the stronger continuation.${mateTransition}${evaluationDrop} It leaves ${move.color} with ${position}.`;
+}
+
+function evaluationDropText(note: MoveAnalysis): string {
+  if (
+    note.bestEvaluation.score.kind === 'mate' ||
+    note.playedEvaluation.score.kind === 'mate' ||
+    note.centipawnLoss === undefined ||
+    note.centipawnLoss <= 0
+  ) {
+    return '';
+  }
+  const pawns = Number((note.centipawnLoss / 100).toFixed(2));
+  return ` That is an evaluation drop of about ${pawns} ${pawns === 1 ? 'pawn' : 'pawns'}.`;
+}
+
+function forcedMateTransition(move: ImportedMove, note: MoveAnalysis): string {
+  const best = note.bestEvaluation.score;
+  const played = note.playedEvaluation.score;
+  if (best.kind === 'mate' && best.moves > 0 && played.kind !== 'mate') {
+    return ' It gives up a forced mate.';
+  }
+  if (played.kind === 'mate' && played.moves < 0 && best.kind !== 'mate') {
+    return ` It allows a forced mate against ${move.color}.`;
+  }
+  if (
+    best.kind === 'mate' &&
+    played.kind === 'mate' &&
+    (Math.sign(best.moves) !== Math.sign(played.moves) ||
+      Math.abs(played.moves) > Math.abs(best.moves))
+  ) {
+    return ' It changes the forced-mate sequence for the worse.';
+  }
+  return '';
 }
 
 function moverPositionLabel(evaluation: EngineEvaluation): string {

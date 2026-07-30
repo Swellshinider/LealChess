@@ -10,7 +10,7 @@
           <span class="avatar bot" aria-hidden="true">SF</span>
           <span>
             <strong>Stockfish</strong>
-            <small>{{ state().difficulty }}</small>
+            <small>{{ state().botRating }} Elo</small>
           </span>
           @if (state().engineStatus === 'thinking') {
             <span class="thinking-label">Thinking<span aria-hidden="true">…</span></span>
@@ -51,9 +51,8 @@
 </div>
 
 <app-new-game-dialog
-  [open]="newGameOpen() || state().phase === 'setup'"
-  [canClose]="state().phase !== 'setup'"
-  [defaultDifficulty]="state().difficulty"
+  [open]="newGameOpen() || (state().phase === 'setup' && !setupDismissed())"
+  [defaultBotRating]="state().botRating"
   [engineStatus]="state().engineStatus"
   [engineError]="state().engineError"
   (cancelled)="closeNewGame()"

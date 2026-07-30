@@ -17,15 +17,7 @@
 }
 
 .timeline-chart {
-  background:
-    linear-gradient(
-      to bottom,
-      rgb(244 241 230 / 10%) 0%,
-      rgb(244 241 230 / 4%) 49.5%,
-      rgb(182 156 255 / 5%) 50.5%,
-      rgb(182 156 255 / 13%) 100%
-    ),
-    var(--surface-lowest);
+  background: #3a3b36;
   height: 70px;
   overflow: hidden;
   position: relative;
@@ -53,7 +45,7 @@
 
 .black-advantage {
   bottom: 5px;
-  color: var(--classification-book);
+  color: rgb(244 241 230 / 64%);
 }
 
 .equal-label {
@@ -71,27 +63,45 @@ svg {
 }
 
 .zero-line {
-  stroke: var(--amber);
+  stroke: #f4f1e6;
   stroke-dasharray: 2 2;
-  stroke-opacity: 0.58;
-  stroke-width: 0.7;
+  stroke-opacity: 0.28;
+  stroke-width: 0.55;
 }
 
-.evaluation-line {
-  fill: none;
-  stroke: url('#evaluation-pulse-gradient');
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.6;
+.white-territory {
+  fill: #f4f1e6;
+}
+
+.key-point {
+  fill: var(--classification-color);
+  stroke: #3a3b36;
+  stroke-width: 0.8;
   vector-effect: non-scaling-stroke;
 }
 
-.white-stop {
-  stop-color: var(--paper);
+.key-point[data-classification='brilliant'] {
+  --classification-color: var(--classification-brilliant);
 }
 
-.black-stop {
-  stop-color: var(--classification-book);
+.key-point[data-classification='great'] {
+  --classification-color: var(--classification-great);
+}
+
+.key-point[data-classification='inaccuracy'] {
+  --classification-color: var(--classification-inaccuracy);
+}
+
+.key-point[data-classification='mistake'] {
+  --classification-color: var(--classification-mistake);
+}
+
+.key-point[data-classification='miss'] {
+  --classification-color: var(--classification-miss);
+}
+
+.key-point[data-classification='blunder'] {
+  --classification-color: var(--classification-blunder);
 }
 
 .current-line {
@@ -102,7 +112,7 @@ svg {
 
 .current-point {
   fill: var(--amber);
-  stroke: var(--surface-lowest);
+  stroke: #3a3b36;
   stroke-width: 0.8;
   vector-effect: non-scaling-stroke;
 }

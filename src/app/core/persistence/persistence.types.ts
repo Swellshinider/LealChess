@@ -1,15 +1,15 @@
 import { InjectionToken } from '@angular/core';
 import type {
   ChessColor,
-  DifficultyId,
   GamePreferences,
   GameResult,
   MoveRecord,
   PendingPremove,
 } from '../game/game.types';
+import type { BotRating } from '../engine/bot-rating';
 import type { SpeedFilter } from '../../features/coach/domain/coach.types';
 
-export const PERSISTENCE_SCHEMA_VERSION = 1;
+export const PERSISTENCE_SCHEMA_VERSION = 2;
 
 export interface PersistedGame {
   schemaVersion: typeof PERSISTENCE_SCHEMA_VERSION;
@@ -19,7 +19,7 @@ export interface PersistedGame {
   moves: MoveRecord[];
   playerColor: ChessColor;
   orientation: ChessColor;
-  difficulty: DifficultyId;
+  botRating: BotRating;
   pendingPremove: PendingPremove | null;
   result: GameResult | null;
   updatedAt: string;

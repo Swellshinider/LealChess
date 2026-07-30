@@ -9,7 +9,6 @@ import {
 import { SoundService, type SoundEvent } from '../sound/sound.service';
 import {
   type ChessColor,
-  type DifficultyId,
   type GamePreferences,
   type GameResult,
   type GameViewState,
@@ -17,6 +16,7 @@ import {
   type PendingPremove,
   type StartGameOptions,
 } from './game.types';
+import type { BotRating } from '../engine/bot-rating';
 import { chessColor, oppositeChessColor } from './chess-move';
 import { chooseChessColor, describeMove, resultTag } from './game-presentation';
 import { evaluateAutomaticResult } from './game-result';
@@ -53,7 +53,7 @@ export class GameController {
 
     const preferences = {
       ...this.mutableState().preferences,
-      difficulty: options.difficulty,
+      botRating: options.botRating,
       orientation: playerColor,
     };
     this.sound.setEnabled(preferences.soundEnabled);
@@ -65,7 +65,7 @@ export class GameController {
         engineError: null,
         playerColor,
         orientation: playerColor,
-        difficulty: options.difficulty,
+        botRating: options.botRating,
         pendingPremove: null,
         result: null,
         restored: false,
@@ -77,7 +77,7 @@ export class GameController {
 
     try {
       await this.engine.initialize();
-      await this.engine.newGame(options.difficulty);
+      await this.engine.newGame(options.botRating);
       this.patchState({ engineStatus: 'ready', engineError: null });
       await this.persistGame();
       if (playerColor === 'black') {
@@ -156,7 +156,7 @@ export class GameController {
       gameId: before.gameId,
       requestId: ++this.requestId,
       fen: this.chess.fen(),
-      difficulty: before.difficulty,
+      botRating: before.botRating,
     };
     this.patchState({
       engineStatus: 'thinking',
@@ -209,24 +209,24 @@ export class GameController {
     }
   }
 
-  async changeDifficulty(difficulty: DifficultyId): Promise<void> {
-    if (difficulty === this.mutableState().difficulty) {
+  async changeBotRating(botRating: BotRating): Promise<void> {
+    if (botRating === this.mutableState().botRating) {
       return;
     }
 
     const wasThinking = this.mutableState().engineStatus === 'thinking';
     await this.invalidateSearch();
-    const preferences = { ...this.mutableState().preferences, difficulty };
+    const preferences = { ...this.mutableState().preferences, botRating };
     this.patchState({
-      difficulty,
+      botRating,
       preferences,
       engineStatus: 'ready',
-      announcement: `Difficulty changed to ${difficulty}.`,
+      announcement: `Stockfish rating changed to ${botRating}.`,
     });
     await this.persistence.savePreferences(preferences);
     await this.persistGame();
     try {
-      await this.engine.newGame(difficulty);
+      await this.engine.newGame(botRating);
       if (
         wasThinking &&
         this.mutableState().phase === 'active' &&
@@ -274,7 +274,7 @@ export class GameController {
     const state = this.mutableState();
     await this.startGame({
       colorSelection: state.playerColor,
-      difficulty: state.difficulty,
+      botRating: state.botRating,
     });
   }
 
@@ -292,7 +292,7 @@ export class GameController {
     this.patchState({
       preferences,
       orientation: preferences.orientation,
-      difficulty: preferences.difficulty,
+      botRating: preferences.botRating,
     });
     void this.persistence.savePreferences(preferences);
   }
@@ -319,7 +319,7 @@ export class GameController {
     this.engine.destroy();
     try {
       await this.engine.initialize();
-      await this.engine.newGame(this.mutableState().difficulty);
+      await this.engine.newGame(this.mutableState().botRating);
       this.patchState({ engineStatus: 'ready', announcement: 'Stockfish is ready.' });
       if (
         this.mutableState().phase === 'active' &&
@@ -356,7 +356,7 @@ export class GameController {
         preferences: restored.preferences,
       });
       if (restoredGame && !restoredGame.result) {
-        await this.engine.newGame(restoredGame.difficulty);
+        await this.engine.newGame(restoredGame.botRating);
         if (this.toColor(this.chess.turn()) !== restoredGame.playerColor) {
           await this.requestEngineMove();
         }
@@ -393,14 +393,14 @@ export class GameController {
           engineStatus: 'loading',
           playerColor: game.playerColor,
           orientation: game.orientation,
-          difficulty: game.difficulty,
+          botRating: game.botRating,
           pendingPremove: game.pendingPremove,
           result: game.result,
           restored: true,
           preferences: {
             ...this.mutableState().preferences,
             orientation: game.orientation,
-            difficulty: game.difficulty,
+            botRating: game.botRating,
           },
         }),
       );
@@ -519,7 +519,7 @@ export class GameController {
       moves: [...state.moves],
       playerColor: state.playerColor,
       orientation: state.orientation,
-      difficulty: state.difficulty,
+      botRating: state.botRating,
       pendingPremove: state.pendingPremove,
       result: state.result,
       updatedAt: new Date().toISOString(),

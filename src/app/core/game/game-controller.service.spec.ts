@@ -89,7 +89,7 @@ describe('GameController', () => {
 
   it('commits legal player and engine moves while rejecting illegal input', async () => {
     await controller.initialize();
-    await controller.startGame({ colorSelection: 'white', difficulty: 'casual' });
+    await controller.startGame({ colorSelection: 'white', botRating: 1500 });
 
     const before = controller.state().fen;
     await expect(controller.makePlayerMove({ from: 'e2', to: 'e5' })).resolves.toBe(false);
@@ -127,7 +127,7 @@ describe('GameController', () => {
 
   it('executes a legal premove after the engine move', async () => {
     await controller.initialize();
-    await controller.startGame({ colorSelection: 'white', difficulty: 'casual' });
+    await controller.startGame({ colorSelection: 'white', botRating: 1500 });
     engine.deferNextSearch();
     engine.moves = [{ from: 'g8', to: 'f6' }];
     const movePromise = controller.makePlayerMove({ from: 'e2', to: 'e4' });
@@ -147,7 +147,7 @@ describe('GameController', () => {
 
   it('cancels a premove that is illegal in the resulting position', async () => {
     await controller.initialize();
-    await controller.startGame({ colorSelection: 'white', difficulty: 'casual' });
+    await controller.startGame({ colorSelection: 'white', botRating: 1500 });
     engine.deferNextSearch();
     const movePromise = controller.makePlayerMove({ from: 'e2', to: 'e4' });
     await vi.waitFor(() => expect(engine.requests).toHaveLength(1));
@@ -162,7 +162,7 @@ describe('GameController', () => {
 
   it('rejects a stale engine response after restart', async () => {
     await controller.initialize();
-    await controller.startGame({ colorSelection: 'white', difficulty: 'casual' });
+    await controller.startGame({ colorSelection: 'white', botRating: 1500 });
     engine.deferNextSearch();
     const oldMove = controller.makePlayerMove({ from: 'e2', to: 'e4' });
     await vi.waitFor(() => expect(engine.requests).toHaveLength(1));
@@ -176,13 +176,13 @@ describe('GameController', () => {
 
   it('starts a playable game after the previous game has finished', async () => {
     await controller.initialize();
-    await controller.startGame({ colorSelection: 'white', difficulty: 'casual' });
+    await controller.startGame({ colorSelection: 'white', botRating: 1500 });
     await controller.resignGame();
 
     expect(controller.state().phase).toBe('game-over');
     expect(controller.state().result).not.toBeNull();
 
-    await controller.startGame({ colorSelection: 'white', difficulty: 'casual' });
+    await controller.startGame({ colorSelection: 'white', botRating: 1500 });
 
     expect(controller.state().phase).toBe('active');
     expect(controller.state().result).toBeNull();
@@ -212,7 +212,7 @@ function snapshot(chess: Chess): PersistedGame {
     })),
     playerColor: 'black',
     orientation: 'black',
-    difficulty: 'casual',
+    botRating: 1500,
     pendingPremove: null,
     result: null,
     updatedAt: new Date().toISOString(),

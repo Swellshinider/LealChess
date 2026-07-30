@@ -81,17 +81,20 @@ describe('StockfishEngineService', () => {
     const service = TestBed.runInInjectionContext(() => new StockfishEngineService());
 
     await Promise.all([service.initialize(), service.initialize()]);
-    await service.newGame('casual');
+    await service.newGame(1500);
     const move = await service.search({
       gameId: 'game',
       requestId: 1,
       fen: 'test-fen',
-      difficulty: 'casual',
+      botRating: 1500,
     });
 
     expect(workers).toHaveLength(1);
     expect(move.move).toEqual({ from: 'e7', to: 'e5' });
     expect(workers[0]?.messages).toContain('uci');
+    expect(workers[0]?.messages).toContain('setoption name UCI_LimitStrength value true');
+    expect(workers[0]?.messages).toContain('setoption name UCI_Elo value 1500');
+    expect(workers[0]?.messages).toContain('go movetime 235');
   });
 
   it('replaces a failed startup worker once', async () => {
@@ -121,7 +124,7 @@ describe('StockfishEngineService', () => {
       gameId: 'game',
       requestId: 1,
       fen: 'test-fen',
-      difficulty: 'casual',
+      botRating: 1500,
     });
     await vi.waitFor(() =>
       expect(workers[0]?.messages.some((message) => message.startsWith('go movetime'))).toBe(true),

@@ -517,7 +517,7 @@ async function seedBoardTheme(
         premovesEnabled: true,
         boardTheme: theme,
         orientation: 'white',
-        difficulty: 'casual',
+        botRating: 1500,
       },
     });
     await new Promise<void>((resolve, reject) => {

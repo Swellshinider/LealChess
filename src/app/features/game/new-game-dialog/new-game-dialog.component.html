@@ -7,19 +7,16 @@
       aria-labelledby="new-game-title"
       aria-describedby="new-game-intro engine-startup-status"
       tabindex="-1"
-      [modalCanDismiss]="canClose()"
       (modalDismissed)="cancelled.emit()"
     >
-      @if (canClose()) {
-        <button
-          class="close"
-          type="button"
-          aria-label="Close new game dialog"
-          (click)="cancelled.emit()"
-        >
-          ×
-        </button>
-      }
+      <button
+        class="close"
+        type="button"
+        aria-label="Close new game dialog"
+        (click)="cancelled.emit()"
+      >
+        ×
+      </button>
       <span class="kicker">New match</span>
       <h2 id="new-game-title">Choose your side</h2>
       <p id="new-game-intro" class="intro">Set the board, then make the first plan.</p>
@@ -39,12 +36,20 @@
         }
       </div>
 
-      <label for="new-difficulty">Bot difficulty</label>
-      <select id="new-difficulty" [value]="difficulty()" (change)="setDifficulty($event)">
-        @for (preset of difficulties; track preset.id) {
-          <option [value]="preset.id">{{ preset.label }} — {{ preset.description }}</option>
-        }
-      </select>
+      <div class="rating-heading">
+        <label for="new-bot-rating">Stockfish rating</label>
+        <output for="new-bot-rating">{{ botRating() }} Elo</output>
+      </div>
+      <input
+        id="new-bot-rating"
+        type="range"
+        min="0"
+        [max]="ratingStops.length - 1"
+        step="1"
+        [value]="ratingIndex()"
+        [attr.aria-valuetext]="botRating() + ' Elo'"
+        (input)="setRating($event)"
+      />
 
       <div
         id="engine-startup-status"
@@ -63,7 +68,7 @@
             <strong>Stockfish could not start</strong>
             <small>{{ engineError() }}</small>
           } @else {
-            <strong>Stockfish is ready</strong>
+            <strong>Stockfish is ready at {{ botRating() }} Elo</strong>
             <small>The engine is running locally.</small>
           }
         </div>

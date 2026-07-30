@@ -33,7 +33,7 @@ describe('ReviewPageStore', () => {
                 premovesEnabled: true,
                 boardTheme: 'blue-steel',
                 orientation: 'white',
-                difficulty: 'casual',
+                botRating: 1500,
               },
             }),
           },

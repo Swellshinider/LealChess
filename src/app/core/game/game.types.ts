@@ -1,9 +1,10 @@
 import type { Square } from 'chess.js';
 import type { ChessColor } from '../../shared/chess/chess.types';
+import type { BotRating } from '../engine/bot-rating';
+import { DEFAULT_BOT_RATING } from '../engine/bot-rating';
 
 export type { ChessColor } from '../../shared/chess/chess.types';
 export type ColorSelection = ChessColor | 'random';
-export type DifficultyId = 'beginner' | 'casual' | 'intermediate' | 'advanced' | 'expert';
 export type BoardTheme =
   'tournament' | 'classic' | 'high-contrast' | 'rosewood' | 'green-felt' | 'blue-steel';
 export type PromotionPiece = 'q' | 'r' | 'b' | 'n';
@@ -54,7 +55,7 @@ export interface GamePreferences {
   premovesEnabled: boolean;
   boardTheme: BoardTheme;
   orientation: ChessColor;
-  difficulty: DifficultyId;
+  botRating: BotRating;
 }
 
 export interface GameViewState {
@@ -68,7 +69,7 @@ export interface GameViewState {
   playerColor: ChessColor;
   turn: ChessColor;
   orientation: ChessColor;
-  difficulty: DifficultyId;
+  botRating: BotRating;
   pendingPremove: PendingPremove | null;
   result: GameResult | null;
   lastMove: readonly [Square, Square] | null;
@@ -83,7 +84,7 @@ export interface GameViewState {
 
 export interface StartGameOptions {
   colorSelection: ColorSelection;
-  difficulty: DifficultyId;
+  botRating: BotRating;
 }
 
 export const DEFAULT_PREFERENCES: GamePreferences = {
@@ -92,7 +93,7 @@ export const DEFAULT_PREFERENCES: GamePreferences = {
   premovesEnabled: true,
   boardTheme: 'tournament',
   orientation: 'white',
-  difficulty: 'casual',
+  botRating: DEFAULT_BOT_RATING,
 };
 
 export const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';

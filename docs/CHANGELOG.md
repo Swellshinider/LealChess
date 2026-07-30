@@ -11,6 +11,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Native Stockfish rating selection from 1320 to 3190 Elo for local bot games.
 - Open-source contribution, conduct, security, support, architecture, and maintenance guidance.
 - Structured issue forms, a pull request template, grouped Dependabot updates, and verified
   release-tag automation.
@@ -18,6 +19,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Redesigned Game pulse as a neutral territory chart with focused markers for noteworthy moves.
+- Made move-review explanations match their classifications, with readable evaluation drops and
+  explicit forced-mate transitions.
 - Renamed Help to About, with `/about` as the canonical project-information page and `/help`
   retained as a compatibility redirect.
 - Hardened continuous integration with least-privilege permissions, immutable action pins,
@@ -32,6 +36,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Allow the initial match setup to be dismissed while Stockfish continues loading, with keyboard
+  focus restored to New game.
 - Updated vulnerable transitive dependencies used by development tooling.
 
 ## [Unreleased] - 28-07-2026
