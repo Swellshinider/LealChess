@@ -12,9 +12,10 @@ describe('ReviewEvaluationTimelineComponent', () => {
     const host = await render([]);
     const chart = host.querySelector('svg')!;
 
-    expect(host.textContent).toContain('White advantage ↑');
-    expect(host.textContent).toContain('Black advantage ↓');
-    expect(host.textContent).toContain('Equal');
+    expect(host.textContent).toContain('Advantage graph');
+    expect(host.querySelector('.advantage-label')).toBeNull();
+    expect(host.querySelector('.equal-label')).toBeNull();
+    expect(chart.getAttribute('aria-label')).toContain('Advantage graph.');
     expect(chart.getAttribute('aria-label')).toContain(
       'Values above the center line favor White; values below the center line favor Black.',
     );

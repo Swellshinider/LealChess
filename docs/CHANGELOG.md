@@ -7,6 +7,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 30-07-2026
+
+### Changed
+
+- Renamed Game pulse to Advantage graph, removed territory labels, and added a solid gray center
+  line that remains readable across both advantage regions.
+
 ## [Unreleased] - 29-07-2026
 
 ### Added
@@ -21,7 +28,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Upgraded Review, Practice, and Explorer analysis to full Stockfish, with completed game reviews
   calculated at depth 16.
-- Redesigned Game pulse as a neutral territory chart with focused markers for noteworthy moves.
+- Redesigned Advantage graph as a neutral territory chart with focused markers for noteworthy moves.
 - Made move-review explanations match their classifications, with readable evaluation drops and
   explicit forced-mate transitions.
 - Renamed Help to About, with `/about` as the canonical project-information page and `/help`

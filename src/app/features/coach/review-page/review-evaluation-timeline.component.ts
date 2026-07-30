@@ -35,10 +35,10 @@ export class ReviewEvaluationTimelineComponent {
     const points = this.points();
     const orientation =
       'Values above the center line favor White; values below the center line favor Black.';
-    if (!points.length) return `Game pulse. ${orientation} No analyzed moves yet.`;
+    if (!points.length) return `Advantage graph. ${orientation} No analyzed moves yet.`;
     const last = points.at(-1)!;
     const side = last.value > 0.35 ? 'White' : last.value < -0.35 ? 'Black' : 'Neither side';
-    return `Game pulse across ${points.length} moves. ${orientation} ${side} has the final advantage shown.`;
+    return `Advantage graph across ${points.length} moves. ${orientation} ${side} has the final advantage shown.`;
   });
 
   protected pointX(point: ReviewEvaluationPoint): number {

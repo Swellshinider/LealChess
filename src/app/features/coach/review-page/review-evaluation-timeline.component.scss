@@ -23,38 +23,6 @@
   position: relative;
 }
 
-.advantage-label,
-.equal-label {
-  font-family: var(--font-utility);
-  font-size: 0.45rem;
-  letter-spacing: 0.03em;
-  pointer-events: none;
-  position: absolute;
-  text-transform: uppercase;
-  z-index: 2;
-}
-
-.advantage-label {
-  left: 6px;
-}
-
-.white-advantage {
-  color: var(--paper);
-  top: 5px;
-}
-
-.black-advantage {
-  bottom: 5px;
-  color: rgb(244 241 230 / 64%);
-}
-
-.equal-label {
-  color: var(--amber);
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
 svg {
   display: block;
   height: 100%;
@@ -63,10 +31,8 @@ svg {
 }
 
 .zero-line {
-  stroke: #f4f1e6;
-  stroke-dasharray: 2 2;
-  stroke-opacity: 0.28;
-  stroke-width: 0.55;
+  stroke: #898b83;
+  stroke-width: 0.8;
 }
 
 .white-territory {

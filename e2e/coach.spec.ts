@@ -202,9 +202,10 @@ test('analyzes locally, caches the result, and opens a missed position', async (
   await expect(page.getByText('Guided analysis', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Next move', exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Show idea on board' })).toBeVisible();
-  await expect(page.getByText('White advantage ↑', { exact: true })).toBeVisible();
-  await expect(page.getByText('Black advantage ↓', { exact: true })).toBeVisible();
-  await expect(page.getByText('Equal', { exact: true })).toBeVisible();
+  await expect(page.getByText('Advantage graph', { exact: true })).toBeVisible();
+  await expect(page.locator('.advantage-label, .equal-label')).toHaveCount(0);
+  await expect(page.locator('.zero-line')).toHaveCSS('stroke', 'rgb(137, 139, 131)');
+  await expect(page.locator('.zero-line')).toHaveCSS('stroke-dasharray', 'none');
   await expect(page.locator('.evaluation-rail')).toBeVisible();
   await expect(page.locator('.evaluation-rail')).toHaveAttribute('aria-label', /White evaluation/);
   await expectPlayerStripsToClearEvaluationRail(page);
