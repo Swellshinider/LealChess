@@ -140,6 +140,23 @@ test('imports both platforms, persists and deduplicates games, then replays move
   await assertNoSeriousA11yViolations(page);
 });
 
+test('detects and saves missing opening metadata when review is opened', async ({ page }) => {
+  await mockChessComWithoutOpening(page);
+  await page.getByLabel('Chess.com username').fill('Learner');
+  await page.getByRole('button', { name: 'Import games' }).click();
+  await expect(page.getByText('Added 1 game.')).toBeVisible();
+  await page.goto('/learn');
+
+  const game = page.locator('.game-list article');
+  await expect(game).toContainText('Opening not recorded');
+  await game.getByRole('link', { name: /Open review/ }).click();
+  await expect(page.locator('.review-toolbar')).toContainText('Ruy Lopez: Morphy Defense');
+
+  await page.goto('/learn');
+  await expect(page.locator('.game-list article')).toContainText('Ruy Lopez: Morphy Defense');
+  await expect(page.locator('.openings')).toContainText('C70 Ruy Lopez: Morphy Defense');
+});
+
 test('shows rating progress and filters the game archive', async ({ page }) => {
   await expect(page.getByLabel('Chess.com username')).toBeEnabled();
   await seedLearnDashboard(page);
@@ -364,6 +381,45 @@ async function mockChessCom(page: Page): Promise<void> {
             rated: true,
             white: { username: 'Learner', rating: 1500, result: 'win' },
             black: { username: 'Opponent', rating: 1480, result: 'checkmated' },
+          },
+        ],
+      });
+    }
+    return json(route, {
+      username: 'Learner',
+      name: 'Learning Player',
+      url: 'https://www.chess.com/member/learner',
+    });
+  });
+}
+
+async function mockChessComWithoutOpening(page: Page): Promise<void> {
+  await page.unroute('**/api.chess.com/**');
+  await page.route('**/api.chess.com/**', (route) => {
+    const url = route.request().url();
+    if (url.endsWith('/games/archives')) {
+      return json(route, {
+        archives: ['https://api.chess.com/pub/player/learner/games/2026/07'],
+      });
+    }
+    if (url.endsWith('/games/2026/07')) {
+      return json(route, {
+        games: [
+          {
+            url: 'https://www.chess.com/game/live/without-opening',
+            uuid: 'without-opening',
+            pgn: `[White "Learner"]
+[Black "Opponent"]
+[Result "1-0"]
+[TimeControl "600+0"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 1-0`,
+            time_control: '600',
+            time_class: 'rapid',
+            end_time: 1_784_912_400,
+            rated: true,
+            white: { username: 'Learner', rating: 1500, result: 'win' },
+            black: { username: 'Opponent', rating: 1480, result: 'resigned' },
           },
         ],
       });

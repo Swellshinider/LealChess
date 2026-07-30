@@ -75,6 +75,42 @@ describe('CoachRepositoryService', () => {
     expect(stored?.profileKeys).toEqual(['lichess:learner', 'lichess:second']);
   });
 
+  it('saves a detected opening once and preserves it across imports without metadata', async () => {
+    const repository = TestBed.inject(CoachRepositoryService);
+    await repository.saveSuccessfulImport(profile, [game()]);
+    await repository.saveOpeningIfMissing('lichess:game-1', {
+      eco: 'C70',
+      name: 'Ruy Lopez: Morphy Defense',
+    });
+    await repository.saveOpeningIfMissing('lichess:game-1', {
+      eco: 'C20',
+      name: "King's Pawn Game",
+    });
+    await repository.saveSuccessfulImport(profile, [{ ...game(), speed: 'blitz' }]);
+
+    expect(await repository.game('lichess', 'game-1')).toMatchObject({
+      speed: 'blitz',
+      opening: { eco: 'C70', name: 'Ruy Lopez: Morphy Defense' },
+    });
+  });
+
+  it('lets later provider metadata replace a detected opening', async () => {
+    const repository = TestBed.inject(CoachRepositoryService);
+    await repository.saveSuccessfulImport(profile, [game()]);
+    await repository.saveOpeningIfMissing('lichess:game-1', {
+      eco: 'C70',
+      name: 'Ruy Lopez: Morphy Defense',
+    });
+    await repository.saveSuccessfulImport(profile, [
+      { ...game(), opening: { eco: 'C60', name: 'Ruy Lopez' } },
+    ]);
+
+    expect((await repository.game('lichess', 'game-1'))?.opening).toEqual({
+      eco: 'C60',
+      name: 'Ruy Lopez',
+    });
+  });
+
   it('loads only games associated with the active profile', async () => {
     const repository = TestBed.inject(CoachRepositoryService);
     await repository.saveSuccessfulImport(profile, [
@@ -98,6 +134,22 @@ describe('CoachRepositoryService', () => {
     expect((await repository.gamesForActiveProfiles()).map((item) => item.key)).toEqual([
       'local:local-game',
     ]);
+  });
+
+  it('preserves a detected opening when a local game is saved again', async () => {
+    const repository = TestBed.inject(CoachRepositoryService);
+    const local = localGame();
+    await repository.saveLocalGame(local);
+    await repository.saveOpeningIfMissing(local.key, {
+      eco: 'C70',
+      name: 'Ruy Lopez: Morphy Defense',
+    });
+    await repository.saveLocalGame({ ...local, lastImportedAt: '2026-07-24T13:00:00.000Z' });
+
+    expect((await repository.game('local', local.platformGameId))?.opening).toEqual({
+      eco: 'C70',
+      name: 'Ruy Lopez: Morphy Defense',
+    });
   });
 
   it('deletes a game, its analysis, and the matching completed local game state', async () => {

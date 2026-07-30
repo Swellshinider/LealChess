@@ -9,6 +9,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased] - 30-07-2026
 
+### Added
+
+- Missing opening names and ECO codes are detected locally when a game review is opened and saved
+  for future reviews and opening statistics.
+
 ### Changed
 
 - Renamed Game pulse to Advantage graph, removed territory labels, and added a solid gray center
