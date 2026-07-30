@@ -1,3 +1,4 @@
+import { Chess } from 'chess.js';
 import { parseImportedPgn } from '../parsing/pgn-parser';
 import type {
   EngineEvaluation,
@@ -123,6 +124,118 @@ describe('review insights', () => {
       expect(explanation?.body).toContain(body);
     },
   );
+
+  it('explains the missed pawn-winning sequence from a cached best line', () => {
+    const game = importedGame('1. d4 e6 2. Bd2 d5 3. a4 c5 4. e3 Nc6 5. Na3 Nge7 *');
+    const analysis = gameAnalysis(game, [
+      note(game, 10, 'miss', {
+        bestMove: 'c5d4',
+        bestMoveSan: 'cxd4',
+        principalVariation: ['c5d4', 'e3d4', 'c6d4'],
+        bestEvaluation: evaluation(147),
+        playedEvaluation: evaluation(-56),
+        centipawnLoss: 203,
+      }),
+    ]);
+
+    expect(createMoveExplanation(game, analysis, 10)?.body).toBe(
+      'Nge7 misses an opportunity. After cxd4 exd4 Nxd4, Black wins a pawn. ' +
+        'That is an evaluation drop of about 2.03 pawns. ' +
+        'The lost opportunity leaves black with a roughly balanced position.',
+    );
+  });
+
+  it('explains material lost in the played line for another concern classification', () => {
+    const game = importedGame('1. a3 *');
+    const fen = '3r2k1/8/8/8/8/8/P7/3Q2K1 w - - 0 1';
+    const chess = new Chess(fen);
+    const played = chess.move({ from: 'a2', to: 'a3' });
+    game.moves[0] = {
+      ply: 1,
+      color: 'white',
+      san: played.san,
+      from: played.from,
+      to: played.to,
+      uci: 'a2a3',
+      fenBefore: played.before,
+      fenAfter: played.after,
+    };
+    const analysis = gameAnalysis(game, [
+      note(game, 1, 'blunder', {
+        bestMove: 'd1d8',
+        bestMoveSan: 'Qxd8+',
+        principalVariation: [],
+        playedPrincipalVariation: ['a2a3', 'd8d1'],
+      }),
+    ]);
+
+    expect(createMoveExplanation(game, analysis, 1)?.body).toBe(
+      'a3 is a blunder. After a3 Rxd1+, Black wins a queen. ' +
+        'It leaves white with a roughly balanced position.',
+    );
+  });
+
+  it('explains the queen lost by Qb6 even when later engine moves change material again', () => {
+    const game = importedGame(
+      '1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. d3 d5 5. exd5 Nxd5 ' +
+        '6. Bxd5 Qxd5 7. Nc3 Qc5 8. Be3 Nd4 9. O-O Nxf3+ 10. Qxf3 Qb6 *',
+    );
+    const analysis = gameAnalysis(game, [
+      note(game, 20, 'blunder', {
+        bestMove: 'c5c6',
+        bestMoveSan: 'Qc6',
+        principalVariation: [],
+        playedPrincipalVariation: [
+          'c5b6',
+          'e3b6',
+          'a7b6',
+          'c3e4',
+          'f7f5',
+          'e4g5',
+          'h7h6',
+          'g5f7',
+          'e8f7',
+        ],
+        bestEvaluation: evaluation(-62),
+        playedEvaluation: evaluation(-624),
+        centipawnLoss: 562,
+      }),
+    ]);
+
+    expect(createMoveExplanation(game, analysis, 20)?.body).toBe(
+      'Qb6 is a blunder. After Qb6 Bxb6 axb6, White wins a queen for a bishop. ' +
+        'That is an evaluation drop of about 5.62 pawns. ' +
+        'It leaves black with the more difficult position.',
+    );
+  });
+
+  it('names a demonstrated tactic in the concrete winning line', () => {
+    const game = importedGame('1. Na3 *');
+    const fen = 'r3k3/8/8/1N6/8/8/8/4K3 w q - 0 1';
+    const chess = new Chess(fen);
+    const played = chess.move({ from: 'b5', to: 'a3' });
+    game.moves[0] = {
+      ply: 1,
+      color: 'white',
+      san: played.san,
+      from: played.from,
+      to: played.to,
+      uci: 'b5a3',
+      fenBefore: played.before,
+      fenAfter: played.after,
+    };
+    const analysis = gameAnalysis(game, [
+      note(game, 1, 'miss', {
+        bestMove: 'b5c7',
+        bestMoveSan: 'Nc7+',
+        principalVariation: ['b5c7', 'e8d7', 'c7a8'],
+      }),
+    ]);
+
+    expect(createMoveExplanation(game, analysis, 1)?.body).toContain(
+      'After Nc7+ Kd7 Nxa8, White uses a fork to win a rook.',
+    );
+  });
 
   it('describes a lost forced mate separately from centipawn loss', () => {
     const game = importedGame('1. e3 *');

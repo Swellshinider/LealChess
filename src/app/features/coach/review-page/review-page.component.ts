@@ -333,6 +333,13 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     await this.coachAnalysis.analyze(game, color);
   }
 
+  protected async reanalyze(): Promise<void> {
+    const game = this.game();
+    const color = this.learnerColor();
+    if (!game || !color) return;
+    await this.coachAnalysis.reanalyze(game, color);
+  }
+
   protected cancelAnalysis(): void {
     this.coachAnalysis.cancel();
   }

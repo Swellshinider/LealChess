@@ -121,7 +121,11 @@ describe('CoachAnalysisService', () => {
         { ply: 3, classification: 'good', reviewClassification: 'best', centipawnLoss: 0 },
       ],
       reviewMoves: [
-        { ply: 1, reviewClassification: 'book' },
+        {
+          ply: 1,
+          reviewClassification: 'book',
+          playedPrincipalVariation: ['e2e3'],
+        },
         { ply: 2, reviewClassification: 'book' },
         { ply: 3, reviewClassification: 'best' },
       ],
@@ -202,6 +206,26 @@ describe('CoachAnalysisService', () => {
     engine.initializationError = null;
     await service.analyze(game, 'white');
     expect(service.state().phase).toBe('complete');
+  });
+
+  it('reanalyzes a completed game from the first ply', async () => {
+    const service = TestBed.inject(CoachAnalysisService);
+    const game = importedGame();
+    await service.load(game, 'white');
+    await service.analyze(game, 'white');
+
+    const firstRunRequests = engine.requests.length;
+    await service.reanalyze(game, 'white');
+
+    expect(firstRunRequests).toBe(4);
+    expect(
+      engine.requests.slice(firstRunRequests).map((request) => request.searchMove ?? 'best'),
+    ).toEqual(['best', 'e2e3', 'best', 'best']);
+    expect(service.state()).toMatchObject({ phase: 'complete', completed: 3, total: 3 });
+    await expect(TestBed.inject(CoachRepositoryService).analysis(game.key)).resolves.toMatchObject({
+      status: 'complete',
+      reviewMoves: [{ ply: 1 }, { ply: 2 }, { ply: 3 }],
+    });
   });
 });
 

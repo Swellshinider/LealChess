@@ -133,6 +133,7 @@ export interface MoveAnalysis {
   bestMove: string;
   bestMoveSan: string;
   principalVariation: string[];
+  playedPrincipalVariation?: string[];
   bestEvaluation: EngineEvaluation;
   playedEvaluation: EngineEvaluation;
   centipawnLoss?: number;
