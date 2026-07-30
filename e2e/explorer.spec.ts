@@ -98,6 +98,17 @@ test('grades a manual board move and displays ranked engine lines', async ({ pag
   });
   expect(geometry.documentHeight).toBeLessThanOrEqual(geometry.documentClientHeight + 1);
   expect(geometry.explorerHeight).toBeLessThanOrEqual(geometry.explorerClientHeight + 1);
+
+  await page.getByRole('button', { name: 'New analysis' }).click();
+  const replacementDialog = page.getByRole('alertdialog', {
+    name: 'Replace the current session?',
+  });
+  await expect(replacementDialog).toBeVisible();
+  await replacementDialog.getByRole('button', { name: 'Keep session' }).click();
+  await expect(page.locator('.move-node')).toHaveCount(1);
+  await page.getByRole('button', { name: 'New analysis' }).click();
+  await replacementDialog.getByRole('button', { name: 'Replace session' }).click();
+  await expect(page.locator('.move-node')).toHaveCount(0);
 });
 
 async function movePiece(page: Page, from: string, to: string): Promise<void> {

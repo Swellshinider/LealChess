@@ -1,0 +1,72 @@
+:host {
+  display: contents;
+}
+
+.confirmation-backdrop {
+  align-items: center;
+  background: rgb(1 16 23 / 82%);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 16px;
+  position: fixed;
+  z-index: 100;
+}
+
+.confirmation-card {
+  background: var(--carbon);
+  border: 1px solid var(--outline);
+  border-left: 4px solid var(--danger);
+  box-shadow: 18px 18px 0 rgb(1 16 23 / 72%);
+  color: var(--paper);
+  max-width: 430px;
+  padding: 22px;
+  width: 100%;
+
+  > span {
+    color: var(--danger);
+    font-family: var(--font-utility);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 1.65rem;
+    line-height: 1;
+    margin: 7px 0;
+    text-transform: uppercase;
+  }
+
+  p {
+    color: var(--mist);
+    font-size: 0.82rem;
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 20px;
+  }
+
+  button {
+    background: var(--surface-low);
+    border: 1px solid var(--outline-variant);
+    color: var(--paper);
+    min-height: 40px;
+    padding: 0 13px;
+  }
+
+  .danger-action {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: var(--on-danger);
+    font-weight: 700;
+  }
+}

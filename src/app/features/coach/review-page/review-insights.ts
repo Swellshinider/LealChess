@@ -104,7 +104,11 @@ export function createMoveExplanation(
   const piece = chess.get(move.from);
   const title = moveIdeaTitle(move, note, piece?.type);
   const arrows: MoveIdeaArrow[] = [{ from: move.from, to: move.to, kind: 'played' }];
-  if (note.bestMove !== note.playedMove && note.reviewClassification !== 'best') {
+  if (
+    note.bestMove !== note.playedMove &&
+    note.reviewClassification !== 'best' &&
+    note.reviewClassification !== 'book'
+  ) {
     const best = parseUci(note.bestMove);
     if (best) arrows.push({ ...best, kind: 'best' });
   }
@@ -206,6 +210,10 @@ function moveIdeaBody(move: ImportedMove, note: MoveAnalysis): string {
 
   if (move.san.includes('#')) {
     return 'It delivers checkmate and ends the game immediately.';
+  }
+
+  if (note.reviewClassification === 'book') {
+    return `It follows established opening theory and leaves ${move.color} with ${position}.`;
   }
 
   if (isConcernClassification(note.reviewClassification) && mateTransition) {

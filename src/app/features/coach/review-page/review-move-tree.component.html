@@ -1,0 +1,76 @@
+<ol class="score" role="tree" aria-label="Game score and analysis variations">
+  @for (entry of entries(); track entry.kind === 'mainline' ? entry.node.id : entry.id) {
+    @if (entry.kind === 'mainline') {
+      <li
+        role="treeitem"
+        aria-level="1"
+        [attr.aria-current]="session().selectedNodeId === entry.node.id ? 'step' : null"
+        data-source="imported"
+        [attr.data-color]="entry.node.color"
+        [attr.data-classification]="classification(entry.node) ?? null"
+        [class.selected-path]="path().has(entry.node.id)"
+      >
+        <span class="move-number">{{ moveNumber(entry.node) }}</span>
+        <button
+          type="button"
+          class="move"
+          [class.current]="session().selectedNodeId === entry.node.id"
+          [attr.aria-label]="
+            entry.node.san +
+            (classification(entry.node) ? ', ' + classificationLabel(entry.node) : '')
+          "
+          (click)="nodeSelected.emit(entry.node.id)"
+        >
+          {{ entry.node.san }}
+          @if (classification(entry.node)) {
+            <i aria-hidden="true">{{ classificationLabel(entry.node) }}</i>
+          }
+        </button>
+      </li>
+    } @else {
+      <li
+        class="variation-row"
+        role="none"
+        data-source="manual"
+        [style.--variation-depth]="entry.variationDepth"
+      >
+        <span class="parenthesis" aria-hidden="true">(</span>
+        <ol role="group" [attr.aria-label]="'Variation beginning with ' + entry.nodes[0]?.san">
+          @for (node of entry.nodes; track node.id; let moveIndex = $index) {
+            <li
+              class="variation-move"
+              role="treeitem"
+              [attr.aria-level]="entry.variationDepth + 1"
+              [attr.aria-current]="session().selectedNodeId === node.id ? 'step' : null"
+              [class.selected-path]="path().has(node.id)"
+            >
+              @if (variationMoveNumber(entry.nodes, moveIndex); as number) {
+                <span class="move-number">{{ number }}</span>
+              }
+              <button
+                type="button"
+                class="move"
+                [class.current]="session().selectedNodeId === node.id"
+                [attr.aria-label]="node.san + ', variation'"
+                (click)="nodeSelected.emit(node.id)"
+              >
+                {{ node.san }}
+              </button>
+              @if (session().selectedNodeId === node.id) {
+                <button
+                  type="button"
+                  class="remove"
+                  aria-label="Remove this variation and all continuations"
+                  (click)="removeRequested.emit(node.id)"
+                >
+                  x
+                </button>
+              }
+            </li>
+          }
+        </ol>
+        <span class="parenthesis" aria-hidden="true">)</span>
+      </li>
+    }
+  }
+</ol>

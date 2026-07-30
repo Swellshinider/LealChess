@@ -1,0 +1,24 @@
+<div
+  appModalFocus
+  class="confirmation-backdrop"
+  role="alertdialog"
+  aria-modal="true"
+  [attr.aria-labelledby]="titleId"
+  [attr.aria-describedby]="descriptionId"
+  tabindex="-1"
+  (modalDismissed)="cancelled.emit()"
+>
+  <section class="confirmation-card">
+    <span>{{ eyebrow() }}</span>
+    <h2 [id]="titleId">{{ title() }}</h2>
+    <p [id]="descriptionId">{{ description() }}</p>
+    <footer>
+      <button type="button" data-modal-initial (click)="cancelled.emit()">
+        {{ cancelLabel() }}
+      </button>
+      <button type="button" class="danger-action" (click)="confirmed.emit()">
+        {{ confirmLabel() }}
+      </button>
+    </footer>
+  </section>
+</div>

@@ -1,4 +1,4 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import type { BoardTheme, MoveInput } from '../../../core/game/game.types';
 import type { PromotionPiece } from '../../../core/game/game.types';
@@ -13,6 +13,8 @@ import type { GameSource, ImportedGame, TrainingPosition } from '../domain/coach
 import { PracticeAnalysisService } from './practice-analysis.service';
 import { practiceSessionKey } from './practice-session';
 import type { PracticeSession, PracticeVariationNode } from './practice.types';
+import type { ReviewAnalysisSession } from './review-analysis-session.types';
+import { ReviewAnalysisRepositoryService } from './review-analysis-repository.service';
 
 export type ReviewMode = 'summary' | 'analysis' | 'practice';
 export type PuzzleStatus = 'ready' | 'incorrect' | 'correct' | 'revealed';
@@ -25,6 +27,9 @@ export class ReviewPageStore {
   private readonly sound = inject(SoundService);
   readonly practiceAnalysis = inject(PracticeAnalysisService);
   readonly coachAnalysis = inject(CoachAnalysisService);
+  private readonly reviewRepository = inject(ReviewAnalysisRepositoryService, { optional: true });
+  private reviewSaveTimer: ReturnType<typeof setTimeout> | null = null;
+  private reviewRestored = false;
 
   readonly game = signal<ImportedGame | null>(null);
   readonly loading = signal(true);
@@ -39,6 +44,7 @@ export class ReviewPageStore {
   readonly practiceSessions = signal<Record<string, PracticeSession>>({});
   readonly practiceReplayFen = signal<string | null>(null);
   readonly practiceReplaying = signal(false);
+  readonly reviewSession = signal<ReviewAnalysisSession | null>(null);
   readonly promotionPieces: readonly PromotionPiece[] = ['q', 'r', 'b', 'n'];
 
   readonly positions = computed(() => {
@@ -63,6 +69,20 @@ export class ReviewPageStore {
   readonly practiceInputLocked = computed(
     () => this.practiceReplaying() || this.practiceAnalysis.state().phase === 'quick',
   );
+  readonly selectedReviewNode = computed(() => {
+    const session = this.reviewSession();
+    return session?.nodes[session.selectedNodeId] ?? null;
+  });
+
+  constructor() {
+    effect(() => {
+      const session = this.reviewSession();
+      if (!session || !this.reviewRestored || !this.reviewRepository) return;
+      if (this.reviewSaveTimer) clearTimeout(this.reviewSaveTimer);
+      const repository = this.reviewRepository;
+      this.reviewSaveTimer = setTimeout(() => void repository.save(session), 250);
+    });
+  }
 
   async initialize(): Promise<void> {
     const restored = await this.persistence.restore();
@@ -78,6 +98,10 @@ export class ReviewPageStore {
       if (game) {
         const reviewedGame = this.withDetectedOpening(game);
         this.game.set(reviewedGame);
+        this.reviewSession.set(
+          this.reviewRepository ? await this.reviewRepository.restore(reviewedGame) : null,
+        );
+        this.reviewRestored = true;
         const color = learnerColorForGame(reviewedGame, profiles) ?? null;
         this.learnerColor.set(color);
         if (color) {
@@ -91,9 +115,13 @@ export class ReviewPageStore {
     this.loading.set(false);
   }
 
-  destroy(): void {
+  async destroy(): Promise<void> {
     this.coachAnalysis.cancel();
     this.practiceAnalysis.destroy();
+    if (this.reviewSaveTimer) clearTimeout(this.reviewSaveTimer);
+    const session = this.reviewSession();
+    if (session && this.reviewRepository) await this.reviewRepository.save(session);
+    await this.reviewRepository?.flush();
   }
 
   private withDetectedOpening(game: ImportedGame): ImportedGame {

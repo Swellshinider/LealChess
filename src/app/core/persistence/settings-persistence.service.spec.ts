@@ -55,5 +55,7 @@ describe('SettingsPersistenceService', () => {
     await expect(database.getAll('coachProfiles')).resolves.toEqual([]);
     await expect(database.getAll('importedGames')).resolves.toEqual([]);
     await expect(database.getAll('gameAnalyses')).resolves.toEqual([]);
+    await expect(database.getAll('explorerSessions')).resolves.toEqual([]);
+    await expect(database.getAll('reviewAnalysisSessions')).resolves.toEqual([]);
   });
 });

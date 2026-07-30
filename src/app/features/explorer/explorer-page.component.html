@@ -480,3 +480,15 @@
     </section>
   </div>
 }
+
+@if (pendingSessionReplacement()) {
+  <app-confirmation-dialog
+    eyebrow="Replace analysis"
+    title="Replace the current session?"
+    description="The current position, moves, and variations will be discarded."
+    cancelLabel="Keep session"
+    confirmLabel="Replace session"
+    (cancelled)="closeSessionReplacement()"
+    (confirmed)="confirmSessionReplacement()"
+  />
+}
