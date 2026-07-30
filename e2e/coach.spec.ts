@@ -140,6 +140,23 @@ test('imports both platforms, persists and deduplicates games, then replays move
   await assertNoSeriousA11yViolations(page);
 });
 
+test('detects and saves missing opening metadata when review is opened', async ({ page }) => {
+  await mockChessComWithoutOpening(page);
+  await page.getByLabel('Chess.com username').fill('Learner');
+  await page.getByRole('button', { name: 'Import games' }).click();
+  await expect(page.getByText('Added 1 game.')).toBeVisible();
+  await page.goto('/learn');
+
+  const game = page.locator('.game-list article');
+  await expect(game).toContainText('Opening not recorded');
+  await game.getByRole('link', { name: /Open review/ }).click();
+  await expect(page.locator('.review-toolbar')).toContainText('Ruy Lopez: Morphy Defense');
+
+  await page.goto('/learn');
+  await expect(page.locator('.game-list article')).toContainText('Ruy Lopez: Morphy Defense');
+  await expect(page.locator('.openings')).toContainText('C70 Ruy Lopez: Morphy Defense');
+});
+
 test('shows rating progress and filters the game archive', async ({ page }) => {
   await expect(page.getByLabel('Chess.com username')).toBeEnabled();
   await seedLearnDashboard(page);
@@ -183,7 +200,7 @@ test('shows rating progress and filters the game archive', async ({ page }) => {
   await assertNoSeriousA11yViolations(page);
 });
 
-test('analyzes locally, caches the result, and opens a missed position', async ({
+test('analyzes locally, caches the result, and opens a concern position', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'Real analysis worker smoke test');
@@ -202,9 +219,10 @@ test('analyzes locally, caches the result, and opens a missed position', async (
   await expect(page.getByText('Guided analysis', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Next move', exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Show idea on board' })).toBeVisible();
-  await expect(page.getByText('White advantage ↑', { exact: true })).toBeVisible();
-  await expect(page.getByText('Black advantage ↓', { exact: true })).toBeVisible();
-  await expect(page.getByText('Equal', { exact: true })).toBeVisible();
+  await expect(page.getByText('Advantage graph', { exact: true })).toBeVisible();
+  await expect(page.locator('.advantage-label, .equal-label')).toHaveCount(0);
+  await expect(page.locator('.zero-line')).toHaveCSS('stroke', 'rgb(137, 139, 131)');
+  await expect(page.locator('.zero-line')).toHaveCSS('stroke-dasharray', 'none');
   await expect(page.locator('.evaluation-rail')).toBeVisible();
   await expect(page.locator('.evaluation-rail')).toHaveAttribute('aria-label', /White evaluation/);
   await expectPlayerStripsToClearEvaluationRail(page);
@@ -217,19 +235,16 @@ test('analyzes locally, caches the result, and opens a missed position', async (
   await page.getByRole('button', { name: 'e5' }).click();
   await expect(page.locator('.review-classification')).toBeVisible();
   await expect(page.locator('.coach-note')).toContainText(/Book|Best|Excellent|Good/);
-  await page.getByRole('button', { name: 'f3' }).click();
+  await page.getByRole('button', { name: 'g4' }).click();
+  await expect(page.locator('.review-classification')).toHaveText('Blunder');
   await page.getByRole('button', { name: 'Practice this position' }).click();
   await expect(page.getByRole('heading', { name: 'Find a better move' })).toBeVisible();
   await expect(page.getByText(/Move a piece for/)).toHaveCount(0);
   const previousPosition = page.getByRole('button', { name: 'Previous position' });
   const nextPosition = page.getByRole('button', { name: 'Next position' });
   await expect(previousPosition).toBeDisabled();
-  await nextPosition.click();
-  await expect(previousPosition).toBeEnabled();
+  await expect(nextPosition).toBeDisabled();
   await expect(page.getByText(/Replaying the opponent’s last move/)).toHaveCount(0);
-  await expect(page.locator('.review-board square.last-move')).toHaveCount(2);
-  await previousPosition.click();
-  await expect(previousPosition).toBeDisabled();
   await moveReviewPiece(page, 'a2', 'a3');
   await expect(page.locator('.practice-classification')).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole('heading', { name: 'Three ways forward' })).toBeVisible();
@@ -238,6 +253,11 @@ test('analyzes locally, caches the result, and opens a missed position', async (
   await expect(page.getByText('2 moves across your variations')).toBeVisible({
     timeout: 15_000,
   });
+  await expect(page.getByRole('treeitem', { name: /^Nc6,/ })).toHaveAttribute(
+    'data-classification',
+    /.+/,
+    { timeout: 15_000 },
+  );
   await page.getByRole('treeitem', { name: 'Start' }).click();
   await moveReviewPiece(page, 'c2', 'c4');
   await expect(page.getByText('3 moves across your variations')).toBeVisible({
@@ -363,6 +383,45 @@ async function mockChessCom(page: Page): Promise<void> {
             rated: true,
             white: { username: 'Learner', rating: 1500, result: 'win' },
             black: { username: 'Opponent', rating: 1480, result: 'checkmated' },
+          },
+        ],
+      });
+    }
+    return json(route, {
+      username: 'Learner',
+      name: 'Learning Player',
+      url: 'https://www.chess.com/member/learner',
+    });
+  });
+}
+
+async function mockChessComWithoutOpening(page: Page): Promise<void> {
+  await page.unroute('**/api.chess.com/**');
+  await page.route('**/api.chess.com/**', (route) => {
+    const url = route.request().url();
+    if (url.endsWith('/games/archives')) {
+      return json(route, {
+        archives: ['https://api.chess.com/pub/player/learner/games/2026/07'],
+      });
+    }
+    if (url.endsWith('/games/2026/07')) {
+      return json(route, {
+        games: [
+          {
+            url: 'https://www.chess.com/game/live/without-opening',
+            uuid: 'without-opening',
+            pgn: `[White "Learner"]
+[Black "Opponent"]
+[Result "1-0"]
+[TimeControl "600+0"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 1-0`,
+            time_control: '600',
+            time_class: 'rapid',
+            end_time: 1_784_912_400,
+            rated: true,
+            white: { username: 'Learner', rating: 1500, result: 'win' },
+            black: { username: 'Opponent', rating: 1480, result: 'resigned' },
           },
         ],
       });
@@ -517,7 +576,7 @@ async function seedBoardTheme(
         premovesEnabled: true,
         boardTheme: theme,
         orientation: 'white',
-        difficulty: 'casual',
+        botRating: 1500,
       },
     });
     await new Promise<void>((resolve, reject) => {

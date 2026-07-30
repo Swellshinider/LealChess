@@ -55,7 +55,7 @@ describe('review insights', () => {
     expect(createMoveExplanation(game, analysis, ply)).toMatchObject({ title });
   });
 
-  it('contrasts a played move with the stronger engine continuation', () => {
+  it('describes mistakes directly with a readable pawn-unit evaluation drop', () => {
     const game = importedGame('1. e3 *');
     const analysis = gameAnalysis(game, [
       note(game, 1, 'mistake', {
@@ -68,12 +68,171 @@ describe('review insights', () => {
 
     const explanation = createMoveExplanation(game, analysis, 1);
 
+    expect(explanation?.title).toBe('e3 is a mistake');
+    expect(explanation?.body).toContain('e3 is a mistake');
     expect(explanation?.body).toContain('e4 was the stronger continuation');
-    expect(explanation?.body).toContain('120 centipawns');
+    expect(explanation?.body).toContain('evaluation drop of about 1.2 pawns');
+    expect(explanation?.body).not.toContain('centipawns');
     expect(explanation?.arrows).toEqual([
       { from: 'e2', to: 'e3', kind: 'played' },
       { from: 'e2', to: 'e4', kind: 'best' },
     ]);
+  });
+
+  it.each([
+    [
+      'inaccuracy',
+      'e3 is an inaccuracy',
+      'e3 is playable but imprecise. e4 was the more accurate continuation.',
+    ],
+    ['mistake', 'e3 is a mistake', 'e3 is a mistake. e4 was the stronger continuation.'],
+    ['miss', 'e3 misses an opportunity', 'e3 misses the opportunity that e4 created.'],
+    ['blunder', 'e3 is a blunder', 'e3 is a blunder. e4 was much stronger.'],
+  ] as const)(
+    'keeps a %s explanation consistent with its classification',
+    (classification, title, body) => {
+      const game = importedGame('1. e3 *');
+      const analysis = gameAnalysis(game, [
+        note(game, 1, classification, {
+          bestMove: 'e2e4',
+          bestMoveSan: 'e4',
+        }),
+      ]);
+
+      const explanation = createMoveExplanation(game, analysis, 1);
+
+      expect(explanation?.title).toBe(title);
+      expect(explanation?.body).toContain(body);
+    },
+  );
+
+  it('describes a lost forced mate separately from centipawn loss', () => {
+    const game = importedGame('1. e3 *');
+    const analysis = gameAnalysis(game, [
+      note(game, 1, 'miss', {
+        bestMove: 'e2e4',
+        bestMoveSan: 'e4',
+        bestEvaluation: { score: { kind: 'mate', moves: 3 }, depth: 14 },
+        playedEvaluation: evaluation(80),
+      }),
+    ]);
+
+    const explanation = createMoveExplanation(game, analysis, 1);
+
+    expect(explanation?.body).toContain('It gives up a forced checkmate.');
+    expect(explanation?.body).not.toContain('evaluation drop');
+  });
+
+  it('explains a newly allowed mate once, with the correct side and distance', () => {
+    const game = importedGame('1. e3 *');
+    game.moves[0] = {
+      ...game.moves[0]!,
+      san: 'Qxe7',
+    };
+    const analysis = gameAnalysis(game, [
+      note(game, 1, 'blunder', {
+        bestMove: 'f1f2',
+        bestMoveSan: 'Rf2',
+        bestEvaluation: evaluation(-537),
+        playedEvaluation: { score: { kind: 'mate', moves: -1 }, depth: 16 },
+      }),
+    ]);
+
+    const explanation = createMoveExplanation(game, analysis, 1);
+
+    expect(explanation?.body).toBe(
+      'Qxe7 is a blunder. Rf2 was much stronger. It allows Black to force checkmate in 1.',
+    );
+    expect(explanation?.body.match(/force checkmate/g)).toHaveLength(1);
+    expect(explanation?.body).not.toContain('against it');
+  });
+
+  it('names White as the mating side after a Black blunder', () => {
+    const game = importedGame('1. e4 e5 *');
+    const analysis = gameAnalysis(game, [
+      note(game, 2, 'blunder', {
+        bestMove: 'c7c5',
+        bestMoveSan: 'c5',
+        bestEvaluation: evaluation(-200),
+        playedEvaluation: { score: { kind: 'mate', moves: -2 }, depth: 16 },
+      }),
+    ]);
+
+    expect(createMoveExplanation(game, analysis, 2)?.body).toContain(
+      'It allows White to force checkmate in 2.',
+    );
+  });
+
+  it('describes shortened unavoidable mate without contradictory advice', () => {
+    const game = importedGame('1. e3 *');
+    const analysis = gameAnalysis(game, [
+      note(game, 1, 'mistake', {
+        bestMove: 'e2e4',
+        bestMoveSan: 'e4',
+        bestEvaluation: { score: { kind: 'mate', moves: -6 }, depth: 16 },
+        playedEvaluation: { score: { kind: 'mate', moves: -2 }, depth: 16 },
+      }),
+    ]);
+
+    expect(createMoveExplanation(game, analysis, 1)?.body).toBe(
+      'e3 is a mistake. e4 was stronger. It lets Black force checkmate in 2 instead of 6.',
+    );
+  });
+
+  it('does not recommend an alternative for equally long unavoidable mate', () => {
+    const game = importedGame('1. e3 *');
+    const analysis = gameAnalysis(game, [
+      note(game, 1, 'best', {
+        bestMove: 'e2e4',
+        bestMoveSan: 'e4',
+        bestEvaluation: { score: { kind: 'mate', moves: -4 }, depth: 16 },
+        playedEvaluation: { score: { kind: 'mate', moves: -4 }, depth: 16 },
+      }),
+    ]);
+
+    const explanation = createMoveExplanation(game, analysis, 1);
+    expect(explanation?.body).toBe(
+      'It preserves the longest defense against Black’s forced checkmate.',
+    );
+    expect(explanation?.body).not.toContain('stronger continuation');
+  });
+
+  it('does not recommend an alternative when a non-top move preserves a faster mate', () => {
+    const game = importedGame('1. e3 *');
+    const analysis = gameAnalysis(game, [
+      note(game, 1, 'best', {
+        bestMove: 'e2e4',
+        bestMoveSan: 'e4',
+        bestEvaluation: { score: { kind: 'mate', moves: 3 }, depth: 16 },
+        playedEvaluation: { score: { kind: 'mate', moves: 2 }, depth: 16 },
+      }),
+    ]);
+
+    const explanation = createMoveExplanation(game, analysis, 1);
+
+    expect(explanation?.body).toBe(
+      'It preserves the best winning outcome and leaves white with a forced mate in 2.',
+    );
+    expect(explanation?.body).not.toContain('stronger continuation');
+    expect(explanation?.arrows).toEqual([{ from: 'e2', to: 'e3', kind: 'played' }]);
+  });
+
+  it('ends an immediate checkmate explanation without continuation advice', () => {
+    const game = importedGame('1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. Qxf7# *');
+    const ply = game.moves.length;
+    const analysis = gameAnalysis(game, [
+      note(game, ply, 'best', {
+        bestMove: 'h5h7',
+        bestMoveSan: 'Qh7#',
+        bestEvaluation: { score: { kind: 'mate', moves: 1 }, depth: 16 },
+        playedEvaluation: { score: { kind: 'mate', moves: 1 }, depth: 16 },
+      }),
+    ]);
+
+    const explanation = createMoveExplanation(game, analysis, ply);
+
+    expect(explanation?.body).toBe('It delivers checkmate and ends the game immediately.');
+    expect(explanation?.arrows).toEqual([{ from: 'h5', to: 'f7', kind: 'played' }]);
   });
 });
 

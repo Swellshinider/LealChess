@@ -9,14 +9,8 @@ import {
   ANALYSIS_ENGINE_VERSION,
   ANALYSIS_SCHEMA_VERSION,
 } from './analysis.constants';
-import {
-  analysisFingerprint,
-  categorizeMistake,
-  classifyMove,
-  moveToSan,
-  moveToUci,
-} from './analysis-rules';
-import { classifyReviewMove } from './review-classification';
+import { analysisFingerprint, categorizeMistake, moveToSan, moveToUci } from './analysis-rules';
+import { assessMove, legacyClassification } from './review-classification';
 
 export type AnalysisPhase =
   'idle' | 'ready' | 'starting' | 'running' | 'partial' | 'complete' | 'error';
@@ -107,7 +101,7 @@ export class CoachAnalysisService {
                 searchMove: move.uci,
                 signal: this.abortController.signal,
               });
-        const result = classifyMove(best.evaluation, played.evaluation);
+        const result = assessMove(move, best, played, move.ply <= bookPlyLimit);
         const bestMoveSan = moveToSan(move.fenBefore, best.bestMove);
         const moveAnalysis: MoveAnalysis = {
           importedGameKey: game.key,
@@ -119,9 +113,9 @@ export class CoachAnalysisService {
           bestEvaluation: best.evaluation,
           playedEvaluation: played.evaluation,
           ...(result.centipawnLoss === undefined ? {} : { centipawnLoss: result.centipawnLoss }),
-          classification: result.classification,
-          reviewClassification: classifyReviewMove(move, best, played, move.ply <= bookPlyLimit),
-          ...(move.color !== learnerColor || result.classification === 'good'
+          classification: legacyClassification(result.classification),
+          reviewClassification: result.classification,
+          ...(move.color !== learnerColor || !result.concern
             ? {}
             : { category: categorizeMistake(move.fenBefore, move.ply, bestMoveSan) }),
         };

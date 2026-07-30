@@ -1,11 +1,12 @@
 import { InjectionToken } from '@angular/core';
-import type { DifficultyId, MoveInput } from '../game/game.types';
+import type { BotRating } from './bot-rating';
+import type { MoveInput } from '../game/game.types';
 
 export interface EngineSearchRequest {
   gameId: string;
   requestId: number;
   fen: string;
-  difficulty: DifficultyId;
+  botRating: BotRating;
 }
 
 export interface EngineMove {
@@ -17,7 +18,7 @@ export interface EngineMove {
 
 export interface EnginePort {
   initialize(): Promise<void>;
-  newGame(difficulty: DifficultyId): Promise<void>;
+  newGame(botRating: BotRating): Promise<void>;
   search(request: EngineSearchRequest): Promise<EngineMove>;
   stop(): Promise<void>;
   destroy(): void;

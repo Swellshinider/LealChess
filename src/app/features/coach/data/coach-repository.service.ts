@@ -6,6 +6,7 @@ import type {
   GameSource,
   ImportedGame,
   ImportedProfile,
+  OpeningInfo,
 } from '../domain/coach.types';
 
 export interface ImportSaveResult {
@@ -63,7 +64,19 @@ export class CoachRepositoryService {
     await database.put('importedGames', {
       ...game,
       firstImportedAt: existing?.firstImportedAt ?? game.firstImportedAt,
+      ...openingMerge(existing, game),
     });
+  }
+
+  async saveOpeningIfMissing(gameKey: string, opening: OpeningInfo): Promise<void> {
+    const database = await this.database.open();
+    const transaction = database.transaction('importedGames', 'readwrite');
+    const store = transaction.objectStore('importedGames');
+    const existing = await store.get(gameKey);
+    if (existing && !hasOpening(existing.opening)) {
+      await store.put({ ...existing, opening });
+    }
+    await transaction.done;
   }
 
   async deleteGame(game: ImportedGame): Promise<void> {
@@ -106,6 +119,7 @@ export class CoachRepositoryService {
         ...game,
         firstImportedAt: existing?.firstImportedAt ?? game.firstImportedAt,
         profileKeys: [...new Set([...(existing?.profileKeys ?? []), ...game.profileKeys])],
+        ...openingMerge(existing, game),
       });
     }
     await transaction.objectStore('coachProfiles').put(profile);
@@ -116,4 +130,16 @@ export class CoachRepositoryService {
 
 export function profileKey(platform: ChessPlatform, username: string): string {
   return `${platform}:${username.trim().toLowerCase()}`;
+}
+
+function openingMerge(
+  existing: ImportedGame | undefined,
+  incoming: ImportedGame,
+): Pick<ImportedGame, 'opening'> | Record<string, never> {
+  if (hasOpening(incoming.opening)) return { opening: incoming.opening };
+  return hasOpening(existing?.opening) ? { opening: existing.opening } : {};
+}
+
+function hasOpening(opening: OpeningInfo | undefined): opening is OpeningInfo {
+  return Boolean(opening?.name.trim());
 }

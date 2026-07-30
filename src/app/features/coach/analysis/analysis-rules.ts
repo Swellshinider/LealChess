@@ -4,20 +4,19 @@ import {
   ANALYSIS_DEPTH,
   ANALYSIS_ENGINE_VERSION,
   ANALYSIS_SCHEMA_VERSION,
-  CLASSIFICATION_THRESHOLDS,
+  FORCED_MATE_THRESHOLDS,
 } from './analysis.constants';
 import type {
-  EngineEvaluation,
   GameAnalysis,
   ImportedGame,
   ImportedProfile,
   LearningPriority,
   MistakeCategory,
   MoveAnalysis,
-  MoveClassification,
   TrainingPosition,
 } from '../domain/coach.types';
 import type { ChessColor } from '../../../shared/chess/chess.types';
+import { isConcernClassification } from './review-classification';
 export { moveToUci } from '../../../core/game/chess-move';
 
 const ADVICE: Record<MistakeCategory, string> = {
@@ -26,32 +25,6 @@ const ADVICE: Record<MistakeCategory, string> = {
   positional: 'Compare piece activity, weak squares, and pawn structure before deciding.',
   endgame: 'Practice simplified positions and calculate forcing king-and-pawn sequences.',
 };
-
-export function classifyMove(
-  best: EngineEvaluation,
-  played: EngineEvaluation,
-): { classification: MoveClassification; centipawnLoss?: number } {
-  if (best.score.kind === 'mate') {
-    const preservesMate =
-      played.score.kind === 'mate' && Math.sign(best.score.moves) === Math.sign(played.score.moves);
-    return { classification: preservesMate ? 'good' : 'blunder' };
-  }
-  if (played.score.kind === 'mate') {
-    return { classification: played.score.moves > 0 ? 'good' : 'blunder' };
-  }
-
-  const centipawnLoss = Math.max(0, best.score.value - played.score.value);
-  if (centipawnLoss >= CLASSIFICATION_THRESHOLDS.blunder) {
-    return { classification: 'blunder', centipawnLoss };
-  }
-  if (centipawnLoss >= CLASSIFICATION_THRESHOLDS.mistake) {
-    return { classification: 'mistake', centipawnLoss };
-  }
-  if (centipawnLoss >= CLASSIFICATION_THRESHOLDS.inaccuracy) {
-    return { classification: 'inaccuracy', centipawnLoss };
-  }
-  return { classification: 'good', centipawnLoss };
-}
 
 export function categorizeMistake(fen: string, ply: number, bestMoveSan: string): MistakeCategory {
   if (ply <= 20) return 'opening';
@@ -81,7 +54,7 @@ export function trainingPositions(
   if (!analysis) return [];
   const positions: TrainingPosition[] = [];
   for (const move of analysis.moves) {
-    if (move.classification === 'good' || !move.category) continue;
+    if (!isConcernClassification(move.reviewClassification) || !move.category) continue;
     const importedMove = game.moves.find((candidate) => candidate.ply === move.ply);
     if (!importedMove) continue;
     positions.push({
@@ -89,7 +62,7 @@ export function trainingPositions(
       ply: move.ply,
       fen: importedMove.fenBefore,
       category: move.category,
-      classification: move.classification,
+      classification: move.reviewClassification,
       playedMove: move.playedMove,
       bestMove: move.bestMove,
       bestMoveSan: move.bestMoveSan,
@@ -104,14 +77,14 @@ export function learningPriorities(analyses: GameAnalysis[]): LearningPriority[]
   for (const analysis of analyses.filter((candidate) => candidate.status === 'complete')) {
     for (const category of new Set(
       analysis.moves
-        .filter((move) => move.classification !== 'good')
+        .filter((move) => isConcernClassification(move.reviewClassification))
         .map((move) => move.category)
         .filter((category): category is MistakeCategory => category !== undefined),
     )) {
       const record = byCategory.get(category) ?? { moments: 0, games: new Set<string>() };
       record.games.add(analysis.importedGameKey);
       record.moments += analysis.moves.filter(
-        (move) => move.classification !== 'good' && move.category === category,
+        (move) => isConcernClassification(move.reviewClassification) && move.category === category,
       ).length;
       byCategory.set(category, record);
     }
@@ -163,7 +136,7 @@ export async function analysisFingerprint(
     schema: ANALYSIS_SCHEMA_VERSION,
     engine: ANALYSIS_ENGINE_VERSION,
     depth: ANALYSIS_DEPTH,
-    thresholds: CLASSIFICATION_THRESHOLDS,
+    forcedMateThresholds: FORCED_MATE_THRESHOLDS,
   });
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(source));
   return [...new Uint8Array(digest)].map((value) => value.toString(16).padStart(2, '0')).join('');

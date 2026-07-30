@@ -15,7 +15,7 @@ const game: PersistedGame = {
   moves: [],
   playerColor: 'white',
   orientation: 'white',
-  difficulty: 'casual',
+  botRating: 1500,
   pendingPremove: null,
   result: null,
   updatedAt: '2026-07-23T12:00:00.000Z',
@@ -81,7 +81,39 @@ describe('IndexedDbPersistenceService', () => {
       premovesEnabled: true,
       boardTheme: 'rosewood',
       orientation: 'black',
-      difficulty: 'advanced',
+      botRating: 2200,
     });
+  });
+
+  it.each([
+    ['beginner', 1320],
+    ['casual', 1500],
+    ['intermediate', 1800],
+    ['advanced', 2200],
+    ['expert', 3190],
+  ])('migrates the legacy %s game rating to %i', async (difficulty, botRating) => {
+    const repository = TestBed.inject(IndexedDbPersistenceService);
+    const database = await TestBed.inject(LealChessDatabaseService).open();
+    const legacyGame = { ...game } as Partial<PersistedGame>;
+    delete legacyGame.botRating;
+    await database.put('state', {
+      key: 'active-game',
+      value: { ...legacyGame, schemaVersion: 1, difficulty } as unknown as PersistedGame,
+    });
+
+    const restored = await repository.restore();
+
+    expect(restored.game).toMatchObject({ schemaVersion: 2, botRating });
+  });
+
+  it('rejects a persisted game with a rating outside the supported stops', async () => {
+    const repository = TestBed.inject(IndexedDbPersistenceService);
+    const database = await TestBed.inject(LealChessDatabaseService).open();
+    await database.put('state', {
+      key: 'active-game',
+      value: { ...game, botRating: 200 } as unknown as PersistedGame,
+    });
+
+    await expect(repository.restore()).resolves.toMatchObject({ game: null });
   });
 });

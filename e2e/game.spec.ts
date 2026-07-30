@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 test('starts as White, supports click moves, premoves, annotations, and restoration', async ({
   page,
 }, testInfo) => {
-  await startGame(page, 'White', 'Expert');
+  await startGame(page, 'White', 3190);
   await expect(page.locator('coords.files coord').nth(0)).toHaveCSS('color', 'rgb(255, 255, 255)');
   await expect(page.locator('coords.files coord').nth(1)).toHaveCSS('color', 'rgb(24, 27, 21)');
   await expect(page.locator('coords.ranks coord').nth(0)).toHaveCSS('color', 'rgb(255, 255, 255)');
@@ -48,10 +48,9 @@ test('starts as White, supports click moves, premoves, annotations, and restorat
 });
 
 test('reviews, archives, and deletes a completed Stockfish game', async ({ page }) => {
-  await startGame(page, 'Black', 'Casual');
+  await startGame(page, 'Black', 1500);
   await expect(page.locator('.history li')).toHaveCount(1, { timeout: 15_000 });
-  await expect(page.locator('#difficulty')).toHaveCount(0);
-  await expect(page.locator('.player-strip.opponent').getByText('casual')).toBeVisible();
+  await expect(page.locator('.player-strip.opponent').getByText('1500 Elo')).toBeVisible();
 
   await page.getByRole('button', { name: 'Resign', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Keep playing' })).toHaveCSS(
@@ -83,7 +82,7 @@ test('reviews, archives, and deletes a completed Stockfish game', async ({ page 
 });
 
 test('supports drag-to-move and cancels a premove that becomes illegal', async ({ page }) => {
-  await startGame(page, 'White', 'Advanced');
+  await startGame(page, 'White', 2200);
   await dragSquare(page, 'e2', 'e4');
   await clickSquare(page, 'e4');
   await clickSquare(page, 'f5');
@@ -113,16 +112,24 @@ test('keeps dialogs keyboard-contained and restores focus', async ({ page }) => 
   const setupDialog = page.getByRole('dialog', { name: 'Choose your side' });
   await expect(page.getByRole('button', { name: 'White', exact: true })).toBeFocused();
   await page.keyboard.press('Escape');
-  await expect(setupDialog).toBeVisible();
-
-  await startGame(page, 'White', 'Casual');
+  await expect(setupDialog).toBeHidden();
   const newGame = page.getByRole('button', { name: 'New game' }).first();
+  await expect(newGame).toBeFocused();
+
   await newGame.click();
   await expect(page.getByRole('button', { name: 'White', exact: true })).toBeFocused();
+  const rating = page.locator('#new-bot-rating');
+  await rating.focus();
+  await page.keyboard.press('End');
+  await expect(rating).toHaveAttribute('aria-valuetext', '3190 Elo');
+  await page.keyboard.press('Home');
+  await expect(rating).toHaveAttribute('aria-valuetext', '1320 Elo');
   await page.keyboard.press('Escape');
   await expect(setupDialog).toBeHidden();
   await expect(newGame).toBeFocused();
 
+  await newGame.click();
+  await startGame(page, 'White', 1500);
   const resign = page.getByRole('button', { name: 'Resign', exact: true });
   await resign.click();
   await expect(page.getByRole('button', { name: 'Keep playing' })).toBeFocused();
@@ -150,7 +157,7 @@ test('shows Stockfish startup failure and recovers on retry', async ({ page }, t
 
 test('has no serious accessibility violations in setup and active play', async ({ page }) => {
   await assertNoSeriousA11yViolations(page);
-  await startGame(page, 'White', 'Casual');
+  await startGame(page, 'White', 1500);
   await expect(page.getByRole('img', { name: 'Chessboard' })).toHaveAttribute(
     'aria-describedby',
     'play-board-description',
@@ -164,7 +171,7 @@ test('completes a checkmate flow from a restored position', async ({ page }) => 
   await expect(page.getByText(/wins by checkmate/i).first()).toBeVisible();
 
   await page.getByRole('button', { name: 'New game' }).first().click();
-  await startGame(page, 'White', 'Casual');
+  await startGame(page, 'White', 1500);
   await clickSquare(page, 'e2');
   await clickSquare(page, 'e4');
   await expect(page.locator('.history')).toContainText('e4');
@@ -172,7 +179,7 @@ test('completes a checkmate flow from a restored position', async ({ page }) => 
 
 test('keeps game controls visible while move history scrolls', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'Single desktop flex geometry check');
-  await startGame(page, 'White', 'Casual');
+  await startGame(page, 'White', 1500);
   await clickSquare(page, 'e2');
   await clickSquare(page, 'e4');
   await expect(page.locator('.history li')).toHaveCount(1, { timeout: 15_000 });
@@ -205,7 +212,7 @@ test('keeps game controls visible while move history scrolls', async ({ page }, 
 
 test('keeps the board primary on a mobile viewport', async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.includes('mobile'), 'Mobile layout check');
-  await startGame(page, 'White', 'Beginner');
+  await startGame(page, 'White', 1320);
   const board = await page.locator('.board-frame').boundingBox();
   const viewport = page.viewportSize();
   expect(board).not.toBeNull();
@@ -214,9 +221,17 @@ test('keeps the board primary on a mobile viewport', async ({ page }, testInfo) 
   await expect(page.getByRole('button', { name: 'New game' }).first()).toBeVisible();
 });
 
-async function startGame(page: Page, color: 'White' | 'Black', difficulty: string) {
+async function startGame(page: Page, color: 'White' | 'Black', botRating: number) {
+  const ratingStops = [
+    1320, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800,
+    2900, 3000, 3100, 3190,
+  ];
   await page.getByRole('button', { name: color, exact: true }).click();
-  await page.locator('#new-difficulty').selectOption(difficulty.toLowerCase());
+  await page.locator('#new-bot-rating').fill(String(ratingStops.indexOf(botRating)));
+  await expect(page.locator('#new-bot-rating')).toHaveAttribute(
+    'aria-valuetext',
+    `${botRating} Elo`,
+  );
   await page.getByRole('button', { name: 'Start game' }).click();
   await expect(page.getByRole('heading', { name: /Your move|Stockfish is thinking/ })).toBeVisible({
     timeout: 20_000,
@@ -299,14 +314,14 @@ async function seedGame(page: Page, fen: string, playerColor: 'white' | 'black')
       transaction.objectStore('state').put({
         key: 'active-game',
         value: {
-          schemaVersion: 1,
+          schemaVersion: 2,
           gameId: crypto.randomUUID(),
           pgn: storedPgn,
           fen: storedFen,
           moves: [],
           playerColor: color,
           orientation: color,
-          difficulty: 'casual',
+          botRating: 1500,
           pendingPremove: null,
           result: null,
           updatedAt: new Date().toISOString(),

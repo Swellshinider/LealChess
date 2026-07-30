@@ -34,7 +34,14 @@
     </div>
 
     <div class="controls-card" aria-label="Game actions">
-      <button type="button" class="new" (click)="newGameRequested.emit($event)">New game</button>
+      <button
+        type="button"
+        class="new"
+        data-new-game-control
+        (click)="newGameRequested.emit($event)"
+      >
+        New game
+      </button>
       <button
         type="button"
         (click)="confirm('restart', $event)"

@@ -7,6 +7,7 @@ import type {
   MoveAnalysis,
   ReviewMoveClassification,
 } from '../domain/coach.types';
+import { isConcernClassification } from '../analysis/review-classification';
 import type { MoveExplanation, ReviewEvaluationPoint } from './review-insights';
 import { ReviewEvaluationTimelineComponent } from './review-evaluation-timeline.component';
 
@@ -41,7 +42,7 @@ export class ReviewAnalysisPanelComponent {
     return Boolean(
       note &&
       move?.color === this.learnerColor() &&
-      note.classification !== 'good' &&
+      isConcernClassification(note.reviewClassification) &&
       note.category,
     );
   });
