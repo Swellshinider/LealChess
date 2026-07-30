@@ -22,12 +22,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   line that remains readable across both advantage regions.
 - Replaced the read-only Game Review move grid with an accessible unified score that keeps the
   imported game immutable while making every reviewed position playable.
+- Grouped Game Review branches into compact, wrapping variation lines with unobtrusive removal
+  controls, made engine candidates playable from the board, and reduced the board-idea action.
+- Replaced the remaining browser-native confirmations with accessible dialogs matching LealChess.
 
 ### Fixed
 
 - Unified Review, Practice, and Explorer move classifications so moves that allow forced checkmate
   are correctly flagged, even when expected-points values are saturated, with readable concern
   labels in the active move list.
+- Opening-book explanations no longer recommend an engine continuation over established theory.
 
 ## [Unreleased] - 29-07-2026
 

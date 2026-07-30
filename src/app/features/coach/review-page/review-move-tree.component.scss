@@ -20,14 +20,6 @@ li {
   grid-template-columns: 28px minmax(0, 1fr);
   min-width: 0;
 
-  &[data-source='manual'] {
-    background: rgb(36 63 54 / 22%);
-    border-left-color: rgb(116 200 146 / 38%);
-    grid-column: 1 / -1;
-    grid-template-columns: auto 28px minmax(0, 1fr) auto;
-    margin-left: calc(min(var(--variation-depth), 4) * 14px);
-  }
-
   &.selected-path {
     box-shadow: inset 0 -1px rgb(116 200 146 / 20%);
   }
@@ -41,6 +33,45 @@ li {
   }
 }
 
+.variation-row {
+  align-items: flex-start;
+  background: rgb(36 63 54 / 22%);
+  border-left: 2px solid rgb(116 200 146 / 38%);
+  display: flex;
+  grid-column: 1 / -1;
+  margin-left: calc(min(var(--variation-depth), 4) * 12px);
+  min-width: 0;
+  padding: 2px 4px;
+
+  > ol {
+    align-items: center;
+    display: flex;
+    flex: 0 1 auto;
+    flex-wrap: wrap;
+    gap: 1px 3px;
+    list-style: none;
+    margin: 0;
+    min-width: 0;
+    padding: 0;
+  }
+}
+
+.variation-move {
+  align-items: center;
+  border: 0;
+  display: inline-flex;
+  flex: 0 0 auto;
+  min-width: 0;
+
+  &.selected-path {
+    box-shadow: inset 0 -1px rgb(116 200 146 / 20%);
+  }
+
+  .move-number {
+    padding-left: 4px;
+  }
+}
+
 .move-number,
 .parenthesis {
   color: var(--mist);
@@ -50,6 +81,7 @@ li {
 }
 
 .parenthesis {
+  line-height: 30px;
   padding: 0 2px;
 }
 
@@ -81,8 +113,17 @@ li {
 .remove {
   background: transparent;
   border: 0;
-  color: var(--amber);
+  color: var(--danger);
   font-family: var(--font-utility);
-  font-size: 0.48rem;
-  padding: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  height: 20px;
+  line-height: 1;
+  padding: 0;
+  width: 20px;
+
+  &:hover,
+  &:focus-visible {
+    background: rgb(231 104 97 / 14%);
+  }
 }

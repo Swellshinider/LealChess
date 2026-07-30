@@ -18,6 +18,7 @@ import type {
 } from './review-analysis-session.types';
 import type { ReviewLiveAnalysisState } from './review-live-analysis.service';
 import { turnColor } from '../../../core/game/chess-move';
+import type { MoveInput } from '../../../core/game/game.types';
 
 @Component({
   selector: 'app-review-analysis-panel',
@@ -43,6 +44,7 @@ export class ReviewAnalysisPanelComponent {
   readonly nodeRequested = output<string>();
   readonly removeVariationRequested = output<string>();
   readonly retryRequested = output<void>();
+  readonly candidateRequested = output<MoveInput>();
 
   protected readonly currentNote = computed<MoveAnalysis | undefined>(() =>
     (this.analysis().reviewMoves ?? this.analysis().moves).find(
@@ -101,5 +103,9 @@ export class ReviewAnalysisPanelComponent {
 
   protected candidateRuleWidth(rank: number): string {
     return `${{ 1: 14, 2: 9, 3: 5 }[rank] ?? 5}px`;
+  }
+
+  protected candidateAriaLabel(line: ReviewCandidateLine): string {
+    return `Play engine candidate ${line.rank}: ${line.san[0] ?? 'move'}`;
   }
 }

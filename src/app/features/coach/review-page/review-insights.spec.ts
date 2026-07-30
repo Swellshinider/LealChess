@@ -55,6 +55,24 @@ describe('review insights', () => {
     expect(createMoveExplanation(game, analysis, ply)).toMatchObject({ title });
   });
 
+  it('describes a book move without preferring an engine continuation', () => {
+    const game = importedGame('1. e4 *');
+    const analysis = gameAnalysis(game, [
+      note(game, 1, 'book', {
+        bestMove: 'd2d4',
+        bestMoveSan: 'd4',
+      }),
+    ]);
+
+    const explanation = createMoveExplanation(game, analysis, 1);
+
+    expect(explanation?.body).toBe(
+      'It follows established opening theory and leaves white with a roughly balanced position.',
+    );
+    expect(explanation?.body).not.toContain('stronger continuation');
+    expect(explanation?.arrows).toEqual([{ from: 'e2', to: 'e4', kind: 'played' }]);
+  });
+
   it('describes mistakes directly with a readable pawn-unit evaluation drop', () => {
     const game = importedGame('1. e3 *');
     const analysis = gameAnalysis(game, [

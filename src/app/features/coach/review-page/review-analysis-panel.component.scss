@@ -88,14 +88,17 @@ header {
 }
 
 .guided-actions {
-  display: grid;
-  grid-template-columns: 1fr;
-  padding: 10px 12px 4px;
+  align-items: center;
+  display: flex;
+  padding: 8px 12px 4px;
 
   button {
+    font-family: var(--font-utility);
+    font-size: 0.54rem;
     font-weight: 700;
-    min-height: 38px;
-    padding: 7px 10px;
+    min-height: 30px;
+    padding: 5px 9px;
+    width: fit-content;
   }
 }
 
@@ -118,14 +121,30 @@ header {
   }
 
   li {
+    min-width: 0;
+  }
+
+  .candidate-action {
     align-items: center;
+    background: transparent;
+    border: 0;
+    color: var(--paper);
     display: grid;
     font-size: 0.65rem;
     gap: 7px;
     grid-template-columns: 14px 14px 42px minmax(0, 1fr);
+    min-height: 28px;
+    padding: 3px 4px;
+    text-align: left;
+    width: 100%;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--surface-container-high);
+    }
   }
 
-  li > i {
+  .candidate-action > i {
     align-self: center;
     background: #74c892;
     border-radius: 99px;
@@ -133,7 +152,7 @@ header {
     width: 14px;
   }
 
-  li > span:last-child {
+  .candidate-action > span:last-child {
     color: var(--mist);
     overflow: hidden;
     text-overflow: ellipsis;

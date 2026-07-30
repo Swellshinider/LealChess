@@ -38,6 +38,23 @@ describe('review analysis session', () => {
     expect(imported).toBe(session);
   });
 
+  it('selects an existing manual continuation instead of duplicating it', () => {
+    let session = createReviewAnalysisSession(game());
+    const e4 = Object.values(session.nodes).find((node) => node.san === 'e4')!;
+    session = selectReviewNode(session, e4.id);
+    const created = commitReviewMove(session, { from: 'c7', to: 'c5' });
+    session = selectReviewNode(created.session, e4.id);
+
+    const existing = commitReviewMove(session, { from: 'c7', to: 'c5' });
+
+    expect(existing.created).toBe(false);
+    expect(existing.node.id).toBe(created.node.id);
+    expect(existing.session.nodes[e4.id]?.children).toEqual([
+      expect.stringContaining('e7e5'),
+      created.node.id,
+    ]);
+  });
+
   it('rebuilds corrupt or stale game trees and retains branches across analysis upgrades', () => {
     const imported = game();
     let session = createReviewAnalysisSession(imported);

@@ -3,10 +3,19 @@ import type { GameAnalysis, ReviewMoveClassification } from '../domain/coach.typ
 import type { ReviewAnalysisSession, ReviewMoveNode } from './review-analysis-session.types';
 import { reviewAncestorIds } from './review-analysis-session';
 
-interface ScoreEntry {
+interface MainlineScoreEntry {
+  kind: 'mainline';
   node: ReviewMoveNode;
+}
+
+interface VariationScoreEntry {
+  kind: 'variation';
+  id: string;
+  nodes: ReviewMoveNode[];
   variationDepth: number;
 }
+
+type ScoreEntry = MainlineScoreEntry | VariationScoreEntry;
 
 @Component({
   selector: 'app-review-move-tree',
@@ -38,21 +47,48 @@ export class ReviewMoveTreeComponent {
   protected moveNumber(node: ReviewMoveNode): string {
     return `${Math.ceil(node.ply / 2)}${node.color === 'black' ? '…' : '.'}`;
   }
+
+  protected variationMoveNumber(nodes: ReviewMoveNode[], index: number): string {
+    const node = nodes[index]!;
+    const previous = nodes[index - 1];
+    if (
+      node.color === 'black' &&
+      previous?.color === 'white' &&
+      Math.ceil(previous.ply / 2) === Math.ceil(node.ply / 2)
+    ) {
+      return '';
+    }
+    return this.moveNumber(node);
+  }
 }
 
 function flattenScore(session: ReviewAnalysisSession): ScoreEntry[] {
   const entries: ScoreEntry[] = [];
-  const visit = (nodeId: string, variationDepth: number): void => {
+  const visitVariation = (nodeId: string, variationDepth: number): void => {
+    const nodes: ReviewMoveNode[] = [];
+    let current: ReviewMoveNode | undefined = session.nodes[nodeId];
+    while (current?.source === 'manual') {
+      nodes.push(current);
+      current = current.children[0] ? session.nodes[current.children[0]] : undefined;
+    }
+    if (!nodes.length) return;
+    entries.push({ kind: 'variation', id: nodeId, nodes, variationDepth });
+    for (const node of nodes) {
+      for (const childId of node.children.slice(1)) {
+        visitVariation(childId, variationDepth + 1);
+      }
+    }
+  };
+  const visitMainline = (nodeId: string): void => {
     const node = session.nodes[nodeId];
     if (!node) return;
-    if (nodeId !== session.rootId) entries.push({ node, variationDepth });
-    const imported = node.children.filter((id) => session.nodes[id]?.source === 'imported');
-    const manual = node.children.filter((id) => session.nodes[id]?.source === 'manual');
-    manual.forEach((child, index) =>
-      visit(child, variationDepth + (node.source === 'manual' && index === 0 ? 0 : 1)),
-    );
-    for (const child of imported) visit(child, variationDepth);
+    if (nodeId !== session.rootId) entries.push({ kind: 'mainline', node });
+    for (const childId of node.children) {
+      if (session.nodes[childId]?.source === 'manual') visitVariation(childId, 1);
+    }
+    const imported = node.children.find((id) => session.nodes[id]?.source === 'imported');
+    if (imported) visitMainline(imported);
   };
-  visit(session.rootId, 0);
+  visitMainline(session.rootId);
   return entries;
 }

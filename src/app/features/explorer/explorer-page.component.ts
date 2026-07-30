@@ -19,6 +19,7 @@ import { STARTING_FEN, type MoveInput, type PromotionPiece } from '../../core/ga
 import type { ChessColor } from '../../shared/chess/chess.types';
 import { ChessgroundBoardComponent } from '../../shared/chess/chessground-board/chessground-board.component';
 import { ModalFocusDirective } from '../../shared/a11y/modal-focus.directive';
+import { ConfirmationDialogComponent } from '../../shared/a11y/confirmation-dialog/confirmation-dialog.component';
 import { SideNavigationComponent } from '../../shared/layout/side-navigation/side-navigation.component';
 import {
   EXPLORER_ANALYSIS_ENGINE_PORT,
@@ -55,6 +56,12 @@ type ExplorerMode = 'analysis' | 'setup';
 type ImportTab = 'fen' | 'pgn';
 type AnalysisKind = 'idle' | 'position' | 'move' | 'batch';
 type SetupTool = { color: 'w' | 'b'; type: PieceSymbol } | 'erase';
+type ReplacementContext = 'import' | 'new-analysis' | 'setup';
+
+interface PendingSessionReplacement {
+  session: ExplorerSession;
+  context: ReplacementContext;
+}
 
 interface TreeRow {
   node: ExplorerMoveNode;
@@ -64,7 +71,12 @@ interface TreeRow {
 
 @Component({
   selector: 'app-explorer-page',
-  imports: [ChessgroundBoardComponent, ModalFocusDirective, SideNavigationComponent],
+  imports: [
+    ChessgroundBoardComponent,
+    ConfirmationDialogComponent,
+    ModalFocusDirective,
+    SideNavigationComponent,
+  ],
   providers: [
     ExplorerAnalysisService,
     ExplorerRepositoryService,
@@ -90,6 +102,7 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
   protected readonly importTab = signal<ImportTab>('fen');
   protected readonly importValue = signal('');
   protected readonly importError = signal<string | null>(null);
+  protected readonly pendingSessionReplacement = signal<PendingSessionReplacement | null>(null);
   protected readonly analysisKind = signal<AnalysisKind>('idle');
   protected readonly analysisMessage = signal('Preparing the board');
   protected readonly pendingPromotion = signal<Omit<MoveInput, 'promotion'> | null>(null);
@@ -231,28 +244,28 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
   }
 
   protected applyImport(): void {
-    if (!this.canReplaceSession()) return;
     if (this.importTab() === 'fen') {
       const result = parseExplorerFen(this.importValue());
       if (!result.ok || !result.fen) {
         this.importError.set(result.error ?? 'Enter a valid FEN.');
         return;
       }
-      this.replaceSession(createExplorerSession(result.fen, 'fen'));
+      this.requestSessionReplacement(createExplorerSession(result.fen, 'fen'), 'import');
     } else {
       const result = parseExplorerPgn(this.importValue());
       if (!result.ok || !result.rootFen || !result.moves) {
         this.importError.set(result.error ?? 'Enter a valid PGN.');
         return;
       }
-      this.replaceSession(createPgnExplorerSession(result.rootFen, result.moves));
+      this.requestSessionReplacement(
+        createPgnExplorerSession(result.rootFen, result.moves),
+        'import',
+      );
     }
-    this.closeImport();
   }
 
   protected newAnalysis(): void {
-    if (!this.canReplaceSession()) return;
-    this.replaceSession(createExplorerSession());
+    this.requestSessionReplacement(createExplorerSession(), 'new-analysis');
   }
 
   protected enterSetup(): void {
@@ -273,9 +286,19 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
       this.setupError.set(result.error ?? 'Complete the position before analyzing it.');
       return;
     }
-    if (!this.canReplaceSession()) return;
-    this.mode.set('analysis');
-    this.replaceSession(createExplorerSession(result.fen, 'setup'));
+    this.requestSessionReplacement(createExplorerSession(result.fen, 'setup'), 'setup');
+  }
+
+  protected closeSessionReplacement(): void {
+    const pending = this.pendingSessionReplacement();
+    this.pendingSessionReplacement.set(null);
+    if (pending?.context === 'import') this.importOpen.set(true);
+  }
+
+  protected confirmSessionReplacement(): void {
+    const pending = this.pendingSessionReplacement();
+    this.pendingSessionReplacement.set(null);
+    if (pending) this.applySessionReplacement(pending);
   }
 
   protected clearSetup(): void {
@@ -527,9 +550,20 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
     this.requestInteractiveAnalysis();
   }
 
-  private canReplaceSession(): boolean {
-    if (Object.keys(this.session().nodes).length <= 1) return true;
-    return window.confirm('Replace the current Explorer session and its variations?');
+  private requestSessionReplacement(session: ExplorerSession, context: ReplacementContext): void {
+    const pending = { session, context };
+    if (Object.keys(this.session().nodes).length <= 1) {
+      this.applySessionReplacement(pending);
+      return;
+    }
+    if (context === 'import') this.importOpen.set(false);
+    this.pendingSessionReplacement.set(pending);
+  }
+
+  private applySessionReplacement(pending: PendingSessionReplacement): void {
+    if (pending.context === 'setup') this.mode.set('analysis');
+    if (pending.context === 'import') this.closeImport();
+    this.replaceSession(pending.session);
   }
 
   private requestInteractiveAnalysis(): void {

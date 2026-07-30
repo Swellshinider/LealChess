@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   HostListener,
   computed,
   effect,
@@ -21,6 +22,7 @@ import { boardOverlayPosition } from '../../../shared/chess/board-overlay-positi
 import { ChessgroundBoardComponent } from '../../../shared/chess/chessground-board/chessground-board.component';
 import type { ChessColor } from '../../../shared/chess/chess.types';
 import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
+import { ConfirmationDialogComponent } from '../../../shared/a11y/confirmation-dialog/confirmation-dialog.component';
 import { SideNavigationComponent } from '../../../shared/layout/side-navigation/side-navigation.component';
 import { STARTING_FEN, type MoveInput, type PromotionPiece } from '../../../core/game/game.types';
 import { SoundService } from '../../../core/sound/sound.service';
@@ -77,6 +79,7 @@ import type { ReviewCandidateLine } from './review-analysis-session.types';
   selector: 'app-review-page',
   imports: [
     ModalFocusDirective,
+    ConfirmationDialogComponent,
     PracticeMoveTreeComponent,
     ReviewAnalysisPanelComponent,
     ReviewSummaryComponent,
@@ -104,6 +107,7 @@ import type { ReviewCandidateLine } from './review-analysis-session.types';
 })
 export class ReviewPageComponent implements OnInit, OnDestroy {
   private readonly board = viewChild(ChessgroundBoardComponent);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly store = inject(ReviewPageStore);
   private readonly sound = inject(SoundService);
   protected readonly practiceAnalysis = this.store.practiceAnalysis;
@@ -130,6 +134,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   protected readonly practiceInputLocked = this.store.practiceInputLocked;
   protected readonly reviewSession = this.store.reviewSession;
   protected readonly selectedReviewNode = this.store.selectedReviewNode;
+  protected readonly pendingVariationRemoval = signal<string | null>(null);
   protected readonly liveAnalysis = inject(ReviewLiveAnalysisService);
   protected readonly currentAnalysis = computed<MoveAnalysis | undefined>(() =>
     this.selectedReviewNode()?.source === 'imported'
@@ -650,20 +655,34 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.analyzeSelectedReviewNode();
   }
 
+  protected playAnalysisCandidate(move: MoveInput): void {
+    this.commitAnalysisMove(move);
+  }
+
   protected removeAnalysisVariation(nodeId: string): void {
     const session = this.reviewSession();
     const node = session?.nodes[nodeId];
-    if (
-      !session ||
-      node?.source !== 'manual' ||
-      !confirm('Remove this variation and all of its continuations?')
-    ) {
-      return;
-    }
+    if (!session || node?.source !== 'manual') return;
+    this.pendingVariationRemoval.set(nodeId);
+  }
+
+  protected closeVariationRemoval(): void {
+    this.pendingVariationRemoval.set(null);
+  }
+
+  protected confirmVariationRemoval(): void {
+    const nodeId = this.pendingVariationRemoval();
+    const session = this.reviewSession();
+    const node = nodeId ? session?.nodes[nodeId] : undefined;
+    this.pendingVariationRemoval.set(null);
+    if (!session || !nodeId || node?.source !== 'manual') return;
     this.liveAnalysis.cancel();
     const next = removeReviewVariation(session, nodeId);
     this.reviewSession.set(next);
     this.analyzeSelectedReviewNode();
+    requestAnimationFrame(() =>
+      this.host.querySelector<HTMLButtonElement>('.score .move.current')?.focus(),
+    );
   }
 
   private goToImportedPly(ply: number): void {
@@ -746,6 +765,9 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       new Chess(parent.fen).move(move);
       const committed = commitReviewMove(session, move);
       this.reviewSession.set(committed.session);
+      if (committed.node.source === 'imported') {
+        this.currentPly.set(committed.node.importedPly ?? committed.node.ply);
+      }
       this.ideaShapes.set([]);
       this.sound.play('move');
       this.analyzeSelectedReviewNode();

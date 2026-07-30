@@ -248,6 +248,7 @@
                           (nodeRequested)="selectAnalysisNode($event)"
                           (removeVariationRequested)="removeAnalysisVariation($event)"
                           (retryRequested)="retryLiveAnalysis()"
+                          (candidateRequested)="playAnalysisCandidate($event)"
                           (ideaRequested)="showMoveIdea()"
                           (practiceRequested)="enterPractice(practiceIndexForPly($event))"
                         />
@@ -401,3 +402,15 @@
     }
   </div>
 </div>
+
+@if (pendingVariationRemoval()) {
+  <app-confirmation-dialog
+    eyebrow="Remove variation"
+    title="Remove this variation?"
+    description="This move and every continuation after it will be removed from your analysis."
+    cancelLabel="Keep variation"
+    confirmLabel="Remove variation"
+    (cancelled)="closeVariationRemoval()"
+    (confirmed)="confirmVariationRemoval()"
+  />
+}

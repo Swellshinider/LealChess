@@ -54,10 +54,17 @@
       <ol>
         @for (line of liveState().candidates; track line.rank) {
           <li>
-            <span>{{ line.rank }}</span>
-            <i [style.height]="candidateRuleWidth(line.rank)" aria-hidden="true"></i>
-            <strong>{{ candidateEvaluationLabel(line) }}</strong>
-            <span>{{ line.san.join(' ') }}</span>
+            <button
+              type="button"
+              class="candidate-action"
+              [attr.aria-label]="candidateAriaLabel(line)"
+              (click)="candidateRequested.emit(line.firstMove)"
+            >
+              <span>{{ line.rank }}</span>
+              <i [style.height]="candidateRuleWidth(line.rank)" aria-hidden="true"></i>
+              <strong>{{ candidateEvaluationLabel(line) }}</strong>
+              <span>{{ line.san.join(' ') }}</span>
+            </button>
           </li>
         }
       </ol>
