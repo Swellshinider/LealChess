@@ -94,10 +94,18 @@ function resolvedMaterialIndex(replay: ReplayedPly[], deltas: number[]): number 
     ) {
       continue;
     }
+    if (!materialAdvantagePersists(deltas, index, delta)) continue;
     if (confidenceWindowEnd < replay.length || index < replay.length - 1) return index;
     if (terminalCaptureCannotBeRecaptured(replay[index]!)) return index;
   }
   return -1;
+}
+
+function materialAdvantagePersists(deltas: number[], index: number, delta: number): boolean {
+  const beneficiaryDirection = Math.sign(delta);
+  return deltas
+    .slice(index + 1)
+    .every((candidateDelta) => Math.sign(candidateDelta) === beneficiaryDirection);
 }
 
 function terminalCaptureCannotBeRecaptured(ply: ReplayedPly): boolean {

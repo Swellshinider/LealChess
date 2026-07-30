@@ -16,6 +16,16 @@ describe('review tactical insight', () => {
     });
   });
 
+  it('rejects a material gain that is recovered beyond the concise line boundary', () => {
+    expect(
+      createTacticalLineInsight(
+        'r1b1kb1r/ppp2ppp/2n5/3qp3/8/2NP1N2/PPP2PPP/R1BQK2R b KQkq - 1 7',
+        ['d5c5', 'c1e3', 'c5e7', 'd3d4', 'c8g4', 'd4e5', 'c6e5'],
+        'black',
+      ),
+    ).toBeNull();
+  });
+
   it.each([
     ['fork', 'r3k3/8/8/1N6/8/8/8/4K3 w q - 0 1', ['b5c7', 'e8d7', 'c7a8'], 'a rook'],
     ['pin', '4k3/p3b3/5B2/8/8/8/8/R5K1 w - - 0 1', ['a1e1', 'a7a6', 'e1e7'], 'a bishop'],

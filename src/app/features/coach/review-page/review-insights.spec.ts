@@ -175,6 +175,29 @@ describe('review insights', () => {
     );
   });
 
+  it('does not claim a pawn win when the engine line shows an immediate recovery', () => {
+    const game = importedGame(
+      '1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. d3 d5 5. exd5 Nxd5 6. Bxd5 Qxd5 7. Nc3 Qc5 *',
+    );
+    const analysis = gameAnalysis(game, [
+      note(game, 14, 'mistake', {
+        bestMove: 'd5c6',
+        bestMoveSan: 'Qc6',
+        principalVariation: [],
+        playedPrincipalVariation: ['d5c5', 'c1e3', 'c5e7', 'd3d4', 'c8g4', 'd4e5', 'c6e5'],
+        bestEvaluation: evaluation(87),
+        playedEvaluation: evaluation(34),
+        centipawnLoss: 53,
+      }),
+    ]);
+
+    expect(createMoveExplanation(game, analysis, 14)?.body).toBe(
+      'Qc5 is a mistake. Qc6 was the stronger continuation. ' +
+        'That is an evaluation drop of about 0.53 pawns. ' +
+        'It leaves black with a roughly balanced position.',
+    );
+  });
+
   it('explains the queen lost by Qb6 even when later engine moves change material again', () => {
     const game = importedGame(
       '1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. d3 d5 5. exd5 Nxd5 ' +
