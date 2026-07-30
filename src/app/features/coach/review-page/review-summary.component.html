@@ -102,6 +102,13 @@
   <footer>
     @if (phase() === 'complete') {
       <small>Stockfish depth {{ depth() }}</small>
+      <button
+        type="button"
+        class="text-action reanalyze-action"
+        (click)="reanalysisRequested.emit()"
+      >
+        Reanalyze game
+      </button>
       <button type="button" class="primary-action start-analysis" (click)="startRequested.emit()">
         Start analysis
       </button>

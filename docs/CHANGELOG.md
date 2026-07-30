@@ -18,6 +18,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Made Game Review explain provable material gains and losses from engine lines, recognize core
+  tactical motifs, and allow completed games to be reanalyzed from the first move.
 - Moved the board-idea action beside the reviewed move evaluation for a more compact coaching
   summary.
 - Renamed Game pulse to Advantage graph, removed territory labels, and added a solid gray center
@@ -30,6 +32,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Prevented Game Review from claiming a material win when the engine line shows that the material
+  is recovered immediately afterward.
 - Unified Review, Practice, and Explorer move classifications so moves that allow forced checkmate
   are correctly flagged, even when expected-points values are saturated, with readable concern
   labels in the active move list.

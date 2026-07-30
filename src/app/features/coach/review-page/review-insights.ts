@@ -9,6 +9,7 @@ import type {
   ReviewMoveClassification,
 } from '../domain/coach.types';
 import { compareMateOutcomes, isConcernClassification } from '../analysis/review-classification';
+import { createTacticalLineInsight, type TacticalLineInsight } from './review-tactical-insight';
 
 export const REVIEW_CLASSIFICATIONS: readonly ReviewMoveClassification[] = [
   'brilliant',
@@ -220,6 +221,15 @@ function moveIdeaBody(move: ImportedMove, note: MoveAnalysis): string {
     return `${concernExplanationLead(move, note)} ${mateTransition}`;
   }
 
+  const tacticalExplanation = concernTacticalExplanation(move, note);
+  if (tacticalExplanation) {
+    const ending =
+      note.reviewClassification === 'miss'
+        ? `The lost opportunity leaves ${move.color} with ${position}.`
+        : `It leaves ${move.color} with ${position}.`;
+    return `${tacticalExplanation}${evaluationDrop} ${ending}`;
+  }
+
   switch (note.reviewClassification) {
     case 'inaccuracy':
       return `${move.san} is playable but imprecise. ${note.bestMoveSan} was the more accurate continuation.${evaluationDrop} It leaves ${move.color} with ${position}.`;
@@ -243,6 +253,50 @@ function moveIdeaBody(move: ImportedMove, note: MoveAnalysis): string {
   }
 
   return `The idea is playable, but ${note.bestMoveSan} was the stronger continuation.${evaluationDrop} It leaves ${move.color} with ${position}.`;
+}
+
+function concernTacticalExplanation(move: ImportedMove, note: MoveAnalysis): string | null {
+  if (!isConcernClassification(note.reviewClassification)) return null;
+  const best = createTacticalLineInsight(move.fenBefore, note.principalVariation, move.color);
+  const played = note.playedPrincipalVariation
+    ? createTacticalLineInsight(move.fenBefore, note.playedPrincipalVariation, move.color)
+    : null;
+  const bestWinsMaterial = best && best.materialDelta > 0 ? best : null;
+  const playedLosesMaterial = played && played.materialDelta < 0 ? played : null;
+
+  if (note.reviewClassification === 'miss' && bestWinsMaterial) {
+    return `${move.san} misses an opportunity. ${lineOutcome(bestWinsMaterial)}`;
+  }
+  if (playedLosesMaterial && (best?.materialDelta ?? 0) > playedLosesMaterial.materialDelta) {
+    return `${concernMoveLead(move, note)} ${lineOutcome(playedLosesMaterial)}`;
+  }
+  if (bestWinsMaterial && played && bestWinsMaterial.materialDelta - played.materialDelta >= 1) {
+    return `${concernMoveLead(move, note)} ${lineOutcome(bestWinsMaterial)}`;
+  }
+  return null;
+}
+
+function concernMoveLead(move: ImportedMove, note: MoveAnalysis): string {
+  switch (note.reviewClassification) {
+    case 'inaccuracy':
+      return `${move.san} is an inaccuracy.`;
+    case 'mistake':
+      return `${move.san} is a mistake.`;
+    case 'miss':
+      return `${move.san} misses an opportunity.`;
+    case 'blunder':
+      return `${move.san} is a blunder.`;
+    default:
+      return '';
+  }
+}
+
+function lineOutcome(insight: TacticalLineInsight): string {
+  const beneficiary = capitalize(insight.beneficiary);
+  const payoff = insight.motif
+    ? `${beneficiary} uses a ${insight.motif} to win ${insight.outcome}.`
+    : `${beneficiary} wins ${insight.outcome}.`;
+  return `After ${insight.line.join(' ')}, ${payoff}`;
 }
 
 function concernExplanationLead(move: ImportedMove, note: MoveAnalysis): string {

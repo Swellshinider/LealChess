@@ -56,16 +56,29 @@ export class CoachAnalysisService {
   }
 
   async analyze(game: ImportedGame, learnerColor: ChessColor): Promise<void> {
+    await this.runAnalysis(game, learnerColor, false);
+  }
+
+  async reanalyze(game: ImportedGame, learnerColor: ChessColor): Promise<void> {
+    await this.runAnalysis(game, learnerColor, true);
+  }
+
+  private async runAnalysis(
+    game: ImportedGame,
+    learnerColor: ChessColor,
+    restart: boolean,
+  ): Promise<void> {
     if (this.abortController) return;
     const fingerprint = await analysisFingerprint(game, learnerColor);
     const userMoves = game.moves.filter((move) => move.color === learnerColor);
     const reviewMoves = game.moves;
     const cached = this.mutableAnalysis();
     let analysis =
-      cached?.sourceFingerprint === fingerprint
+      !restart && cached?.sourceFingerprint === fingerprint
         ? cached
         : this.newAnalysis(game, learnerColor, fingerprint, userMoves.length);
     this.mutableAnalysis.set(analysis);
+    if (restart) await this.repository.saveAnalysis(analysis);
     this.abortController = new AbortController();
     this.mutableState.set({
       phase: 'starting',
@@ -110,6 +123,7 @@ export class CoachAnalysisService {
           bestMove,
           bestMoveSan,
           principalVariation: best.principalVariation,
+          playedPrincipalVariation: played.principalVariation,
           bestEvaluation: best.evaluation,
           playedEvaluation: played.evaluation,
           ...(result.centipawnLoss === undefined ? {} : { centipawnLoss: result.centipawnLoss }),

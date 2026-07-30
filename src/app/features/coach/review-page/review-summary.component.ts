@@ -21,6 +21,7 @@ export class ReviewSummaryComponent {
   readonly depth = input<number | undefined>(undefined);
   readonly analysisRequested = output<void>();
   readonly cancelRequested = output<void>();
+  readonly reanalysisRequested = output<void>();
   readonly startRequested = output<void>();
 
   protected readonly progress = computed(() =>
