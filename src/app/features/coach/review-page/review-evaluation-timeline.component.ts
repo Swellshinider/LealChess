@@ -13,10 +13,20 @@ export class ReviewEvaluationTimelineComponent {
   readonly selectable = input(false);
   readonly plySelected = output<number>();
 
-  protected readonly polyline = computed(() =>
-    this.points()
-      .map((point) => `${this.pointX(point)},${this.pointY(point)}`)
-      .join(' '),
+  protected readonly areaPath = computed(() => {
+    const points = this.points();
+    if (!points.length) return '';
+    const boundary = points
+      .map((point) => `L ${this.pointX(point)} ${this.pointY(point)}`)
+      .join(' ');
+    return `M 0 0 L 0 ${this.pointY(points[0]!)} ${boundary} L 100 0 Z`;
+  });
+  protected readonly keyPoints = computed(() =>
+    this.points().filter((point) =>
+      ['brilliant', 'great', 'inaccuracy', 'mistake', 'miss', 'blunder'].includes(
+        point.classification,
+      ),
+    ),
   );
   protected readonly currentPoint = computed(() =>
     this.points().find((point) => point.ply === this.currentPly()),
@@ -25,10 +35,10 @@ export class ReviewEvaluationTimelineComponent {
     const points = this.points();
     const orientation =
       'Values above the center line favor White; values below the center line favor Black.';
-    if (!points.length) return `Game pulse. ${orientation} No analyzed moves yet.`;
+    if (!points.length) return `Advantage graph. ${orientation} No analyzed moves yet.`;
     const last = points.at(-1)!;
     const side = last.value > 0.35 ? 'White' : last.value < -0.35 ? 'Black' : 'Neither side';
-    return `Game pulse across ${points.length} moves. ${orientation} ${side} has the final advantage shown.`;
+    return `Advantage graph across ${points.length} moves. ${orientation} ${side} has the final advantage shown.`;
   });
 
   protected pointX(point: ReviewEvaluationPoint): number {

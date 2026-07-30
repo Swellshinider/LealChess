@@ -18,6 +18,7 @@ class FakeAnalysisEngine implements AnalysisEnginePort {
   readonly requests: PositionAnalysisRequest[] = [];
   matchFirst = false;
   blockSecondLearnerMove = false;
+  forcedLossOnPlayed = false;
   initialization: Promise<void> = Promise.resolve();
   initializationError: Error | null = null;
   private resumed = false;
@@ -49,10 +50,17 @@ class FakeAnalysisEngine implements AnalysisEnginePort {
         from: bestMove.slice(0, 2) as Square,
         to: bestMove.slice(2, 4) as Square,
       },
-      evaluation: {
-        score: { kind: 'centipawn', value: played ? -100 : 30 },
-        depth: 14,
-      },
+      evaluation:
+        this.forcedLossOnPlayed && played
+          ? { score: { kind: 'mate', moves: -1 }, depth: 16 }
+          : {
+              score: {
+                kind: 'centipawn',
+                value: played ? -100 : this.forcedLossOnPlayed ? -537 : 30,
+              },
+              depth: 16,
+            },
+      ...(this.forcedLossOnPlayed ? { expectedPoints: 0 } : {}),
       principalVariation: [bestMove],
     });
   }
@@ -94,19 +102,21 @@ describe('CoachAnalysisService', () => {
       'best',
     ]);
     expect(engine.requests.filter((request) => !request.searchMove)).toEqual([
-      expect.objectContaining({ multiPv: 2 }),
-      expect.objectContaining({ multiPv: 2 }),
-      expect.objectContaining({ multiPv: 2 }),
+      expect.objectContaining({ depth: 16, multiPv: 2 }),
+      expect.objectContaining({ depth: 16, multiPv: 2 }),
+      expect.objectContaining({ depth: 16, multiPv: 2 }),
     ]);
     expect(service.analysis()).toMatchObject({
+      schemaVersion: 5,
+      engineVersion: 'stockfish-18-single@18.0.8',
+      depth: 16,
       status: 'complete',
       totalUserMoves: 2,
       moves: [
         {
           ply: 1,
-          classification: 'mistake',
+          classification: 'good',
           reviewClassification: 'book',
-          category: 'opening',
         },
         { ply: 3, classification: 'good', reviewClassification: 'best', centipawnLoss: 0 },
       ],
@@ -118,6 +128,20 @@ describe('CoachAnalysisService', () => {
     });
     await expect(TestBed.inject(CoachRepositoryService).analysis(game.key)).resolves.toMatchObject({
       status: 'complete',
+    });
+  });
+
+  it('stores canonical forced-mate concerns and derives the legacy label', async () => {
+    engine.forcedLossOnPlayed = true;
+    const service = TestBed.inject(CoachAnalysisService);
+    const game = importedGame();
+    await service.load(game, 'white');
+    await service.analyze(game, 'white');
+
+    expect(service.analysis()?.moves[0]).toMatchObject({
+      classification: 'blunder',
+      reviewClassification: 'blunder',
+      category: 'opening',
     });
   });
 

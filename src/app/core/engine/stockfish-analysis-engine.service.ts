@@ -6,7 +6,7 @@ import type {
 } from './analysis-engine.types';
 import { parseBestMove } from './uci-parser';
 import { parseAnalysisInfo, type UciAnalysisInfo } from './uci-analysis-parser';
-import { STOCKFISH_WORKER_FACTORY } from './stockfish-worker';
+import { STOCKFISH_ANALYSIS_WORKER_FACTORY } from './stockfish-worker';
 
 type Waiter = {
   predicate: (line: string) => boolean;
@@ -17,7 +17,7 @@ type Waiter = {
 
 @Injectable()
 export class StockfishAnalysisEngineService implements AnalysisEnginePort {
-  private readonly createStockfishWorker = inject(STOCKFISH_WORKER_FACTORY);
+  private readonly createStockfishWorker = inject(STOCKFISH_ANALYSIS_WORKER_FACTORY);
   private worker: Worker | null = null;
   private waiters: Waiter[] = [];
   private initialized = false;

@@ -8,6 +8,7 @@ import type {
   MoveAnalysis,
   ReviewMoveClassification,
 } from '../domain/coach.types';
+import { compareMateOutcomes, isConcernClassification } from '../analysis/review-classification';
 
 export const REVIEW_CLASSIFICATIONS: readonly ReviewMoveClassification[] = [
   'brilliant',
@@ -103,7 +104,7 @@ export function createMoveExplanation(
   const piece = chess.get(move.from);
   const title = moveIdeaTitle(move, note, piece?.type);
   const arrows: MoveIdeaArrow[] = [{ from: move.from, to: move.to, kind: 'played' }];
-  if (note.bestMove !== note.playedMove) {
+  if (note.bestMove !== note.playedMove && note.reviewClassification !== 'best') {
     const best = parseUci(note.bestMove);
     if (best) arrows.push({ ...best, kind: 'best' });
   }
@@ -170,6 +171,16 @@ function moveIdeaTitle(
   note: MoveAnalysis,
   piece: PieceSymbol | undefined,
 ): string {
+  switch (note.reviewClassification) {
+    case 'inaccuracy':
+      return `${move.san} is an inaccuracy`;
+    case 'mistake':
+      return `${move.san} is a mistake`;
+    case 'miss':
+      return `${move.san} misses an opportunity`;
+    case 'blunder':
+      return `${move.san} is a blunder`;
+  }
   if (move.san.includes('#')) return `${move.san} ends the game`;
   if (/^O-O(?:-O)?/.test(move.san)) return `${move.san} brings the king to safety`;
   if (move.san.includes('=')) return `${move.san} promotes the pawn`;
@@ -189,15 +200,101 @@ function moveIdeaTitle(
 
 function moveIdeaBody(move: ImportedMove, note: MoveAnalysis): string {
   const position = moverPositionLabel(note.playedEvaluation);
+  const evaluationDrop = evaluationDropText(note);
+  const mateComparison = compareMateOutcomes(move, note.bestEvaluation, note.playedEvaluation);
+  const mateTransition = forcedMateTransition(move, note, mateComparison);
+
+  if (move.san.includes('#')) {
+    return 'It delivers checkmate and ends the game immediately.';
+  }
+
+  if (isConcernClassification(note.reviewClassification) && mateTransition) {
+    return `${concernExplanationLead(move, note)} ${mateTransition}`;
+  }
+
+  switch (note.reviewClassification) {
+    case 'inaccuracy':
+      return `${move.san} is playable but imprecise. ${note.bestMoveSan} was the more accurate continuation.${evaluationDrop} It leaves ${move.color} with ${position}.`;
+    case 'mistake':
+      return `${move.san} is a mistake. ${note.bestMoveSan} was the stronger continuation.${evaluationDrop} It leaves ${move.color} with ${position}.`;
+    case 'miss':
+      return `${move.san} misses the opportunity that ${note.bestMoveSan} created.${evaluationDrop} The lost opportunity leaves ${move.color} with ${position}.`;
+    case 'blunder':
+      return `${move.san} is a blunder. ${note.bestMoveSan} was much stronger.${evaluationDrop} It leaves ${move.color} with ${position}.`;
+  }
+
   if (note.bestMove === note.playedMove) {
     return `It matches the engine’s top move and leaves ${move.color} with ${position}.`;
   }
 
-  const loss =
-    note.centipawnLoss === undefined || note.centipawnLoss === 0
-      ? ''
-      : ` The move gives up about ${note.centipawnLoss} centipawns.`;
-  return `The idea is playable, but ${note.bestMoveSan} was the stronger continuation.${loss} It leaves ${move.color} with ${position}.`;
+  if (note.reviewClassification === 'best' && mateComparison === 'winning-equivalent') {
+    return `It preserves the best winning outcome and leaves ${move.color} with ${position}.`;
+  }
+  if (note.reviewClassification === 'best' && mateComparison === 'losing-mate-equivalent') {
+    return `It preserves the longest defense against ${opponentName(move)}’s forced checkmate.`;
+  }
+
+  return `The idea is playable, but ${note.bestMoveSan} was the stronger continuation.${evaluationDrop} It leaves ${move.color} with ${position}.`;
+}
+
+function concernExplanationLead(move: ImportedMove, note: MoveAnalysis): string {
+  switch (note.reviewClassification) {
+    case 'inaccuracy':
+      return `${move.san} is an inaccuracy. ${note.bestMoveSan} was more accurate.`;
+    case 'mistake':
+      return `${move.san} is a mistake. ${note.bestMoveSan} was stronger.`;
+    case 'miss':
+      return `${move.san} misses an opportunity. ${note.bestMoveSan} created a forced win.`;
+    case 'blunder':
+      return `${move.san} is a blunder. ${note.bestMoveSan} was much stronger.`;
+    default:
+      return '';
+  }
+}
+
+function evaluationDropText(note: MoveAnalysis): string {
+  if (
+    note.bestEvaluation.score.kind === 'mate' ||
+    note.playedEvaluation.score.kind === 'mate' ||
+    note.centipawnLoss === undefined ||
+    note.centipawnLoss <= 0
+  ) {
+    return '';
+  }
+  const pawns = Number((note.centipawnLoss / 100).toFixed(2));
+  return ` That is an evaluation drop of about ${pawns} ${pawns === 1 ? 'pawn' : 'pawns'}.`;
+}
+
+function forcedMateTransition(
+  move: ImportedMove,
+  note: MoveAnalysis,
+  comparison: ReturnType<typeof compareMateOutcomes>,
+): string {
+  const playedMoves =
+    note.playedEvaluation.score.kind === 'mate'
+      ? Math.abs(note.playedEvaluation.score.moves)
+      : undefined;
+  switch (comparison) {
+    case 'winning-mate-lost':
+      return 'It gives up a forced checkmate.';
+    case 'winning-mate-reversed':
+      return `It gives up a forced checkmate and allows ${opponentName(move)} to force checkmate in ${playedMoves}.`;
+    case 'losing-mate-new':
+      return `It allows ${opponentName(move)} to force checkmate in ${playedMoves}.`;
+    case 'losing-mate-shortened': {
+      const bestMoves =
+        note.bestEvaluation.score.kind === 'mate'
+          ? Math.abs(note.bestEvaluation.score.moves)
+          : undefined;
+      return `It lets ${opponentName(move)} force checkmate in ${playedMoves} instead of ${bestMoves}.`;
+    }
+    default:
+      return '';
+  }
+}
+
+function opponentName(move: ImportedMove): string {
+  return move.color === 'white' ? 'Black' : 'White';
 }
 
 function moverPositionLabel(evaluation: EngineEvaluation): string {
@@ -222,7 +319,7 @@ function isPositive(classification: ReviewMoveClassification): boolean {
 }
 
 function isConcern(classification: ReviewMoveClassification): boolean {
-  return ['inaccuracy', 'mistake', 'miss', 'blunder'].includes(classification);
+  return isConcernClassification(classification);
 }
 
 function parseUci(uci: string): { from: Square; to: Square } | null {

@@ -7,6 +7,7 @@ import { SoundService } from '../../../core/sound/sound.service';
 import type { ChessColor } from '../../../shared/chess/chess.types';
 import { learnerColorForGame, trainingPositions } from '../analysis/analysis-rules';
 import { CoachAnalysisService } from '../analysis/coach-analysis.service';
+import { detectOpening } from '../analysis/opening-index';
 import { CoachRepositoryService } from '../data/coach-repository.service';
 import type { GameSource, ImportedGame, TrainingPosition } from '../domain/coach.types';
 import { PracticeAnalysisService } from './practice-analysis.service';
@@ -74,14 +75,17 @@ export class ReviewPageStore {
         this.repository.game(platform, gameId),
         this.repository.profiles(),
       ]);
-      this.game.set(game ?? null);
       if (game) {
-        const color = learnerColorForGame(game, profiles) ?? null;
+        const reviewedGame = this.withDetectedOpening(game);
+        this.game.set(reviewedGame);
+        const color = learnerColorForGame(reviewedGame, profiles) ?? null;
         this.learnerColor.set(color);
         if (color) {
           this.orientation.set(color);
-          await this.coachAnalysis.load(game, color);
+          await this.coachAnalysis.load(reviewedGame, color);
         }
+      } else {
+        this.game.set(null);
       }
     }
     this.loading.set(false);
@@ -90,5 +94,16 @@ export class ReviewPageStore {
   destroy(): void {
     this.coachAnalysis.cancel();
     this.practiceAnalysis.destroy();
+  }
+
+  private withDetectedOpening(game: ImportedGame): ImportedGame {
+    if (game.opening?.name.trim()) return game;
+    const opening = detectOpening(
+      game.moves[0]?.fenBefore,
+      game.moves.map((move) => move.fenAfter),
+    );
+    if (!opening) return game;
+    void this.repository.saveOpeningIfMissing(game.key, opening).catch(() => undefined);
+    return { ...game, opening };
   }
 }

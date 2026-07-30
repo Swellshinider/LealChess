@@ -98,13 +98,21 @@ label {
   margin-bottom: 5px;
 }
 
-select {
-  background: var(--surface-lowest);
-  border: 1px solid var(--outline-variant);
+.rating-heading {
+  align-items: baseline;
+  display: flex;
+  justify-content: space-between;
+}
+
+output {
   color: var(--paper);
-  font: inherit;
-  min-height: 46px;
-  padding: 0 10px;
+  font-family: var(--font-utility);
+  font-size: 0.72rem;
+}
+
+input[type='range'] {
+  accent-color: var(--primary);
+  min-height: 42px;
   width: 100%;
 }
 

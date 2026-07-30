@@ -1,9 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { getDifficulty } from './difficulty';
+import { botMoveTimeMs, type BotRating } from './bot-rating';
 import type { EngineMove, EnginePort, EngineSearchRequest } from './engine.types';
-import { STOCKFISH_WORKER_FACTORY } from './stockfish-worker';
+import { STOCKFISH_PLAY_WORKER_FACTORY } from './stockfish-worker';
 import { parseBestMove } from './uci-parser';
-import type { DifficultyId } from '../game/game.types';
 
 type Waiter = {
   predicate: (line: string) => boolean;
@@ -14,7 +13,7 @@ type Waiter = {
 
 @Injectable()
 export class StockfishEngineService implements EnginePort {
-  private readonly createWorker = inject(STOCKFISH_WORKER_FACTORY);
+  private readonly createWorker = inject(STOCKFISH_PLAY_WORKER_FACTORY);
   private worker: Worker | null = null;
   private waiters: Waiter[] = [];
   private activeSearch: {
@@ -53,26 +52,25 @@ export class StockfishEngineService implements EnginePort {
     }
   }
 
-  async newGame(difficulty: DifficultyId): Promise<void> {
+  async newGame(botRating: BotRating): Promise<void> {
     await this.ensureInitialized();
     await this.stopInternal();
     this.post('ucinewgame');
-    this.applyDifficulty(difficulty);
+    this.applyRating(botRating);
     await this.waitFor('readyok', 5000, () => this.post('isready'));
   }
 
   async search(request: EngineSearchRequest): Promise<EngineMove> {
     await this.ensureInitialized();
     await this.stopInternal();
-    this.applyDifficulty(request.difficulty);
+    this.applyRating(request.botRating);
     await this.waitFor('readyok', 5000, () => this.post('isready'));
 
-    const preset = getDifficulty(request.difficulty);
     this.post(`position fen ${request.fen}`);
 
     return new Promise<EngineMove>((resolve, reject) => {
       this.activeSearch = { request, resolve, reject };
-      this.post(`go movetime ${preset.moveTimeMs}`);
+      this.post(`go movetime ${botMoveTimeMs(request.botRating)}`);
     });
   }
 
@@ -163,9 +161,9 @@ export class StockfishEngineService implements EnginePort {
     });
   }
 
-  private applyDifficulty(difficulty: DifficultyId): void {
-    const preset = getDifficulty(difficulty);
-    this.post(`setoption name Skill Level value ${preset.skillLevel}`);
+  private applyRating(botRating: BotRating): void {
+    this.post('setoption name UCI_LimitStrength value true');
+    this.post(`setoption name UCI_Elo value ${botRating}`);
   }
 
   private waitFor(expected: string, timeoutMs: number, beforeWait: () => void): Promise<string> {

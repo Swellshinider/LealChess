@@ -1,8 +1,13 @@
 import { TestBed } from '@angular/core/testing';
+import type { InjectionToken } from '@angular/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { StockfishAnalysisEngineService } from './stockfish-analysis-engine.service';
 import { StockfishEngineService } from './stockfish-engine.service';
-import { STOCKFISH_WORKER_FACTORY, type StockfishWorkerFactory } from './stockfish-worker';
+import {
+  STOCKFISH_ANALYSIS_WORKER_FACTORY,
+  STOCKFISH_PLAY_WORKER_FACTORY,
+  type StockfishWorkerFactory,
+} from './stockfish-worker';
 
 type WorkerMode = 'success' | 'manual' | 'error' | 'silent';
 
@@ -57,7 +62,10 @@ class FakeStockfishWorker {
   }
 }
 
-function setupFactory(...modes: WorkerMode[]) {
+function setupFactory(
+  workerFactoryToken: InjectionToken<StockfishWorkerFactory>,
+  ...modes: WorkerMode[]
+) {
   const workers: FakeStockfishWorker[] = [];
   const factory: StockfishWorkerFactory = () => {
     const worker = new FakeStockfishWorker(modes[workers.length] ?? 'success');
@@ -65,7 +73,7 @@ function setupFactory(...modes: WorkerMode[]) {
     return worker as unknown as Worker;
   };
   TestBed.configureTestingModule({
-    providers: [{ provide: STOCKFISH_WORKER_FACTORY, useValue: factory }],
+    providers: [{ provide: workerFactoryToken, useValue: factory }],
   });
   return workers;
 }
@@ -77,25 +85,28 @@ afterEach(() => {
 
 describe('StockfishEngineService', () => {
   it('initializes once and returns a searched move', async () => {
-    const workers = setupFactory('success');
+    const workers = setupFactory(STOCKFISH_PLAY_WORKER_FACTORY, 'success');
     const service = TestBed.runInInjectionContext(() => new StockfishEngineService());
 
     await Promise.all([service.initialize(), service.initialize()]);
-    await service.newGame('casual');
+    await service.newGame(1500);
     const move = await service.search({
       gameId: 'game',
       requestId: 1,
       fen: 'test-fen',
-      difficulty: 'casual',
+      botRating: 1500,
     });
 
     expect(workers).toHaveLength(1);
     expect(move.move).toEqual({ from: 'e7', to: 'e5' });
     expect(workers[0]?.messages).toContain('uci');
+    expect(workers[0]?.messages).toContain('setoption name UCI_LimitStrength value true');
+    expect(workers[0]?.messages).toContain('setoption name UCI_Elo value 1500');
+    expect(workers[0]?.messages).toContain('go movetime 235');
   });
 
   it('replaces a failed startup worker once', async () => {
-    const workers = setupFactory('error', 'success');
+    const workers = setupFactory(STOCKFISH_PLAY_WORKER_FACTORY, 'error', 'success');
     const service = TestBed.runInInjectionContext(() => new StockfishEngineService());
 
     await service.initialize();
@@ -105,7 +116,7 @@ describe('StockfishEngineService', () => {
   });
 
   it('rejects after both startup attempts fail', async () => {
-    const workers = setupFactory('error', 'error');
+    const workers = setupFactory(STOCKFISH_PLAY_WORKER_FACTORY, 'error', 'error');
     const service = TestBed.runInInjectionContext(() => new StockfishEngineService());
 
     await expect(service.initialize()).rejects.toThrow('Stockfish Worker failed');
@@ -114,14 +125,14 @@ describe('StockfishEngineService', () => {
   });
 
   it('rejects active work and can initialize a replacement after a worker failure', async () => {
-    const workers = setupFactory('manual', 'success');
+    const workers = setupFactory(STOCKFISH_PLAY_WORKER_FACTORY, 'manual', 'success');
     const service = TestBed.runInInjectionContext(() => new StockfishEngineService());
     await service.initialize();
     const search = service.search({
       gameId: 'game',
       requestId: 1,
       fen: 'test-fen',
-      difficulty: 'casual',
+      botRating: 1500,
     });
     await vi.waitFor(() =>
       expect(workers[0]?.messages.some((message) => message.startsWith('go movetime'))).toBe(true),
@@ -134,7 +145,7 @@ describe('StockfishEngineService', () => {
   });
 
   it('rejects initialization immediately when destroyed', async () => {
-    setupFactory('silent');
+    setupFactory(STOCKFISH_PLAY_WORKER_FACTORY, 'silent');
     const service = TestBed.runInInjectionContext(() => new StockfishEngineService());
     const initialization = service.initialize();
     service.destroy();
@@ -144,7 +155,7 @@ describe('StockfishEngineService', () => {
 
   it('times out both startup attempts without leaking workers', async () => {
     vi.useFakeTimers();
-    const workers = setupFactory('silent', 'silent');
+    const workers = setupFactory(STOCKFISH_PLAY_WORKER_FACTORY, 'silent', 'silent');
     const service = TestBed.runInInjectionContext(() => new StockfishEngineService());
     const initialization = service.initialize();
     const rejection = expect(initialization).rejects.toThrow('Stockfish timed out');
@@ -159,7 +170,7 @@ describe('StockfishEngineService', () => {
 
 describe('StockfishAnalysisEngineService', () => {
   it('retries startup and returns an evaluation', async () => {
-    const workers = setupFactory('error', 'success');
+    const workers = setupFactory(STOCKFISH_ANALYSIS_WORKER_FACTORY, 'error', 'success');
     const service = TestBed.runInInjectionContext(() => new StockfishAnalysisEngineService());
 
     const result = await service.analyze({
@@ -173,7 +184,7 @@ describe('StockfishAnalysisEngineService', () => {
   });
 
   it('rejects active analysis when its worker fails and starts cleanly afterward', async () => {
-    const workers = setupFactory('manual', 'success');
+    const workers = setupFactory(STOCKFISH_ANALYSIS_WORKER_FACTORY, 'manual', 'success');
     const service = TestBed.runInInjectionContext(() => new StockfishAnalysisEngineService());
     await service.initialize();
     const analysis = service.analyze({ fen: 'test-fen', depth: 14 });
@@ -188,7 +199,7 @@ describe('StockfishAnalysisEngineService', () => {
   });
 
   it('cancels an active analysis with an AbortError', async () => {
-    const workers = setupFactory('manual');
+    const workers = setupFactory(STOCKFISH_ANALYSIS_WORKER_FACTORY, 'manual');
     const service = TestBed.runInInjectionContext(() => new StockfishAnalysisEngineService());
     await service.initialize();
     const controller = new AbortController();

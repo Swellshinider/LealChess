@@ -16,8 +16,14 @@ export function normalizeLocalGame(
     platformUrl: '',
     pgn: state.pgn,
     variant: 'standard',
-    white: { username: state.playerColor === 'white' ? 'You' : 'Stockfish' },
-    black: { username: state.playerColor === 'black' ? 'You' : 'Stockfish' },
+    white:
+      state.playerColor === 'white'
+        ? { username: 'You' }
+        : { username: 'Stockfish', rating: state.botRating },
+    black:
+      state.playerColor === 'black'
+        ? { username: 'You' }
+        : { username: 'Stockfish', rating: state.botRating },
     result: resultTag(state),
     speed: 'untimed',
     timeControl: 'No clock',
@@ -38,6 +44,7 @@ export function normalizeLocalGame(
     firstImportedAt: completedAt,
     lastImportedAt: completedAt,
     learnerColor: state.playerColor,
+    botRating: state.botRating,
   };
 }
 

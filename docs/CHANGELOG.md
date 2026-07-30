@@ -7,10 +7,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 30-07-2026
+
+### Added
+
+- Missing opening names and ECO codes are detected locally when a game review is opened and saved
+  for future reviews and opening statistics.
+
+### Changed
+
+- Renamed Game pulse to Advantage graph, removed territory labels, and added a solid gray center
+  line that remains readable across both advantage regions.
+
+### Fixed
+
+- Unified Review, Practice, and Explorer move classifications so moves that allow forced checkmate
+  are correctly flagged, even when expected-points values are saturated, with readable concern
+  labels in the active move list.
+
 ## [Unreleased] - 29-07-2026
 
 ### Added
 
+- Native Stockfish rating selection from 1320 to 3190 Elo for local bot games.
 - Open-source contribution, conduct, security, support, architecture, and maintenance guidance.
 - Structured issue forms, a pull request template, grouped Dependabot updates, and verified
   release-tag automation.
@@ -18,6 +37,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Upgraded Review, Practice, and Explorer analysis to full Stockfish, with completed game reviews
+  calculated at depth 16.
+- Redesigned Advantage graph as a neutral territory chart with focused markers for noteworthy moves.
+- Made move-review explanations match their classifications, with readable evaluation drops and
+  explicit forced-mate transitions.
 - Renamed Help to About, with `/about` as the canonical project-information page and `/help`
   retained as a compatibility redirect.
 - Hardened continuous integration with least-privilege permissions, immutable action pins,
@@ -32,6 +56,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Classified equivalent checkmates as best moves without unnecessary alternatives, and marked
+  abandoned forced mates as missed opportunities.
+- Allow the initial match setup to be dismissed while Stockfish continues loading, with keyboard
+  focus restored to New game.
 - Updated vulnerable transitive dependencies used by development tooling.
 
 ## [Unreleased] - 28-07-2026
