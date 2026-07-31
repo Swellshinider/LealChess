@@ -180,6 +180,70 @@ form > button {
   grid-template-columns: minmax(280px, 1fr) minmax(260px, 400px);
 }
 
+.keyboard-intro {
+  color: var(--mist);
+  margin: 0 0 18px;
+}
+
+.keybinding-list {
+  border-top: 1px solid rgb(200 213 207 / 12%);
+}
+
+.keybinding-row {
+  align-items: center;
+  border-bottom: 1px solid rgb(200 213 207 / 12%);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(180px, 1fr) minmax(150px, 220px) 74px;
+  min-height: 68px;
+  padding: 10px 2px;
+}
+
+.keybinding-name {
+  color: var(--paper);
+  font-weight: 700;
+}
+
+.keybinding-capture,
+.keybinding-reset,
+.keybinding-footer button {
+  background: transparent;
+  border: 1px solid rgb(200 213 207 / 28%);
+  color: var(--paper);
+  min-height: 42px;
+}
+
+.keybinding-capture {
+  font-family: var(--font-utility);
+
+  &.capturing {
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+}
+
+.keybinding-reset:disabled {
+  cursor: default;
+  opacity: 0.36;
+}
+
+.keybinding-footer {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+
+  p {
+    color: #f2b0aa;
+    margin: 0;
+    min-height: 1.4em;
+  }
+
+  button {
+    padding-inline: 16px;
+  }
+}
+
 .control-sheet {
   display: grid;
 }
@@ -523,6 +587,20 @@ form > button {
   .section-heading,
   .danger-zone {
     flex-direction: column;
+  }
+
+  .keybinding-row {
+    grid-template-columns: 1fr 74px;
+
+    .keybinding-name {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .keybinding-footer {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
   }
 
   .local-data-actions,

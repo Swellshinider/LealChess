@@ -238,13 +238,16 @@ test('analyzes locally, caches the result, and opens a concern position', async 
   await expectPlayerStripsToClearEvaluationRail(page);
   await expect(page.locator('.live-analysis li')).toHaveCount(3, { timeout: 30_000 });
   await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(0);
+  await page.evaluate(() =>
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true })),
+  );
+  await expect(page.locator('.review-board svg.cg-shapes line')).not.toHaveCount(0);
 
-  const candidateLabels = await page
-    .locator('.live-analysis .candidate-action')
-    .evaluateAll((buttons) => buttons.map((button) => button.getAttribute('aria-label') ?? ''));
-  const alternateCandidate = candidateLabels.find((label) => !label.endsWith(': e5'));
-  expect(alternateCandidate).toBeTruthy();
-  await page.getByRole('button', { name: alternateCandidate! }).click();
+  const alternateCandidate = page
+    .locator('.live-analysis .candidate-action:not([aria-label$=": e5"])')
+    .first();
+  await expect(alternateCandidate).toBeVisible();
+  await alternateCandidate.click();
   await expect(page.locator('.score .variation-move')).toHaveCount(1);
   await expect(page.locator('.score .variation-move .move.current')).toBeVisible();
   await page.getByRole('button', { name: 'Remove this variation and all continuations' }).click();
