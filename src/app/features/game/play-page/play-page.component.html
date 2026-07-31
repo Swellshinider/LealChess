@@ -1,4 +1,4 @@
-<div class="play-shell">
+<div class="play-shell" [attr.inert]="gameOverOpen() ? '' : null">
   <app-side-navigation />
   <div class="app-frame">
     <main class="game-layout" [attr.data-theme]="state().preferences.boardTheme">
@@ -59,3 +59,17 @@
   (retryRequested)="controller.retryEngine()"
   (started)="startGame($event)"
 />
+
+@if (gameOverOpen()) {
+  @if (state().result; as result) {
+    <app-game-over-dialog
+      [result]="result"
+      [reviewPending]="reviewPending()"
+      [reviewError]="reviewError()"
+      (dismissed)="gameOverOpen.set(false)"
+      (newGameRequested)="openNewGameFromResult()"
+      (restartRequested)="restartGameFromResult()"
+      (reviewRequested)="reviewGame()"
+    />
+  }
+}

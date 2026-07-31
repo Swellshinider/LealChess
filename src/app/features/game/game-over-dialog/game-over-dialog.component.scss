@@ -1,0 +1,135 @@
+:host {
+  display: contents;
+}
+
+.dialog-backdrop {
+  align-items: center;
+  background: rgb(9 17 21 / 84%);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 18px;
+  position: fixed;
+  z-index: 100;
+}
+
+section {
+  background: var(--carbon);
+  border-color: rgb(200 213 207 / 22%) var(--surface-lowest) var(--surface-lowest)
+    rgb(200 213 207 / 22%);
+  border-radius: 4px 0 4px 0;
+  border-style: solid;
+  border-width: 1px;
+  box-shadow: 0 28px 90px rgb(0 0 0 / 45%);
+  color: var(--paper);
+  max-width: 470px;
+  overflow: hidden;
+  padding: 28px;
+  position: relative;
+  text-align: center;
+  width: 100%;
+}
+
+.close {
+  background: transparent;
+  border: 0;
+  color: var(--mist);
+  font-size: 1.5rem;
+  min-height: 42px;
+  min-width: 42px;
+  position: absolute;
+  right: 10px;
+  top: 8px;
+}
+
+.kicker {
+  color: var(--primary);
+  font-family: var(--font-utility);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 8vw, 2.8rem);
+  line-height: 0.95;
+  margin: 20px 0 0;
+  text-transform: uppercase;
+}
+
+.result-label {
+  color: var(--paper);
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 10px 0 0;
+}
+
+.next-step {
+  color: var(--mist);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  margin: 6px auto 0;
+  max-width: 38ch;
+}
+
+.review-error {
+  background: rgb(231 104 97 / 10%);
+  border-left: 3px solid var(--danger);
+  color: #ffb4ab;
+  font-size: 0.78rem;
+  margin: 18px 0 0;
+  padding: 10px 12px;
+}
+
+footer {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 24px;
+}
+
+button {
+  min-height: 44px;
+}
+
+.secondary-action,
+.primary-action {
+  border-radius: 3px 0 3px 0;
+  font-family: var(--font-utility);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 8px 12px;
+}
+
+.secondary-action {
+  background: var(--surface-low);
+  border: 1px solid var(--outline-variant);
+  color: var(--paper);
+}
+
+.primary-action {
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  color: var(--on-primary);
+  grid-column: 1 / -1;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+@media (max-width: 420px) {
+  section {
+    padding: 24px 20px 20px;
+  }
+
+  footer {
+    grid-template-columns: 1fr;
+  }
+
+  .primary-action {
+    grid-column: auto;
+  }
+}

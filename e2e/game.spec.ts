@@ -58,9 +58,12 @@ test('reviews, archives, and deletes a completed Stockfish game', async ({ page 
     'rgb(24, 27, 21)',
   );
   await page.getByRole('button', { name: 'Resign game' }).click();
-  await expect(page.getByRole('heading', { name: 'You resigned' })).toBeVisible();
+  const gameOverDialog = page.getByRole('dialog', { name: 'Game over' });
+  await expect(gameOverDialog).toBeVisible();
+  await expect(gameOverDialog).toContainText('You resigned');
+  await expect(gameOverDialog.getByRole('button', { name: 'Review game' })).toBeFocused();
 
-  await page.getByRole('button', { name: 'Review game' }).click();
+  await gameOverDialog.getByRole('button', { name: 'Review game' }).click();
   await expect(page).toHaveURL(/\/learn\/review\/local\/.+autoAnalyze=true/);
   await expect(page.locator('.review-board')).toBeVisible();
   await expect(page.locator('.game-meta')).toContainText('LealChess');
@@ -168,7 +171,24 @@ test('has no serious accessibility violations in setup and active play', async (
 test('completes a checkmate flow from a restored position', async ({ page }) => {
   await seedGame(page, '7k/5Q2/6K1/8/8/8/8/8 w - - 0 1', 'white');
   await dragPieceTo(page, 'piece.white.queen', 'g7');
-  await expect(page.getByText(/wins by checkmate/i).first()).toBeVisible();
+  const gameOverDialog = page.getByRole('dialog', { name: 'Game over' });
+  await expect(gameOverDialog).toBeVisible();
+  await expect(gameOverDialog).toContainText('White wins by checkmate');
+  await expect(gameOverDialog.getByRole('button', { name: 'Review game' })).toBeFocused();
+  await assertNoSeriousA11yViolations(page);
+
+  await gameOverDialog.getByRole('button', { name: 'Restart' }).click();
+  const restartConfirmation = page.getByRole('alertdialog', { name: 'Restart this game?' });
+  await expect(restartConfirmation).toBeVisible();
+  await expect(restartConfirmation.getByRole('button', { name: 'Keep result' })).toBeFocused();
+  await restartConfirmation.getByRole('button', { name: 'Keep result' }).click();
+  await expect(gameOverDialog.getByRole('button', { name: 'Restart' })).toBeFocused();
+
+  await page.keyboard.press('Escape');
+  await expect(gameOverDialog).toBeHidden();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'White wins by checkmate' })).toBeVisible();
+  await expect(gameOverDialog).toHaveCount(0);
 
   await page.getByRole('button', { name: 'New game' }).first().click();
   await startGame(page, 'White', 1500);
