@@ -17,6 +17,7 @@ import { StockfishAnalysisEngineService } from '../../core/engine/stockfish-anal
 import { legalDestinations } from '../../core/game/chess-move';
 import { STARTING_FEN, type MoveInput, type PromotionPiece } from '../../core/game/game.types';
 import type { ChessColor } from '../../shared/chess/chess.types';
+import { BoardFlipButtonComponent } from '../../shared/chess/board-flip-button/board-flip-button.component';
 import { ChessgroundBoardComponent } from '../../shared/chess/chessground-board/chessground-board.component';
 import { ModalFocusDirective } from '../../shared/a11y/modal-focus.directive';
 import { ConfirmationDialogComponent } from '../../shared/a11y/confirmation-dialog/confirmation-dialog.component';
@@ -72,6 +73,7 @@ interface TreeRow {
 @Component({
   selector: 'app-explorer-page',
   imports: [
+    BoardFlipButtonComponent,
     ChessgroundBoardComponent,
     ConfirmationDialogComponent,
     ModalFocusDirective,

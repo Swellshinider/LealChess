@@ -15,6 +15,8 @@
           @if (state().engineStatus === 'thinking') {
             <span class="thinking-label">Thinking<span aria-hidden="true">…</span></span>
           }
+          <span class="turn-indicator" aria-hidden="true"></span>
+          <app-board-flip-button (flipRequested)="controller.flipBoard()" />
         </div>
 
         <app-chess-board />
@@ -28,6 +30,7 @@
             <strong>You</strong>
             <small>Playing {{ state().playerColor }}</small>
           </span>
+          <span class="turn-indicator" aria-hidden="true"></span>
         </div>
       </section>
 

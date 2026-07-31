@@ -13,6 +13,17 @@ test('imports and restores a PGN, then exposes the full position editor', async 
 
   await expect(page.getByRole('heading', { name: 'Explorer', exact: true })).toBeAttached();
   await expect(page.getByRole('img', { name: /Analysis chessboard/ })).toBeVisible();
+  await expect(
+    page.locator('.workspace-actions').getByRole('button', { name: 'Flip board' }),
+  ).toHaveCount(0);
+  const flipBoard = page.locator('.board-heading').getByRole('button', { name: 'Flip board' });
+  await expect(flipBoard).toBeVisible();
+  await expectFlipControlAtBoardTopRight(page, '.explorer-board');
+  await expect(page.locator('.explorer-board')).toHaveClass(/orientation-white/);
+  await flipBoard.click();
+  await expect(page.locator('.explorer-board')).toHaveClass(/orientation-black/);
+  await flipBoard.click();
+  await expect(page.locator('.explorer-board')).toHaveClass(/orientation-white/);
   await expect(page.locator('.explorer-board cg-board')).toHaveCSS(
     'background-image',
     /rgb\(99, 122, 82\).*rgb\(215, 221, 192\)/,
@@ -40,6 +51,8 @@ test('imports and restores a PGN, then exposes the full position editor', async 
 
   await page.getByRole('button', { name: 'Set up position' }).click();
   await expect(page.getByRole('heading', { name: 'Position setup' })).toBeVisible();
+  await expect(flipBoard).toBeVisible();
+  await expectFlipControlAtBoardTopRight(page, '.explorer-board');
   await expect(page.getByLabel('Side to move')).toHaveValue('w');
   await page.getByRole('button', { name: 'Clear board' }).click();
   await expect(page.getByRole('button', { name: 'Analyze position' })).toBeDisabled();
@@ -127,4 +140,13 @@ async function movePiece(page: Page, from: string, to: string): Promise<void> {
   await page.mouse.down();
   await page.mouse.move(destination.x, destination.y, { steps: 10 });
   await page.mouse.up();
+}
+
+async function expectFlipControlAtBoardTopRight(page: Page, boardSelector: string): Promise<void> {
+  const control = await page.getByRole('button', { name: 'Flip board' }).boundingBox();
+  const board = await page.locator(boardSelector).boundingBox();
+  expect(control).not.toBeNull();
+  expect(board).not.toBeNull();
+  expect(Math.abs(control!.x + control!.width - (board!.x + board!.width))).toBeLessThanOrEqual(5);
+  expect(control!.y + control!.height).toBeLessThanOrEqual(board!.y + 1);
 }
