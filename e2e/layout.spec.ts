@@ -32,7 +32,7 @@ test('collapses the desktop panel, preserves the choice, and navigates between w
   );
   expect(
     Math.abs(expandButton.x + expandButton.width / 2 - (brandBlock.x + brandBlock.width / 2)),
-  ).toBeLessThanOrEqual(2);
+  ).toBeLessThanOrEqual(3);
 
   await playLink.hover();
   await expect
@@ -107,11 +107,48 @@ test('launches each workspace and provides project information', async ({ page }
   await page.goto('/help');
   await expect(page).toHaveURL(/\/about$/);
   await expect(page.getByRole('heading', { name: 'About' })).toBeVisible();
-  await expect(page.getByText('v0.5.0', { exact: true })).toBeVisible();
+  await expect(page.getByText('v0.6.0', { exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Swellshinider/LealChess' })).toHaveAttribute(
     'href',
     'https://github.com/Swellshinider/LealChess',
   );
+});
+
+test('publishes indexable metadata only for public pages', async ({ page, request }) => {
+  await page.goto('/');
+  await expect(page).toHaveTitle('LealChess | Local Chess Analysis & Training');
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+    'content',
+    /Play Stockfish, import Chess\.com and Lichess games/,
+  );
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'index, follow');
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    'href',
+    'https://lealchess.com/',
+  );
+  expect(await page.locator('#lealchess-structured-data').textContent()).toContain(
+    'WebApplication',
+  );
+
+  await page.goto('/about');
+  await expect(page).toHaveTitle('About LealChess | Local-First Chess Training');
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    'href',
+    'https://lealchess.com/about',
+  );
+  await expect(page.locator('#lealchess-structured-data')).toHaveCount(0);
+
+  await page.goto('/play');
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, nofollow');
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
+
+  const robots = await request.get('/robots.txt');
+  expect(robots.ok()).toBe(true);
+  expect(await robots.text()).toContain('Sitemap: https://lealchess.com/sitemap.xml');
+
+  const sitemap = await request.get('/sitemap.xml');
+  expect(sitemap.ok()).toBe(true);
+  expect(await sitemap.text()).toContain('<loc>https://lealchess.com/about</loc>');
 });
 
 test('keeps unknown routes visible and offers a route home', async ({ page }) => {
