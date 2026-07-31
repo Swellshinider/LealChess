@@ -30,13 +30,11 @@ LealChess uses Semantic Versioning:
 To release:
 
 1. Choose `MAJOR.MINOR.PATCH` and update `package.json`.
-2. Move relevant dated `Unreleased` entries into `## [version] - YYYY-MM-DD`, preserving older
-   dated `Unreleased` sections exactly.
-3. Update changelog comparison links and run `pnpm verify`.
-4. Merge the release preparation through the protected `main` branch.
-5. Create and push the immutable `vMAJOR.MINOR.PATCH` tag.
-6. Confirm the Release workflow validates the version and changelog, reruns quality checks, and
-   creates the GitHub Release.
+2. Run `pnpm verify`.
+3. Merge the release preparation through the protected `main` branch.
+4. Create and push the immutable `vMAJOR.MINOR.PATCH` tag.
+5. Confirm the Release workflow validates the version, reruns quality checks, and creates the
+   GitHub Release with generated release notes.
 
 Never move or delete a published release tag.
 

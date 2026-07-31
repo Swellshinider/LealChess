@@ -33,8 +33,7 @@ remote storage, or new network access without discussing the privacy impact firs
   `chore/**`.
 - Use a concise commit subject without conventional-commit prefixes.
 - Keep changes focused and link the agreed issue in the pull request.
-- Update the newest dated `Unreleased` section in `docs/CHANGELOG.md` for notable changes.
-- Do not include screenshots in pull requests.
+- You can include screenshots in pull requests.
 
 Run `pnpm verify:quality` before opening a pull request and `pnpm e2e` for user-facing flows.
 Changes should include focused unit or characterization tests. Check keyboard use, focus order,
