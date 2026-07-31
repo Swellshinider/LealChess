@@ -71,19 +71,18 @@
     font-size: 0.66rem;
     text-transform: capitalize;
   }
+}
 
-  &::after {
-    background: transparent;
-    border-radius: 999px;
-    content: '';
-    height: 6px;
-    margin-left: auto;
-    width: 6px;
-  }
+.turn-indicator {
+  background: transparent;
+  border-radius: 999px;
+  height: 6px;
+  margin-left: auto;
+  width: 6px;
+}
 
-  &.active::after {
-    background: var(--primary);
-  }
+.player-strip.active .turn-indicator {
+  background: var(--primary);
 }
 
 .avatar {
@@ -109,11 +108,10 @@
   color: var(--amber);
   font-family: var(--font-utility);
   font-size: 0.67rem;
-  margin-left: auto;
   text-transform: uppercase;
 }
 
-.player-strip.opponent:has(.thinking-label)::after {
+.player-strip.opponent:has(.thinking-label) .turn-indicator {
   display: none;
 }
 

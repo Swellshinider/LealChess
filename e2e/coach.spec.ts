@@ -92,6 +92,15 @@ test('imports both platforms, persists and deduplicates games, then replays move
   await expect(page.locator('.review-board')).toBeVisible();
   await expect(page.locator('.player-strip.opponent')).toContainText('Opponent');
   await expect(page.locator('.player-strip.opponent .player-avatar')).toHaveText('OP');
+  await expect(
+    page.locator('.review-toolbar').getByRole('button', { name: 'Flip board' }),
+  ).toHaveCount(0);
+  const flipBoard = page
+    .locator('.player-strip.opponent')
+    .getByRole('button', { name: 'Flip board' });
+  await expect(flipBoard).toBeVisible();
+  await expectFlipControlAtBoardTopRight(page, '.review-board');
+  await expect(page.locator('.review-board')).toHaveClass(/orientation-white/);
   await expect
     .poll(() =>
       page.locator('.review-board cg-board').evaluate((board) => {
@@ -132,7 +141,8 @@ test('imports both platforms, persists and deduplicates games, then replays move
   await expect(
     page.getByRole('heading', { name: /Reading the whole game|Your game at a glance/ }),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'Flip board' }).click();
+  await flipBoard.click();
+  await expect(page.locator('.review-board')).toHaveClass(/orientation-black/);
   await expect(page.getByRole('img', { name: 'Review chessboard' })).toHaveAttribute(
     'aria-describedby',
     'review-board-description',
@@ -539,6 +549,15 @@ async function drawReviewArrow(page: Page, from: string, to: string): Promise<vo
   await page.mouse.move(destination.x, destination.y, { steps: 12 });
   await page.waitForTimeout(50);
   await page.mouse.up({ button: 'right' });
+}
+
+async function expectFlipControlAtBoardTopRight(page: Page, boardSelector: string): Promise<void> {
+  const control = await page.getByRole('button', { name: 'Flip board' }).boundingBox();
+  const board = await page.locator(boardSelector).boundingBox();
+  expect(control).not.toBeNull();
+  expect(board).not.toBeNull();
+  expect(Math.abs(control!.x + control!.width - (board!.x + board!.width))).toBeLessThanOrEqual(2);
+  expect(control!.y + control!.height).toBeLessThanOrEqual(board!.y + 1);
 }
 
 async function moveReviewPiece(page: Page, from: string, to: string): Promise<void> {

@@ -10,6 +10,7 @@ import type { OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { GameController } from '../../../core/game/game-controller.service';
 import type { GamePhase, StartGameOptions } from '../../../core/game/game.types';
+import { BoardFlipButtonComponent } from '../../../shared/chess/board-flip-button/board-flip-button.component';
 import { SideNavigationComponent } from '../../../shared/layout/side-navigation/side-navigation.component';
 import { CoachRepositoryService } from '../../coach/data/coach-repository.service';
 import { normalizeLocalGame } from '../../coach/data/local-game-normalizer';
@@ -21,6 +22,7 @@ import { NewGameDialogComponent } from '../new-game-dialog/new-game-dialog.compo
 @Component({
   selector: 'app-play-page',
   imports: [
+    BoardFlipButtonComponent,
     ChessBoardComponent,
     GameOverDialogComponent,
     GameSidebarComponent,

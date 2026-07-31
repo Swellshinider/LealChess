@@ -1,0 +1,33 @@
+:host {
+  display: block;
+  flex: 0 0 auto;
+  position: relative;
+}
+
+button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--mist);
+  display: flex;
+  height: 20px;
+  justify-content: center;
+  padding: 0;
+  width: 20px;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--primary);
+  }
+}
+
+svg {
+  fill: none;
+  height: 20px;
+  stroke: currentcolor;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  stroke-width: 1.8;
+  transform: rotate(90deg);
+  width: 20px;
+}

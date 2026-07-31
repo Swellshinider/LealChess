@@ -19,6 +19,7 @@ import { Chess, type Square } from 'chess.js';
 import { StockfishAnalysisEngineService } from '../../../core/engine/stockfish-analysis-engine.service';
 import { legalDestinations, parseUci, turnColor } from '../../../core/game/chess-move';
 import { boardOverlayPosition } from '../../../shared/chess/board-overlay-position';
+import { BoardFlipButtonComponent } from '../../../shared/chess/board-flip-button/board-flip-button.component';
 import { ChessgroundBoardComponent } from '../../../shared/chess/chessground-board/chessground-board.component';
 import type { ChessColor } from '../../../shared/chess/chess.types';
 import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
@@ -78,6 +79,7 @@ import type { ReviewCandidateLine } from './review-analysis-session.types';
 @Component({
   selector: 'app-review-page',
   imports: [
+    BoardFlipButtonComponent,
     ModalFocusDirective,
     ConfirmationDialogComponent,
     PracticeMoveTreeComponent,

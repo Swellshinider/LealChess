@@ -18,7 +18,6 @@
             <strong>{{ game()?.opening?.name ?? 'Opening not recorded' }}</strong>
             <small>{{ game()?.opening?.eco }} · {{ game()?.speed }} · {{ game()?.result }}</small>
           </div>
-          <button type="button" class="toolbar-action" (click)="flipBoard()">Flip board</button>
         </header>
 
         @if (game()?.parseStatus !== 'ready') {
@@ -51,6 +50,7 @@
                   <small>{{ opponentSide() }} · {{ opponentPlayer()?.rating ?? 'Unrated' }}</small>
                 </span>
                 <span class="turn-indicator" aria-hidden="true"></span>
+                <app-board-flip-button (flipRequested)="flipBoard()" />
               </div>
 
               <div class="board-workbench" [class.has-evaluation]="mode() === 'analysis'">
