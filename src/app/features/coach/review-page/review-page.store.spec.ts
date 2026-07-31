@@ -23,6 +23,7 @@ describe('ReviewPageStore', () => {
     load: vi.fn(),
     cancel: vi.fn(),
   };
+  const sound = { setEnabled: vi.fn(), setVolume: vi.fn() };
   let routeValues: Record<string, string | null>;
 
   beforeEach(() => {
@@ -46,6 +47,7 @@ describe('ReviewPageStore', () => {
               game: null,
               preferences: {
                 soundEnabled: false,
+                soundVolume: 35,
                 showLegalMoves: true,
                 premovesEnabled: true,
                 boardTheme: 'blue-steel',
@@ -55,7 +57,7 @@ describe('ReviewPageStore', () => {
             }),
           },
         },
-        { provide: SoundService, useValue: { setEnabled: vi.fn() } },
+        { provide: SoundService, useValue: sound },
         {
           provide: PracticeAnalysisService,
           useValue: { state: signal({ phase: 'idle' }), destroy: vi.fn() },
@@ -74,6 +76,8 @@ describe('ReviewPageStore', () => {
     expect(store.loading()).toBe(false);
     expect(store.game()).toBeNull();
     expect(store.boardTheme()).toBe('blue-steel');
+    expect(sound.setEnabled).toHaveBeenCalledWith(false);
+    expect(sound.setVolume).toHaveBeenCalledWith(35);
   });
 
   it('detects and persists a missing opening when the review loads', async () => {

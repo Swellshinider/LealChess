@@ -185,7 +185,8 @@ form > button {
 }
 
 .switch-row,
-.select-row {
+.select-row,
+.range-row {
   align-items: center;
   border-bottom: 1px solid rgb(200 213 207 / 12%);
   display: flex;
@@ -205,6 +206,25 @@ form > button {
   small {
     color: var(--mist);
     margin-top: 4px;
+  }
+}
+
+.range-control {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+
+  input {
+    accent-color: var(--primary);
+    min-height: 44px;
+    width: clamp(120px, 18vw, 190px);
+  }
+
+  .volume-output {
+    color: var(--paper);
+    font-variant-numeric: tabular-nums;
+    min-width: 4ch;
+    text-align: right;
   }
 }
 
@@ -340,5 +360,20 @@ form > button {
 
   .danger-zone button {
     width: 100%;
+  }
+
+  .range-row {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .range-control {
+    width: 100%;
+
+    input {
+      flex: 1 1 auto;
+      width: auto;
+    }
   }
 }

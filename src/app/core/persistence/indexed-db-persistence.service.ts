@@ -129,6 +129,9 @@ export class IndexedDbPersistenceService implements PersistencePort {
         typeof record['soundEnabled'] === 'boolean'
           ? record['soundEnabled']
           : DEFAULT_PREFERENCES.soundEnabled,
+      soundVolume: this.isSoundVolume(record['soundVolume'])
+        ? record['soundVolume']
+        : DEFAULT_PREFERENCES.soundVolume,
       showLegalMoves:
         typeof record['showLegalMoves'] === 'boolean'
           ? record['showLegalMoves']
@@ -209,6 +212,10 @@ export class IndexedDbPersistenceService implements PersistencePort {
       'green-felt',
       'blue-steel',
     ].includes(String(value));
+  }
+
+  private isSoundVolume(value: unknown): value is number {
+    return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 100;
   }
 
   private isSquare(value: unknown): boolean {

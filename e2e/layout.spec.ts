@@ -127,6 +127,9 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   await page.goto('/settings');
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
   await expect(page.getByLabel(/Mute sounds/)).not.toBeChecked();
+  await expect(page.getByLabel('Sound volume')).toHaveValue('100');
+  await page.getByLabel('Sound volume').fill('35');
+  await expect(page.getByText('35%', { exact: true })).toBeVisible();
 
   await clickSettingsSquare(page, 'e2');
   await expect(page.locator('square.move-dest')).toHaveCount(2);
@@ -143,6 +146,7 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   await expect(page.locator('.preview-board')).toHaveAttribute('data-board-theme', 'rosewood');
   await page.reload();
   await expect(page.getByLabel('Board palette')).toHaveValue('rosewood');
+  await expect(page.getByLabel('Sound volume')).toHaveValue('35');
 
   await page.getByRole('button', { name: 'Clear all data' }).first().click();
   await expect(page.getByRole('alertdialog')).toBeVisible();
@@ -150,6 +154,7 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   await expect(page).toHaveURL(/\/$/);
   await page.goto('/settings');
   await expect(page.getByLabel('Board palette')).toHaveValue('tournament');
+  await expect(page.getByLabel('Sound volume')).toHaveValue('100');
 });
 
 async function clickSettingsSquare(page: import('@playwright/test').Page, square: string) {

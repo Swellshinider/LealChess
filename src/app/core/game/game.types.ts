@@ -51,6 +51,7 @@ export interface GameResult {
 
 export interface GamePreferences {
   soundEnabled: boolean;
+  soundVolume: number;
   showLegalMoves: boolean;
   premovesEnabled: boolean;
   boardTheme: BoardTheme;
@@ -89,6 +90,7 @@ export interface StartGameOptions {
 
 export const DEFAULT_PREFERENCES: GamePreferences = {
   soundEnabled: true,
+  soundVolume: 100,
   showLegalMoves: true,
   premovesEnabled: true,
   boardTheme: 'tournament',

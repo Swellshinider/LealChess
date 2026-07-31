@@ -26,6 +26,7 @@ vi.mock('@lichess-org/chessground', () => ({
 describe('SettingsPreviewBoardComponent', () => {
   const sound = {
     setEnabled: vi.fn(),
+    setVolume: vi.fn(),
     unlock: vi.fn(),
     play: vi.fn(),
   };
@@ -86,11 +87,13 @@ describe('SettingsPreviewBoardComponent', () => {
     fixture.componentRef.setInput('orientation', 'black');
     fixture.componentRef.setInput('showLegalMoves', false);
     fixture.componentRef.setInput('soundEnabled', false);
+    fixture.componentRef.setInput('soundVolume', 35);
     fixture.detectChanges();
 
     expect(lastBoardConfig().orientation).toBe('black');
     expect(lastBoardConfig().movable?.showDests).toBe(false);
     expect(sound.setEnabled).toHaveBeenLastCalledWith(false);
+    expect(sound.setVolume).toHaveBeenLastCalledWith(35);
   });
 
   it('auto-promotes preview pawns to queens', async () => {
@@ -108,6 +111,7 @@ describe('SettingsPreviewBoardComponent', () => {
 
 async function createFixture(sound: {
   setEnabled: ReturnType<typeof vi.fn>;
+  setVolume: ReturnType<typeof vi.fn>;
   unlock: ReturnType<typeof vi.fn>;
   play: ReturnType<typeof vi.fn>;
 }) {
@@ -120,6 +124,7 @@ async function createFixture(sound: {
   fixture.componentRef.setInput('orientation', 'white');
   fixture.componentRef.setInput('showLegalMoves', true);
   fixture.componentRef.setInput('soundEnabled', true);
+  fixture.componentRef.setInput('soundVolume', 100);
   fixture.detectChanges();
   return fixture;
 }

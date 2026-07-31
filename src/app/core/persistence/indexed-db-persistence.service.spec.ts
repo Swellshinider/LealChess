@@ -77,12 +77,26 @@ describe('IndexedDbPersistenceService', () => {
     const restored = await repository.restore();
     expect(restored.preferences).toEqual({
       soundEnabled: false,
+      soundVolume: 100,
       showLegalMoves: false,
       premovesEnabled: true,
       boardTheme: 'rosewood',
       orientation: 'black',
       botRating: 2200,
     });
+  });
+
+  it('falls back to the default volume when the persisted value is invalid', async () => {
+    const repository = TestBed.inject(IndexedDbPersistenceService);
+    const database = await TestBed.inject(LealChessDatabaseService).open();
+    await database.put('state', {
+      key: 'preferences',
+      value: { ...DEFAULT_PREFERENCES, soundVolume: 101 } as GamePreferences,
+    });
+
+    const restored = await repository.restore();
+
+    expect(restored.preferences.soundVolume).toBe(100);
   });
 
   it.each([
