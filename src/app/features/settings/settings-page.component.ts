@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, HostListener, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  HostListener,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import type { OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BOARD_THEMES } from '../../core/game/board-themes';
@@ -9,7 +16,10 @@ import {
   type GamePreferences,
 } from '../../core/game/game.types';
 import { PERSISTENCE_PORT } from '../../core/persistence/persistence.types';
-import { SettingsPersistenceService } from '../../core/persistence/settings-persistence.service';
+import {
+  SettingsPersistenceService,
+  type LealChessStorageUsage,
+} from '../../core/persistence/settings-persistence.service';
 import { ModalFocusDirective } from '../../shared/a11y/modal-focus.directive';
 import { SideNavigationComponent } from '../../shared/layout/side-navigation/side-navigation.component';
 import { CoachImportService } from '../coach/data/coach-import.service';
@@ -38,6 +48,11 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
   protected readonly usernameError = signal(false);
   protected readonly clearConfirmationOpen = signal(false);
   protected readonly clearing = signal(false);
+  protected readonly storageUsage = signal<LealChessStorageUsage | null | undefined>(undefined);
+  protected readonly storageUsageLabel = computed(() => {
+    const usage = this.storageUsage();
+    return formatStorageUsage(usage === null || usage === undefined ? usage : usage.total);
+  });
   protected readonly importForm = new FormGroup({
     chessComUsername: new FormControl('', { nonNullable: true }),
     lichessUsername: new FormControl('', { nonNullable: true }),
@@ -62,6 +77,7 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
     this.preferences.set(restored.preferences);
     this.importForm.setValue(importPreferences, { emitEvent: false });
     this.importForm.enable({ emitEvent: false });
+    this.storageUsage.set(await this.settingsPersistence.calculateStorageUsage());
     this.importPreferencesSubscription = this.importForm.valueChanges.subscribe(() => {
       if (this.importForm.valid) {
         void this.settingsPersistence.saveImportPreferences(this.importForm.getRawValue());
@@ -88,10 +104,12 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
     }
     await this.settingsPersistence.saveImportPreferences(request);
     await this.coach.import(request);
+    await this.refreshStorageUsage();
   }
 
-  protected retry(platform: ChessPlatform): void {
-    void this.coach.retry(platform);
+  protected async retry(platform: ChessPlatform): Promise<void> {
+    await this.coach.retry(platform);
+    await this.refreshStorageUsage();
   }
 
   protected updateBoolean(key: 'showLegalMoves' | 'premovesEnabled', event: Event): void {
@@ -130,4 +148,25 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
     this.preferences.set(next);
     void this.persistence.savePreferences(next);
   }
+
+  private async refreshStorageUsage(): Promise<void> {
+    this.storageUsage.set(undefined);
+    this.storageUsage.set(await this.settingsPersistence.calculateStorageUsage());
+  }
+}
+
+export function formatStorageUsage(bytes: number | null | undefined): string {
+  if (bytes === undefined) return 'Calculating…';
+  if (bytes === null) return 'Unavailable';
+  if (bytes < 1024) return `${Math.round(bytes)} B`;
+
+  const units = ['KB', 'MB', 'GB'] as const;
+  let value = bytes / 1024;
+  let unitIndex = 0;
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+
+  return `${Math.round(value * 10) / 10} ${units[unitIndex]}`;
 }

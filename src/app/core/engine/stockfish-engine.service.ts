@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { botMoveTimeMs, type BotRating } from './bot-rating';
 import type { EngineMove, EnginePort, EngineSearchRequest } from './engine.types';
+import { markStockfishEngineDownloaded } from './stockfish-assets';
 import { STOCKFISH_PLAY_WORKER_FACTORY } from './stockfish-worker';
 import { parseBestMove } from './uci-parser';
 
@@ -110,6 +111,7 @@ export class StockfishEngineService implements EnginePort {
       throw new Error('Stockfish was stopped.');
     }
     this.initialized = true;
+    markStockfishEngineDownloaded('play');
   }
 
   private handleLine(line: string): void {

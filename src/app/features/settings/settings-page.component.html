@@ -181,7 +181,31 @@
           analyses from this browser.
         </p>
       </div>
-      <button type="button" (click)="clearConfirmationOpen.set(true)">Clear all data</button>
+      <div class="local-data-actions">
+        <p class="storage-usage">
+          <span>LealChess storage used</span>
+          <span class="storage-value">
+            <strong data-testid="storage-usage-value" aria-live="polite">
+              {{ storageUsageLabel() }}
+            </strong>
+            <span class="storage-help">
+              <button
+                type="button"
+                aria-label="How storage usage is calculated"
+                aria-describedby="storage-calculation-tooltip"
+              >
+                ?
+              </button>
+              <span id="storage-calculation-tooltip" class="storage-tooltip" role="tooltip">
+                The total combines the UTF-8 size of saved games, preferences, profiles and analyses
+                with the packaged size of Stockfish engines loaded since LealChess data was last
+                cleared. Browser and database overhead are not included.
+              </span>
+            </span>
+          </span>
+        </p>
+        <button type="button" (click)="clearConfirmationOpen.set(true)">Clear all data</button>
+      </div>
     </section>
   </main>
 </div>
