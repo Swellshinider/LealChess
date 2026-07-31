@@ -1,12 +1,20 @@
-import { ChangeDetectionStrategy, Component, HostListener, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  HostListener,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import type { OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { GameController } from '../../../core/game/game-controller.service';
-import type { StartGameOptions } from '../../../core/game/game.types';
+import type { GamePhase, StartGameOptions } from '../../../core/game/game.types';
 import { SideNavigationComponent } from '../../../shared/layout/side-navigation/side-navigation.component';
 import { CoachRepositoryService } from '../../coach/data/coach-repository.service';
 import { normalizeLocalGame } from '../../coach/data/local-game-normalizer';
 import { ChessBoardComponent } from '../chess-board/chess-board.component';
+import { GameOverDialogComponent } from '../game-over-dialog/game-over-dialog.component';
 import { GameSidebarComponent } from '../game-sidebar/game-sidebar.component';
 import { NewGameDialogComponent } from '../new-game-dialog/new-game-dialog.component';
 
@@ -14,6 +22,7 @@ import { NewGameDialogComponent } from '../new-game-dialog/new-game-dialog.compo
   selector: 'app-play-page',
   imports: [
     ChessBoardComponent,
+    GameOverDialogComponent,
     GameSidebarComponent,
     NewGameDialogComponent,
     SideNavigationComponent,
@@ -29,10 +38,26 @@ export class PlayPageComponent implements OnInit, OnDestroy {
   protected readonly setupDismissed = signal(false);
   protected readonly reviewPending = signal(false);
   protected readonly reviewError = signal<string | null>(null);
+  protected readonly gameOverOpen = signal(false);
   protected readonly state = this.controller.state;
   private readonly repository = inject(CoachRepositoryService);
   private readonly router = inject(Router);
   private newGameTrigger: HTMLElement | null = null;
+  private previousPhase: GamePhase = this.state().phase;
+
+  constructor() {
+    effect(() => {
+      const phase = this.state().phase;
+      const previousPhase = this.previousPhase;
+      this.previousPhase = phase;
+
+      if (previousPhase === 'active' && phase === 'game-over') {
+        this.gameOverOpen.set(true);
+      } else if (phase !== 'game-over') {
+        this.gameOverOpen.set(false);
+      }
+    });
+  }
 
   ngOnInit(): void {
     void this.controller.initialize();
@@ -66,7 +91,19 @@ export class PlayPageComponent implements OnInit, OnDestroy {
 
   protected startGame(options: StartGameOptions): void {
     this.newGameOpen.set(false);
+    this.clearReviewState();
     void this.controller.startGame(options);
+  }
+
+  protected openNewGameFromResult(): void {
+    this.gameOverOpen.set(false);
+    this.openNewGame();
+  }
+
+  protected restartGameFromResult(): void {
+    this.gameOverOpen.set(false);
+    this.clearReviewState();
+    void this.controller.restartGame();
   }
 
   protected async reviewGame(): Promise<void> {
@@ -83,5 +120,10 @@ export class PlayPageComponent implements OnInit, OnDestroy {
       this.reviewError.set('The game could not be saved for review. Please try again.');
       this.reviewPending.set(false);
     }
+  }
+
+  private clearReviewState(): void {
+    this.reviewPending.set(false);
+    this.reviewError.set(null);
   }
 }

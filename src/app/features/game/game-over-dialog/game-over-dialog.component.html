@@ -1,0 +1,72 @@
+@if (restartConfirmationOpen()) {
+  <app-confirmation-dialog
+    eyebrow="Confirm restart"
+    title="Restart this game?"
+    description="The completed position and move history will be cleared."
+    cancelLabel="Keep result"
+    confirmLabel="Restart game"
+    (cancelled)="cancelRestart()"
+    (confirmed)="restart()"
+  />
+} @else {
+  <div class="dialog-backdrop">
+    <section
+      appModalFocus
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="game-over-title"
+      aria-describedby="game-over-result"
+      tabindex="-1"
+      (modalDismissed)="dismissed.emit()"
+    >
+      <button
+        class="close"
+        type="button"
+        aria-label="Close game over dialog"
+        (click)="dismissed.emit()"
+      >
+        ×
+      </button>
+
+      <span class="kicker">Final position</span>
+      <h2 id="game-over-title">Game over</h2>
+      <p id="game-over-result" class="result-label">{{ result().label }}</p>
+      <p class="next-step">
+        Review the game now, replay the same match, or choose a new challenge.
+      </p>
+
+      @if (reviewError()) {
+        <p class="review-error" role="alert">{{ reviewError() }}</p>
+      }
+
+      <footer>
+        <button
+          type="button"
+          class="secondary-action"
+          [disabled]="reviewPending()"
+          (click)="newGameRequested.emit()"
+        >
+          New game
+        </button>
+        <button
+          type="button"
+          class="secondary-action restart-action"
+          [disabled]="reviewPending()"
+          [attr.data-modal-initial]="returnFocusToRestart() ? '' : null"
+          (click)="confirmRestart()"
+        >
+          Restart
+        </button>
+        <button
+          type="button"
+          class="primary-action"
+          [disabled]="reviewPending()"
+          [attr.data-modal-initial]="returnFocusToRestart() ? null : ''"
+          (click)="reviewRequested.emit()"
+        >
+          {{ reviewPending() ? 'Opening review…' : 'Review game' }}
+        </button>
+      </footer>
+    </section>
+  </div>
+}
