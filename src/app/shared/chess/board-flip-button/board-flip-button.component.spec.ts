@@ -21,6 +21,7 @@ describe('BoardFlipButtonComponent', () => {
     const icon = button.querySelector('svg')!;
 
     expect(button.getAttribute('aria-label')).toBe('Flip board');
+    expect(button.getAttribute('title')).toBe('Flip board');
     expect(icon.getAttribute('aria-hidden')).toBe('true');
 
     button.click();
