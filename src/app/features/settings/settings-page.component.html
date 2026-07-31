@@ -111,15 +111,17 @@
               <small>Set the level for move and game sounds.</small>
             </span>
             <span class="range-control">
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="1"
-                [value]="preferences().soundVolume"
-                [attr.aria-valuetext]="preferences().soundVolume + '%'"
-                (input)="updateSoundVolume($event)"
-              />
+              <span class="range-slider" [style.--sound-volume]="preferences().soundVolume + '%'">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="1"
+                  [value]="preferences().soundVolume"
+                  [attr.aria-valuetext]="preferences().soundVolume + '%'"
+                  (input)="updateSoundVolume($event)"
+                />
+              </span>
               <span class="volume-output" aria-live="polite">
                 {{ preferences().soundVolume }}%
               </span>

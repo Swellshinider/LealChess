@@ -127,8 +127,22 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   await page.goto('/settings');
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
   await expect(page.getByLabel(/Mute sounds/)).not.toBeChecked();
-  await expect(page.getByLabel('Sound volume')).toHaveValue('100');
-  await page.getByLabel('Sound volume').fill('35');
+  const soundVolume = page.getByLabel('Sound volume');
+  const soundVolumeTrack = soundVolume.locator('xpath=..');
+  await expect(soundVolume).toHaveValue('100');
+  await expect(soundVolumeTrack).toHaveCSS('--sound-volume', '100%');
+  const soundVolumeBounds = await soundVolume.boundingBox();
+  await soundVolume.fill('0');
+  await expect(soundVolumeTrack).toHaveCSS('--sound-volume', '0%');
+  await expect
+    .poll(async () => {
+      const bounds = await soundVolume.boundingBox();
+      return bounds ? { x: bounds.x, width: bounds.width } : null;
+    })
+    .toEqual(soundVolumeBounds ? { x: soundVolumeBounds.x, width: soundVolumeBounds.width } : null);
+  await soundVolume.fill('100');
+  await expect(soundVolumeTrack).toHaveCSS('--sound-volume', '100%');
+  await soundVolume.fill('35');
   await expect(page.getByText('35%', { exact: true })).toBeVisible();
 
   await clickSettingsSquare(page, 'e2');

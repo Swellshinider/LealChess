@@ -214,17 +214,100 @@ form > button {
   display: flex;
   gap: 12px;
 
-  input {
-    accent-color: var(--primary);
-    min-height: 44px;
-    width: clamp(120px, 18vw, 190px);
-  }
-
   .volume-output {
     color: var(--paper);
+    flex: 0 0 5ch;
     font-variant-numeric: tabular-nums;
-    min-width: 4ch;
+    max-width: 5ch;
+    min-width: 5ch;
     text-align: right;
+    white-space: nowrap;
+  }
+}
+
+.range-slider {
+  --range-thumb-size: 18px;
+  --range-track-height: 6px;
+
+  align-items: center;
+  display: flex;
+  flex: 0 0 clamp(120px, 18vw, 190px);
+  height: 44px;
+  position: relative;
+  width: clamp(120px, 18vw, 190px);
+
+  &::before {
+    background: linear-gradient(
+      to right,
+      var(--primary) 0 var(--sound-volume),
+      rgb(200 213 207 / 24%) var(--sound-volume) 100%
+    );
+    border-radius: 999px;
+    content: '';
+    height: var(--range-track-height);
+    inset-inline: calc(var(--range-thumb-size) / 2);
+    pointer-events: none;
+    position: absolute;
+  }
+
+  input {
+    appearance: none;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    cursor: pointer;
+    height: 44px;
+    margin: 0;
+    min-height: 44px;
+    padding: 0;
+    position: relative;
+    width: 100%;
+
+    &::-webkit-slider-runnable-track {
+      background: transparent;
+      height: var(--range-track-height);
+    }
+
+    &::-webkit-slider-thumb {
+      appearance: none;
+      background: var(--primary);
+      border: none;
+      border-radius: 50%;
+      box-shadow: none;
+      height: var(--range-thumb-size);
+      margin-top: calc((var(--range-track-height) - var(--range-thumb-size)) / 2);
+      width: var(--range-thumb-size);
+    }
+
+    &::-moz-range-track,
+    &::-moz-range-progress {
+      background: transparent;
+      height: var(--range-track-height);
+    }
+
+    &::-moz-range-thumb {
+      background: var(--primary);
+      border: none;
+      border-radius: 50%;
+      box-shadow: none;
+      height: var(--range-thumb-size);
+      width: var(--range-thumb-size);
+    }
+
+    &:focus-visible {
+      outline: none;
+    }
+
+    &:focus-visible::-webkit-slider-thumb {
+      outline: 3px solid var(--paper);
+      outline-offset: 2px;
+    }
+
+    &:focus-visible::-moz-range-thumb {
+      outline: 3px solid var(--paper);
+      outline-offset: 2px;
+    }
   }
 }
 
@@ -371,7 +454,7 @@ form > button {
   .range-control {
     width: 100%;
 
-    input {
+    .range-slider {
       flex: 1 1 auto;
       width: auto;
     }
