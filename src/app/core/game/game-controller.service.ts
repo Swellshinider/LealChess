@@ -57,6 +57,7 @@ export class GameController {
       orientation: playerColor,
     };
     this.sound.setEnabled(preferences.soundEnabled);
+    this.sound.setVolume(preferences.soundVolume);
     this.mutableState.set(
       this.buildState({
         gameId: crypto.randomUUID(),
@@ -289,6 +290,7 @@ export class GameController {
   updatePreferences(changes: Partial<GamePreferences>): void {
     const preferences = { ...this.mutableState().preferences, ...changes };
     this.sound.setEnabled(preferences.soundEnabled);
+    this.sound.setVolume(preferences.soundVolume);
     this.patchState({
       preferences,
       orientation: preferences.orientation,
@@ -344,6 +346,7 @@ export class GameController {
     });
     const restored = await this.persistence.restore();
     this.sound.setEnabled(restored.preferences.soundEnabled);
+    this.sound.setVolume(restored.preferences.soundVolume);
     const restoredGame = this.restoreGame(restored.game);
 
     try {

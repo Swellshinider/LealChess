@@ -102,6 +102,10 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
     this.savePreferences({ soundEnabled: !(event.target as HTMLInputElement).checked });
   }
 
+  protected updateSoundVolume(event: Event): void {
+    this.savePreferences({ soundVolume: Number((event.target as HTMLInputElement).value) });
+  }
+
   protected updateTheme(event: Event): void {
     this.savePreferences({
       boardTheme: (event.target as HTMLSelectElement).value as BoardTheme,

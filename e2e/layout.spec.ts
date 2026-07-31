@@ -107,7 +107,7 @@ test('launches each workspace and provides project information', async ({ page }
   await page.goto('/help');
   await expect(page).toHaveURL(/\/about$/);
   await expect(page.getByRole('heading', { name: 'About' })).toBeVisible();
-  await expect(page.getByText('v0.2.0', { exact: true })).toBeVisible();
+  await expect(page.getByText('v0.3.0', { exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Swellshinider/LealChess' })).toHaveAttribute(
     'href',
     'https://github.com/Swellshinider/LealChess',
@@ -127,6 +127,23 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   await page.goto('/settings');
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
   await expect(page.getByLabel(/Mute sounds/)).not.toBeChecked();
+  const soundVolume = page.getByLabel('Sound volume');
+  const soundVolumeTrack = soundVolume.locator('xpath=..');
+  await expect(soundVolume).toHaveValue('100');
+  await expect(soundVolumeTrack).toHaveCSS('--sound-volume', '100%');
+  const soundVolumeBounds = await soundVolume.boundingBox();
+  await soundVolume.fill('0');
+  await expect(soundVolumeTrack).toHaveCSS('--sound-volume', '0%');
+  await expect
+    .poll(async () => {
+      const bounds = await soundVolume.boundingBox();
+      return bounds ? { x: bounds.x, width: bounds.width } : null;
+    })
+    .toEqual(soundVolumeBounds ? { x: soundVolumeBounds.x, width: soundVolumeBounds.width } : null);
+  await soundVolume.fill('100');
+  await expect(soundVolumeTrack).toHaveCSS('--sound-volume', '100%');
+  await soundVolume.fill('35');
+  await expect(page.getByText('35%', { exact: true })).toBeVisible();
 
   await clickSettingsSquare(page, 'e2');
   await expect(page.locator('square.move-dest')).toHaveCount(2);
@@ -143,6 +160,7 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   await expect(page.locator('.preview-board')).toHaveAttribute('data-board-theme', 'rosewood');
   await page.reload();
   await expect(page.getByLabel('Board palette')).toHaveValue('rosewood');
+  await expect(page.getByLabel('Sound volume')).toHaveValue('35');
 
   await page.getByRole('button', { name: 'Clear all data' }).first().click();
   await expect(page.getByRole('alertdialog')).toBeVisible();
@@ -150,6 +168,7 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   await expect(page).toHaveURL(/\/$/);
   await page.goto('/settings');
   await expect(page.getByLabel('Board palette')).toHaveValue('tournament');
+  await expect(page.getByLabel('Sound volume')).toHaveValue('100');
 });
 
 async function clickSettingsSquare(page: import('@playwright/test').Page, square: string) {

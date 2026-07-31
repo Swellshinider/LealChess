@@ -13,6 +13,7 @@ import {
   type PersistedGame,
   type PersistencePort,
 } from '../persistence/persistence.types';
+import { SoundService } from '../sound/sound.service';
 import { GameController } from './game-controller.service';
 import { DEFAULT_PREFERENCES, type GamePreferences } from './game.types';
 
@@ -73,8 +74,15 @@ describe('GameController', () => {
   let engine: FakeEngine;
   let persistence: FakePersistence;
   let controller: GameController;
+  const sound = {
+    setEnabled: vi.fn(),
+    setVolume: vi.fn(),
+    unlock: vi.fn(),
+    play: vi.fn(),
+  };
 
   beforeEach(() => {
+    vi.clearAllMocks();
     engine = new FakeEngine();
     persistence = new FakePersistence();
     TestBed.configureTestingModule({
@@ -82,9 +90,23 @@ describe('GameController', () => {
         GameController,
         { provide: ENGINE_PORT, useValue: engine },
         { provide: PERSISTENCE_PORT, useValue: persistence },
+        { provide: SoundService, useValue: sound },
       ],
     });
     controller = TestBed.inject(GameController);
+  });
+
+  it('applies restored and updated sound preferences', async () => {
+    persistence.preferences = { ...DEFAULT_PREFERENCES, soundEnabled: false, soundVolume: 35 };
+
+    await controller.initialize();
+    expect(sound.setEnabled).toHaveBeenLastCalledWith(false);
+    expect(sound.setVolume).toHaveBeenLastCalledWith(35);
+
+    controller.updatePreferences({ soundEnabled: true, soundVolume: 70 });
+    expect(sound.setEnabled).toHaveBeenLastCalledWith(true);
+    expect(sound.setVolume).toHaveBeenLastCalledWith(70);
+    expect(persistence.preferences.soundVolume).toBe(70);
   });
 
   it('commits legal player and engine moves while rejecting illegal input', async () => {

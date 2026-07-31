@@ -7,9 +7,15 @@ export class SoundService {
   private context: AudioContext | null = null;
   private unlocked = false;
   private enabled = true;
+  private volume = 1;
 
   setEnabled(enabled: boolean): void {
     this.enabled = enabled;
+  }
+
+  setVolume(volume: number): void {
+    const safeVolume = Number.isFinite(volume) ? volume : 100;
+    this.volume = Math.min(100, Math.max(0, safeVolume)) / 100;
   }
 
   unlock(): void {
@@ -22,7 +28,7 @@ export class SoundService {
   }
 
   play(event: SoundEvent): void {
-    if (!this.enabled || !this.unlocked || !this.context) {
+    if (!this.enabled || this.volume === 0 || !this.unlocked || !this.context) {
       return;
     }
 
@@ -34,7 +40,7 @@ export class SoundService {
     oscillator.frequency.setValueAtTime(profile.frequency, now);
     oscillator.frequency.exponentialRampToValueAtTime(profile.endFrequency, now + profile.duration);
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(profile.volume, now + 0.008);
+    gain.gain.exponentialRampToValueAtTime(profile.volume * this.volume, now + 0.008);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + profile.duration);
     oscillator.connect(gain);
     gain.connect(this.context.destination);

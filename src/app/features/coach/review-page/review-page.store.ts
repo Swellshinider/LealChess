@@ -87,6 +87,7 @@ export class ReviewPageStore {
   async initialize(): Promise<void> {
     const restored = await this.persistence.restore();
     this.sound.setEnabled(restored.preferences.soundEnabled);
+    this.sound.setVolume(restored.preferences.soundVolume);
     this.boardTheme.set(restored.preferences.boardTheme);
     const platform = this.route.snapshot.paramMap.get('platform') as GameSource | null;
     const gameId = this.route.snapshot.paramMap.get('gameId');
