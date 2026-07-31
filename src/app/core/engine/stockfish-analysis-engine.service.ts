@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { markStockfishEngineDownloaded } from './stockfish-assets';
 import type {
   AnalysisEnginePort,
   PositionAnalysisRequest,
@@ -132,6 +133,7 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
       throw new Error('Stockfish analysis was stopped.');
     }
     this.initialized = true;
+    markStockfishEngineDownloaded('analysis');
   }
 
   private handleLine(line: string): void {

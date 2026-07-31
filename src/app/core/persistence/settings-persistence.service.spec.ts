@@ -2,6 +2,7 @@ import 'fake-indexeddb/auto';
 import { TestBed } from '@angular/core/testing';
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { markStockfishEngineDownloaded } from '../engine/stockfish-assets';
 import { LealChessDatabaseService } from './leal-chess-database.service';
 import { SettingsPersistenceService } from './settings-persistence.service';
 
@@ -11,7 +12,42 @@ describe('SettingsPersistenceService', () => {
       configurable: true,
       value: new IDBFactory(),
     });
+    localStorage.clear();
     TestBed.configureTestingModule({});
+  });
+
+  it('calculates saved record bytes together with downloaded engine bytes', async () => {
+    const database = await TestBed.inject(LealChessDatabaseService).open();
+    const profile = {
+      platform: 'lichess' as const,
+      username: 'player',
+      displayName: 'Player',
+      profileUrl: 'https://lichess.org/@/player',
+      updatedAt: '2026-07-27T12:00:00.000Z',
+    };
+    const preferences = {
+      key: 'import-preferences' as const,
+      value: {
+        chessComUsername: '',
+        lichessUsername: 'player',
+        maxGames: 20,
+        speed: 'any' as const,
+      },
+    };
+    await database.put('coachProfiles', profile);
+    await database.put('state', preferences);
+    markStockfishEngineDownloaded('play');
+
+    const records =
+      new TextEncoder().encode(JSON.stringify(profile)).byteLength +
+      new TextEncoder().encode(JSON.stringify(preferences)).byteLength;
+    await expect(
+      TestBed.inject(SettingsPersistenceService).calculateStorageUsage(),
+    ).resolves.toEqual({
+      records,
+      engines: 7_316_840,
+      total: records + 7_316_840,
+    });
   });
 
   it('seeds usernames from profiles and persists import filters', async () => {
@@ -48,6 +84,7 @@ describe('SettingsPersistenceService', () => {
       key: 'import-preferences',
       value: { chessComUsername: '', lichessUsername: 'player', maxGames: 20, speed: 'any' },
     });
+    markStockfishEngineDownloaded('analysis');
 
     await TestBed.inject(SettingsPersistenceService).clearAll();
 
@@ -57,5 +94,12 @@ describe('SettingsPersistenceService', () => {
     await expect(database.getAll('gameAnalyses')).resolves.toEqual([]);
     await expect(database.getAll('explorerSessions')).resolves.toEqual([]);
     await expect(database.getAll('reviewAnalysisSessions')).resolves.toEqual([]);
+    await expect(
+      TestBed.inject(SettingsPersistenceService).calculateStorageUsage(),
+    ).resolves.toEqual({
+      records: 0,
+      engines: 0,
+      total: 0,
+    });
   });
 });
