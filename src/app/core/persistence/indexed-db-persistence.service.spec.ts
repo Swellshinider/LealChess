@@ -83,6 +83,7 @@ describe('IndexedDbPersistenceService', () => {
       boardTheme: 'rosewood',
       orientation: 'black',
       botRating: 2200,
+      keybindings: DEFAULT_PREFERENCES.keybindings,
     });
   });
 

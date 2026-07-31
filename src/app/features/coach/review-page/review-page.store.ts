@@ -1,7 +1,12 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import type { BoardTheme, MoveInput } from '../../../core/game/game.types';
+import {
+  DEFAULT_PREFERENCES,
+  type BoardTheme,
+  type MoveInput,
+} from '../../../core/game/game.types';
 import type { PromotionPiece } from '../../../core/game/game.types';
+import type { KeybindingPreferences } from '../../../core/keyboard/keybindings';
 import { PERSISTENCE_PORT } from '../../../core/persistence/persistence.types';
 import { SoundService } from '../../../core/sound/sound.service';
 import type { ChessColor } from '../../../shared/chess/chess.types';
@@ -37,6 +42,7 @@ export class ReviewPageStore {
   readonly orientation = signal<ChessColor>('white');
   readonly learnerColor = signal<ChessColor | null>(null);
   readonly boardTheme = signal<BoardTheme>('tournament');
+  readonly keybindings = signal<KeybindingPreferences>(DEFAULT_PREFERENCES.keybindings);
   readonly mode = signal<ReviewMode>('summary');
   readonly trainingIndex = signal(0);
   readonly puzzleStatus = signal<PuzzleStatus>('ready');
@@ -89,6 +95,7 @@ export class ReviewPageStore {
     this.sound.setEnabled(restored.preferences.soundEnabled);
     this.sound.setVolume(restored.preferences.soundVolume);
     this.boardTheme.set(restored.preferences.boardTheme);
+    this.keybindings.set(restored.preferences.keybindings);
     const platform = this.route.snapshot.paramMap.get('platform') as GameSource | null;
     const gameId = this.route.snapshot.paramMap.get('gameId');
     if ((platform === 'chess-com' || platform === 'lichess' || platform === 'local') && gameId) {

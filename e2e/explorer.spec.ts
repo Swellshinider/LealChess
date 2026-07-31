@@ -8,6 +8,32 @@ const pgn = `[Event "Explorer test"]
 
 1. e4 e5 2. Nf3 Nc6 *`;
 
+test('persists a custom navigation shortcut from Settings', async ({ page }) => {
+  await page.goto('/settings');
+  const previousShortcut = page.getByRole('button', {
+    name: /Change Previous move shortcut/,
+  });
+  await previousShortcut.click();
+  await previousShortcut.press('p');
+  await expect(previousShortcut).toHaveAccessibleName(/currently P$/);
+
+  await page.reload();
+  await expect(
+    page.getByRole('button', { name: /Change Previous move shortcut, currently P$/ }),
+  ).toBeVisible();
+  await page.goto('/explorer');
+  await page.getByRole('button', { name: 'Import FEN or PGN' }).click();
+  await page.getByRole('tab', { name: 'PGN' }).click();
+  await page.getByLabel('Paste a standard PGN').fill(pgn);
+  await page.getByRole('button', { name: 'Analyze game' }).click();
+
+  await expect(page.locator('.move-node.current')).toContainText('Nc6');
+  await page.evaluate(() =>
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'p', bubbles: true })),
+  );
+  await expect(page.locator('.move-node.current')).toContainText('Nf3');
+});
+
 test('imports and restores a PGN, then exposes the full position editor', async ({ page }) => {
   await page.goto('/explorer');
 
@@ -78,6 +104,10 @@ test('grades a manual board move and displays ranked engine lines', async ({ pag
     timeout: 30_000,
   });
   await expect(page.locator('.candidate-lines li')).toHaveCount(3, { timeout: 30_000 });
+  await expect(page.locator('.explorer-board svg.cg-shapes line')).toHaveCount(3);
+  await page.keyboard.press('Space');
+  await expect(page.locator('.explorer-board svg.cg-shapes line')).toHaveCount(0);
+  await page.keyboard.press('Space');
   await expect(page.locator('.explorer-board svg.cg-shapes line')).toHaveCount(3);
 
   const board = await page.locator('.explorer-board').boundingBox();

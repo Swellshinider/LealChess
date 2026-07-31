@@ -10,6 +10,7 @@ import {
   type PendingPremove,
 } from '../game/game.types';
 import { isBotRating, legacyBotRating, normalizeBotRating } from '../engine/bot-rating';
+import { normalizeKeybindingPreferences } from '../keyboard/keybindings';
 import {
   PERSISTENCE_SCHEMA_VERSION,
   type PersistedGame,
@@ -147,6 +148,7 @@ export class IndexedDbPersistenceService implements PersistencePort {
         ? record['orientation']
         : DEFAULT_PREFERENCES.orientation,
       botRating: normalizeBotRating(record['botRating'], record['difficulty']),
+      keybindings: normalizeKeybindingPreferences(record['keybindings']),
     };
   }
 

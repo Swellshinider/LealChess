@@ -172,6 +172,57 @@
       </div>
     </section>
 
+    <section aria-labelledby="keyboard-heading">
+      <div class="section-heading">
+        <div>
+          <p class="folio">Keyboard</p>
+          <h2 id="keyboard-heading">Move through analysis your way</h2>
+        </div>
+        <span>Changes save immediately</span>
+      </div>
+
+      <p class="keyboard-intro">
+        Choose a shortcut, then press the key combination you want. Shortcuts are active in Review
+        and Explorer when focus is outside interactive controls.
+      </p>
+      <div class="keybinding-list">
+        @for (action of keybindingActions; track action) {
+          <div class="keybinding-row">
+            <span class="keybinding-name">{{ keybindingLabels[action] }}</span>
+            <button
+              type="button"
+              class="keybinding-capture"
+              [class.capturing]="capturingKeybinding() === action"
+              [attr.aria-label]="
+                'Change ' +
+                keybindingLabels[action] +
+                ' shortcut, currently ' +
+                keybindingLabel(action)
+              "
+              [attr.aria-pressed]="capturingKeybinding() === action"
+              (click)="beginKeybindingCapture(action)"
+              (keydown)="captureKeybinding(action, $event)"
+            >
+              {{ capturingKeybinding() === action ? 'Press shortcut…' : keybindingLabel(action) }}
+            </button>
+            <button
+              type="button"
+              class="keybinding-reset"
+              [disabled]="keybindingIsDefault(action)"
+              [attr.aria-label]="'Reset ' + keybindingLabels[action] + ' to default'"
+              (click)="resetKeybinding(action)"
+            >
+              Reset
+            </button>
+          </div>
+        }
+      </div>
+      <div class="keybinding-footer">
+        <p aria-live="polite">{{ keybindingError() }}</p>
+        <button type="button" (click)="restoreDefaultKeybindings()">Restore defaults</button>
+      </div>
+    </section>
+
     <section class="danger-zone" aria-labelledby="danger-heading">
       <div>
         <p class="folio">Local data</p>
