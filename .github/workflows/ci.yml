@@ -13,45 +13,111 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run_ci: ${{ steps.classify.outputs.run_ci }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Test change classification
+        shell: bash
+        run: bash .github/scripts/classify-ci-changes.spec.sh
+      - name: Classify changed files
+        id: classify
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            diff_base="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
+          elif [[ "$BASE_SHA" =~ ^0+$ ]]; then
+            diff_base="$(git hash-object -t tree /dev/null)"
+          else
+            diff_base="$BASE_SHA"
+          fi
+
+          mapfile -d '' -t changed_files < <(
+            git diff --name-only -z "$diff_base" "$HEAD_SHA"
+          )
+          run_ci="$(bash .github/scripts/classify-ci-changes.sh "${changed_files[@]}")"
+          echo "run_ci=$run_ci" >> "$GITHUB_OUTPUT"
+
   quality:
+    needs: changes
+    if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      - name: Require successful change classification
+        if: ${{ needs.changes.result != 'success' }}
+        run: exit 1
+      - name: Skip quality checks for documentation-only changes
+        if: ${{ needs.changes.result == 'success' && needs.changes.outputs.run_ci != 'true' }}
+        run: echo "Documentation-only change; quality checks are not required."
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: ${{ needs.changes.outputs.run_ci == 'true' }}
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        if: ${{ needs.changes.outputs.run_ci == 'true' }}
         with:
           version: 11.17.0
           run_install: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        if: ${{ needs.changes.outputs.run_ci == 'true' }}
         with:
           node-version: 24.15.0
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm format:check
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm test:coverage
-      - run: pnpm build
-      - run: pnpm run audit
+      - if: ${{ needs.changes.outputs.run_ci == 'true' }}
+        run: pnpm install --frozen-lockfile
+      - if: ${{ needs.changes.outputs.run_ci == 'true' }}
+        run: pnpm format:check
+      - if: ${{ needs.changes.outputs.run_ci == 'true' }}
+        run: pnpm lint
+      - if: ${{ needs.changes.outputs.run_ci == 'true' }}
+        run: pnpm typecheck
+      - if: ${{ needs.changes.outputs.run_ci == 'true' }}
+        run: pnpm test:coverage
+      - if: ${{ needs.changes.outputs.run_ci == 'true' }}
+        run: pnpm build
+      - if: ${{ needs.changes.outputs.run_ci == 'true' }}
+        run: pnpm run audit
 
   browser:
+    needs: changes
+    if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
+      - name: Require successful change classification
+        if: ${{ needs.changes.result != 'success' }}
+        run: exit 1
+      - name: Skip browser checks for documentation-only changes
+        if: ${{ needs.changes.result == 'success' && needs.changes.outputs.run_ci != 'true' }}
+        run: echo "Documentation-only change; browser checks are not required."
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: ${{ needs.changes.outputs.run_ci == 'true' }}
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        if: ${{ needs.changes.outputs.run_ci == 'true' }}
         with:
           version: 11.17.0
           run_install: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        if: ${{ needs.changes.outputs.run_ci == 'true' }}
         with:
           node-version: 24.15.0
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium firefox webkit
-      - run: pnpm e2e
+      - if: ${{ needs.changes.outputs.run_ci == 'true' }}
+        run: pnpm install --frozen-lockfile
+      - if: ${{ needs.changes.outputs.run_ci == 'true' }}
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
+      - if: ${{ needs.changes.outputs.run_ci == 'true' }}
+        run: pnpm e2e
       - name: Upload Playwright report
-        if: failure()
+        if: ${{ needs.changes.outputs.run_ci == 'true' && failure() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: playwright-report
