@@ -37,7 +37,7 @@ app-review-page {
     border-bottom: 1px solid rgb(200 213 207 / 14%);
     display: grid;
     gap: 14px;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr);
     min-height: 48px;
     padding-bottom: 10px;
   }
@@ -87,7 +87,6 @@ app-review-page {
     }
   }
 
-  .toolbar-action,
   .primary-action,
   .secondary-action,
   .move-note > button,
@@ -98,7 +97,6 @@ app-review-page {
     padding: 7px 13px;
   }
 
-  .toolbar-action,
   .secondary-action,
   .move-note > button {
     background: transparent;
@@ -997,11 +995,6 @@ app-review-page {
 
     .review-toolbar {
       grid-template-columns: auto minmax(0, 1fr);
-    }
-
-    .toolbar-action {
-      grid-column: 1 / -1;
-      justify-self: end;
     }
 
     .review-desk {

@@ -1,4 +1,5 @@
 import type { Routes } from '@angular/router';
+import { ABOUT_SEO, HOME_SEO, SEO_ROUTE_DATA } from './core/seo/seo.types';
 
 export const routes: Routes = [
   {
@@ -7,7 +8,8 @@ export const routes: Routes = [
       import('./features/landing/landing-page.component').then(
         (module) => module.LandingPageComponent,
       ),
-    title: 'LealChess | Play. Study. Improve.',
+    title: HOME_SEO.title,
+    data: { [SEO_ROUTE_DATA]: HOME_SEO },
   },
   {
     path: 'play',
@@ -45,7 +47,8 @@ export const routes: Routes = [
     path: 'about',
     loadComponent: () =>
       import('./features/about/about-page.component').then((module) => module.AboutPageComponent),
-    title: 'About | LealChess',
+    title: ABOUT_SEO.title,
+    data: { [SEO_ROUTE_DATA]: ABOUT_SEO },
   },
   {
     path: 'help',

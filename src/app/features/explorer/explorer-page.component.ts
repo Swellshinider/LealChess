@@ -16,11 +16,26 @@ import type { Key } from '@lichess-org/chessground/types';
 import { StockfishAnalysisEngineService } from '../../core/engine/stockfish-analysis-engine.service';
 import { legalDestinations } from '../../core/game/chess-move';
 import { STARTING_FEN, type MoveInput, type PromotionPiece } from '../../core/game/game.types';
+import {
+  KEYBINDING_ACTIONS,
+  keyChordMatches,
+  type KeybindingAction,
+} from '../../core/keyboard/keybindings';
 import type { ChessColor } from '../../shared/chess/chess.types';
+import { BoardFlipButtonComponent } from '../../shared/chess/board-flip-button/board-flip-button.component';
 import { ChessgroundBoardComponent } from '../../shared/chess/chessground-board/chessground-board.component';
 import { ModalFocusDirective } from '../../shared/a11y/modal-focus.directive';
 import { ConfirmationDialogComponent } from '../../shared/a11y/confirmation-dialog/confirmation-dialog.component';
 import { SideNavigationComponent } from '../../shared/layout/side-navigation/side-navigation.component';
+import {
+  EMPTY_MOVE_TREE_NAVIGATION,
+  jumpToEndNodeId,
+  jumpToStartNodeId,
+  nextMoveNodeId,
+  previousMoveNodeId,
+  rememberMoveTreeSelection,
+  type MoveTreeNavigationState,
+} from '../../shared/chess/move-tree-navigation';
 import {
   EXPLORER_ANALYSIS_ENGINE_PORT,
   ExplorerAnalysisService,
@@ -72,6 +87,7 @@ interface TreeRow {
 @Component({
   selector: 'app-explorer-page',
   imports: [
+    BoardFlipButtonComponent,
     ChessgroundBoardComponent,
     ConfirmationDialogComponent,
     ModalFocusDirective,
@@ -110,6 +126,8 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
   protected readonly setupTool = signal<SetupTool>({ color: 'w', type: 'q' });
   protected readonly setupError = signal<string | null>(null);
   protected readonly boardTheme = this.store.boardTheme;
+  protected readonly keybindings = this.store.keybindings;
+  protected readonly candidateArrowsVisible = signal(true);
   protected readonly promotionPieces: readonly PromotionPiece[] = ['q', 'r', 'b', 'n'];
   protected readonly pieceTypes: readonly PieceSymbol[] = ['k', 'q', 'r', 'b', 'n', 'p'];
   protected readonly setupColors: readonly ['w', 'b'] = ['w', 'b'];
@@ -175,18 +193,25 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
   private activeKind: AnalysisKind = 'idle';
   private analysisTicket = 0;
   private destroyed = false;
+  private navigationState: MoveTreeNavigationState = EMPTY_MOVE_TREE_NAVIGATION;
 
   constructor() {
     effect(() => {
       this.session();
       this.mode();
       this.setup();
+      this.candidateArrowsVisible();
       this.syncBoard();
     });
   }
 
   async ngOnInit(): Promise<void> {
     await this.store.initialize();
+    this.navigationState = rememberMoveTreeSelection(
+      this.session(),
+      this.session().selectedNodeId,
+      EMPTY_MOVE_TREE_NAVIGATION,
+    );
     this.requestInteractiveAnalysis();
   }
 
@@ -208,17 +233,20 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
       }
       return;
     }
-    if (this.mode() !== 'analysis' || isInteractiveTarget(event.target)) return;
-    if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      this.selectParent();
-    } else if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      this.selectPrimaryChild();
-    } else if (event.key === 'Home') {
-      event.preventDefault();
-      this.selectNode(this.session().rootId);
+    if (
+      this.mode() !== 'analysis' ||
+      this.pendingPromotion() ||
+      isInteractiveTarget(event.target)
+    ) {
+      return;
     }
+    const action = KEYBINDING_ACTIONS.find((candidate) =>
+      keyChordMatches(event, this.keybindings()[candidate]),
+    );
+    if (!action) return;
+    event.preventDefault();
+    if (action === 'showIdea' && event.repeat) return;
+    this.runKeybindingAction(action);
   }
 
   protected openImport(tab: ImportTab = 'fen'): void {
@@ -371,8 +399,16 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
   }
 
   protected selectNode(nodeId: string): void {
-    if (nodeId === this.session().selectedNodeId) return;
+    if (nodeId === this.session().selectedNodeId) {
+      this.navigationState = rememberMoveTreeSelection(
+        this.session(),
+        nodeId,
+        this.navigationState,
+      );
+      return;
+    }
     this.session.update((session) => selectExplorerNode(session, nodeId));
+    this.navigationState = rememberMoveTreeSelection(this.session(), nodeId, this.navigationState);
     this.pendingPromotion.set(null);
     this.requestInteractiveAnalysis();
   }
@@ -383,7 +419,11 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
   }
 
   protected selectPrimaryChild(): void {
-    const childId = this.selectedNode().children[0];
+    const childId = nextMoveNodeId(
+      this.session(),
+      this.session().selectedNodeId,
+      this.navigationState,
+    );
     if (childId) this.selectNode(childId);
   }
 
@@ -503,7 +543,7 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
         selectable: { enabled: movable },
         drawable: {
           enabled: true,
-          autoShapes: candidateShapes(node.candidates),
+          autoShapes: this.candidateArrowsVisible() ? candidateShapes(node.candidates) : [],
         },
       });
     }
@@ -536,6 +576,11 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
     try {
       const committed = commitExplorerMove(this.session(), move);
       this.session.set(committed.session);
+      this.navigationState = rememberMoveTreeSelection(
+        committed.session,
+        committed.node.id,
+        this.navigationState,
+      );
       this.store.save(committed.session);
       this.requestInteractiveAnalysis();
     } catch {
@@ -546,6 +591,12 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
   private replaceSession(session: ExplorerSession): void {
     this.interruptAnalysis();
     this.session.set(session);
+    this.navigationState = rememberMoveTreeSelection(
+      session,
+      session.selectedNodeId,
+      EMPTY_MOVE_TREE_NAVIGATION,
+    );
+    this.candidateArrowsVisible.set(true);
     this.store.save(session);
     this.requestInteractiveAnalysis();
   }
@@ -744,6 +795,31 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
     }
   }
 
+  private runKeybindingAction(action: KeybindingAction): void {
+    if (action === 'showIdea') {
+      this.candidateArrowsVisible.update((visible) => !visible);
+      return;
+    }
+    const session = this.session();
+    const selectedId = session.selectedNodeId;
+    if (action === 'previousMove') {
+      const destination = previousMoveNodeId(session, selectedId);
+      if (destination) this.selectNode(destination);
+      return;
+    }
+    if (action === 'nextMove') {
+      const destination = nextMoveNodeId(session, selectedId, this.navigationState);
+      if (destination) this.selectNode(destination);
+      return;
+    }
+    const jump =
+      action === 'branchStart'
+        ? jumpToStartNodeId(session, selectedId, this.navigationState)
+        : jumpToEndNodeId(session, selectedId, this.navigationState);
+    if (jump.nodeId !== selectedId) this.selectNode(jump.nodeId);
+    this.navigationState = jump.state;
+  }
+
   private analysisRequest(node: ExplorerMoveNode): ExplorerMoveAnalysisRequest | null {
     if (!node.parentId || !node.move || !node.san || !node.color) return null;
     const parent = this.session().nodes[node.parentId];
@@ -863,6 +939,10 @@ function isAbort(error: unknown): boolean {
 function isInteractiveTarget(target: EventTarget | null): boolean {
   return (
     target instanceof HTMLElement &&
-    Boolean(target.closest('button, a, input, select, textarea, [role="dialog"]'))
+    Boolean(
+      target.closest(
+        'button, a, input, select, textarea, summary, [contenteditable="true"], [role="dialog"]',
+      ),
+    )
   );
 }

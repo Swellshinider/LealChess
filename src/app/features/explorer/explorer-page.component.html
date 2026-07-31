@@ -9,7 +9,6 @@
         @if (mode() === 'analysis') {
           <button type="button" (click)="enterSetup()">Set up position</button>
         }
-        <button type="button" (click)="flipBoard()">Flip board</button>
         <button type="button" class="quiet-action" (click)="newAnalysis()">New analysis</button>
       </div>
     </div>
@@ -22,8 +21,8 @@
     } @else {
       <section class="analysis-workspace">
         <div class="board-workbench" [class.setup-mode]="mode() === 'setup'">
-          @if (mode() === 'analysis') {
-            <div class="board-heading">
+          <div class="board-heading">
+            @if (mode() === 'analysis') {
               <strong>
                 @if (gameOverLabel(); as result) {
                   {{ result }}
@@ -31,8 +30,11 @@
                   {{ turn() }} to move
                 }
               </strong>
-            </div>
+            }
+            <app-board-flip-button (flipRequested)="flipBoard()" />
+          </div>
 
+          @if (mode() === 'analysis') {
             <div
               class="evaluation-rail"
               [class.flipped]="session().orientation === 'black'"
@@ -77,7 +79,8 @@
               @if (mode() === 'setup') {
                 Select a piece, then click a square. Existing pieces can be dragged.
               } @else {
-                Move either color. Right-drag to annotate; arrow keys navigate the selected line.
+                Move either color. Right-drag to annotate; your configured shortcuts navigate the
+                selected line and toggle engine ideas.
               }
             </p>
           </div>

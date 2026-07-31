@@ -105,6 +105,28 @@
               (change)="updateMute($event)"
             />
           </label>
+          <label class="range-row">
+            <span>
+              <strong>Sound volume</strong>
+              <small>Set the level for move and game sounds.</small>
+            </span>
+            <span class="range-control">
+              <span class="range-slider" [style.--sound-volume]="preferences().soundVolume + '%'">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="1"
+                  [value]="preferences().soundVolume"
+                  [attr.aria-valuetext]="preferences().soundVolume + '%'"
+                  (input)="updateSoundVolume($event)"
+                />
+              </span>
+              <span class="volume-output" aria-live="polite">
+                {{ preferences().soundVolume }}%
+              </span>
+            </span>
+          </label>
           <label class="switch-row">
             <span><strong>Legal move dots</strong><small>Mark available destinations.</small></span>
             <input
@@ -145,7 +167,59 @@
           [orientation]="preferences().orientation"
           [showLegalMoves]="preferences().showLegalMoves"
           [soundEnabled]="preferences().soundEnabled"
+          [soundVolume]="preferences().soundVolume"
         />
+      </div>
+    </section>
+
+    <section aria-labelledby="keyboard-heading">
+      <div class="section-heading">
+        <div>
+          <p class="folio">Keyboard</p>
+          <h2 id="keyboard-heading">Move through analysis your way</h2>
+        </div>
+        <span>Changes save immediately</span>
+      </div>
+
+      <p class="keyboard-intro">
+        Choose a shortcut, then press the key combination you want. Shortcuts are active in Review
+        and Explorer when focus is outside interactive controls.
+      </p>
+      <div class="keybinding-list">
+        @for (action of keybindingActions; track action) {
+          <div class="keybinding-row">
+            <span class="keybinding-name">{{ keybindingLabels[action] }}</span>
+            <button
+              type="button"
+              class="keybinding-capture"
+              [class.capturing]="capturingKeybinding() === action"
+              [attr.aria-label]="
+                'Change ' +
+                keybindingLabels[action] +
+                ' shortcut, currently ' +
+                keybindingLabel(action)
+              "
+              [attr.aria-pressed]="capturingKeybinding() === action"
+              (click)="beginKeybindingCapture(action)"
+              (keydown)="captureKeybinding(action, $event)"
+            >
+              {{ capturingKeybinding() === action ? 'Press shortcut…' : keybindingLabel(action) }}
+            </button>
+            <button
+              type="button"
+              class="keybinding-reset"
+              [disabled]="keybindingIsDefault(action)"
+              [attr.aria-label]="'Reset ' + keybindingLabels[action] + ' to default'"
+              (click)="resetKeybinding(action)"
+            >
+              Reset
+            </button>
+          </div>
+        }
+      </div>
+      <div class="keybinding-footer">
+        <p aria-live="polite">{{ keybindingError() }}</p>
+        <button type="button" (click)="restoreDefaultKeybindings()">Restore defaults</button>
       </div>
     </section>
 
@@ -158,7 +232,31 @@
           analyses from this browser.
         </p>
       </div>
-      <button type="button" (click)="clearConfirmationOpen.set(true)">Clear all data</button>
+      <div class="local-data-actions">
+        <p class="storage-usage">
+          <span>LealChess storage used</span>
+          <span class="storage-value">
+            <strong data-testid="storage-usage-value" aria-live="polite">
+              {{ storageUsageLabel() }}
+            </strong>
+            <span class="storage-help">
+              <button
+                type="button"
+                aria-label="How storage usage is calculated"
+                aria-describedby="storage-calculation-tooltip"
+              >
+                ?
+              </button>
+              <span id="storage-calculation-tooltip" class="storage-tooltip" role="tooltip">
+                The total combines the UTF-8 size of saved games, preferences, profiles and analyses
+                with the packaged size of Stockfish engines loaded since LealChess data was last
+                cleared. Browser and database overhead are not included.
+              </span>
+            </span>
+          </span>
+        </p>
+        <button type="button" (click)="clearConfirmationOpen.set(true)">Clear all data</button>
+      </div>
     </section>
   </main>
 </div>

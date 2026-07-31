@@ -180,12 +180,77 @@ form > button {
   grid-template-columns: minmax(280px, 1fr) minmax(260px, 400px);
 }
 
+.keyboard-intro {
+  color: var(--mist);
+  margin: 0 0 18px;
+}
+
+.keybinding-list {
+  border-top: 1px solid rgb(200 213 207 / 12%);
+}
+
+.keybinding-row {
+  align-items: center;
+  border-bottom: 1px solid rgb(200 213 207 / 12%);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(180px, 1fr) minmax(150px, 220px) 74px;
+  min-height: 68px;
+  padding: 10px 2px;
+}
+
+.keybinding-name {
+  color: var(--paper);
+  font-weight: 700;
+}
+
+.keybinding-capture,
+.keybinding-reset,
+.keybinding-footer button {
+  background: transparent;
+  border: 1px solid rgb(200 213 207 / 28%);
+  color: var(--paper);
+  min-height: 42px;
+}
+
+.keybinding-capture {
+  font-family: var(--font-utility);
+
+  &.capturing {
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+}
+
+.keybinding-reset:disabled {
+  cursor: default;
+  opacity: 0.36;
+}
+
+.keybinding-footer {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+
+  p {
+    color: #f2b0aa;
+    margin: 0;
+    min-height: 1.4em;
+  }
+
+  button {
+    padding-inline: 16px;
+  }
+}
+
 .control-sheet {
   display: grid;
 }
 
 .switch-row,
-.select-row {
+.select-row,
+.range-row {
   align-items: center;
   border-bottom: 1px solid rgb(200 213 207 / 12%);
   display: flex;
@@ -205,6 +270,108 @@ form > button {
   small {
     color: var(--mist);
     margin-top: 4px;
+  }
+}
+
+.range-control {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+
+  .volume-output {
+    color: var(--paper);
+    flex: 0 0 5ch;
+    font-variant-numeric: tabular-nums;
+    max-width: 5ch;
+    min-width: 5ch;
+    text-align: right;
+    white-space: nowrap;
+  }
+}
+
+.range-slider {
+  --range-thumb-size: 18px;
+  --range-track-height: 6px;
+
+  align-items: center;
+  display: flex;
+  flex: 0 0 clamp(120px, 18vw, 190px);
+  height: 44px;
+  position: relative;
+  width: clamp(120px, 18vw, 190px);
+
+  &::before {
+    background: linear-gradient(
+      to right,
+      var(--primary) 0 var(--sound-volume),
+      rgb(200 213 207 / 24%) var(--sound-volume) 100%
+    );
+    border-radius: 999px;
+    content: '';
+    height: var(--range-track-height);
+    inset-inline: calc(var(--range-thumb-size) / 2);
+    pointer-events: none;
+    position: absolute;
+  }
+
+  input {
+    appearance: none;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    cursor: pointer;
+    height: 44px;
+    margin: 0;
+    min-height: 44px;
+    padding: 0;
+    position: relative;
+    width: 100%;
+
+    &::-webkit-slider-runnable-track {
+      background: transparent;
+      height: var(--range-track-height);
+    }
+
+    &::-webkit-slider-thumb {
+      appearance: none;
+      background: var(--primary);
+      border: none;
+      border-radius: 50%;
+      box-shadow: none;
+      height: var(--range-thumb-size);
+      margin-top: calc((var(--range-track-height) - var(--range-thumb-size)) / 2);
+      width: var(--range-thumb-size);
+    }
+
+    &::-moz-range-track,
+    &::-moz-range-progress {
+      background: transparent;
+      height: var(--range-track-height);
+    }
+
+    &::-moz-range-thumb {
+      background: var(--primary);
+      border: none;
+      border-radius: 50%;
+      box-shadow: none;
+      height: var(--range-thumb-size);
+      width: var(--range-thumb-size);
+    }
+
+    &:focus-visible {
+      outline: none;
+    }
+
+    &:focus-visible::-webkit-slider-thumb {
+      outline: 3px solid var(--paper);
+      outline-offset: 2px;
+    }
+
+    &:focus-visible::-moz-range-thumb {
+      outline: 3px solid var(--paper);
+      outline-offset: 2px;
+    }
   }
 }
 
@@ -241,7 +408,7 @@ form > button {
     max-width: 720px;
   }
 
-  button {
+  > .local-data-actions > button {
     background: transparent;
     border: 1px solid #d98078;
     color: #ffd9d5;
@@ -249,6 +416,90 @@ form > button {
     min-height: 44px;
     padding: 8px 16px;
   }
+}
+
+.local-data-actions {
+  align-items: flex-end;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.storage-usage {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  span {
+    color: var(--mist);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  strong {
+    color: var(--paper);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.storage-value {
+  align-items: center;
+  display: flex;
+  gap: 7px;
+}
+
+.storage-help {
+  display: inline-flex;
+  position: relative;
+
+  > button {
+    align-items: center;
+    background: transparent;
+    border: 1px solid rgb(200 213 207 / 45%);
+    border-radius: 50%;
+    color: var(--mist);
+    cursor: help;
+    display: inline-flex;
+    font-size: 0.72rem;
+    height: 20px;
+    justify-content: center;
+    min-height: 20px;
+    padding: 0;
+    width: 20px;
+  }
+
+  &:hover .storage-tooltip,
+  &:focus-within .storage-tooltip {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+.storage-tooltip {
+  background: var(--night);
+  border: 1px solid rgb(200 213 207 / 28%);
+  bottom: calc(100% + 8px);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 45%);
+  color: var(--paper);
+  font-size: 0.82rem;
+  font-weight: 400;
+  line-height: 1.4;
+  opacity: 0;
+  padding: 10px 12px;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  text-align: left;
+  text-transform: none;
+  transition:
+    opacity 120ms ease,
+    visibility 120ms ease;
+  visibility: hidden;
+  width: min(310px, calc(100vw - 40px));
+  z-index: 2;
 }
 
 .confirmation-backdrop {
@@ -338,7 +589,47 @@ form > button {
     flex-direction: column;
   }
 
-  .danger-zone button {
+  .keybinding-row {
+    grid-template-columns: 1fr 74px;
+
+    .keybinding-name {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .keybinding-footer {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .local-data-actions,
+  .danger-zone > .local-data-actions > button {
     width: 100%;
+  }
+
+  .storage-usage {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .storage-tooltip {
+    left: 0;
+    right: auto;
+  }
+
+  .range-row {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .range-control {
+    width: 100%;
+
+    .range-slider {
+      flex: 1 1 auto;
+      width: auto;
+    }
   }
 }

@@ -5,21 +5,23 @@ const NAVIGATION_PREFERENCE_KEY = 'lealchess.navigation.expanded';
 
 @Injectable({ providedIn: 'root' })
 export class NavigationPanelService implements OnDestroy {
-  private readonly desktopQuery = matchMedia('(min-width: 1200px)');
-  private readonly mobileQuery = matchMedia('(max-width: 767px)');
+  private readonly desktopQuery =
+    typeof matchMedia === 'function' ? matchMedia('(min-width: 1200px)') : null;
+  private readonly mobileQuery =
+    typeof matchMedia === 'function' ? matchMedia('(max-width: 767px)') : null;
   private readonly handleMobileChange = (event: MediaQueryListEvent): void => {
     if (!event.matches) this.mobileOpen.set(false);
   };
 
-  readonly expanded = signal(this.readPreference() ?? this.desktopQuery.matches);
+  readonly expanded = signal(this.readPreference() ?? this.desktopQuery?.matches ?? false);
   readonly mobileOpen = signal(false);
 
   constructor() {
-    this.mobileQuery.addEventListener('change', this.handleMobileChange);
+    this.mobileQuery?.addEventListener('change', this.handleMobileChange);
   }
 
   ngOnDestroy(): void {
-    this.mobileQuery.removeEventListener('change', this.handleMobileChange);
+    this.mobileQuery?.removeEventListener('change', this.handleMobileChange);
   }
 
   toggleExpanded(): void {
@@ -33,7 +35,7 @@ export class NavigationPanelService implements OnDestroy {
   }
 
   openMobile(): void {
-    if (this.mobileQuery.matches) this.mobileOpen.set(true);
+    if (this.mobileQuery?.matches) this.mobileOpen.set(true);
   }
 
   closeMobile(): void {

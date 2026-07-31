@@ -92,6 +92,15 @@ test('imports both platforms, persists and deduplicates games, then replays move
   await expect(page.locator('.review-board')).toBeVisible();
   await expect(page.locator('.player-strip.opponent')).toContainText('Opponent');
   await expect(page.locator('.player-strip.opponent .player-avatar')).toHaveText('OP');
+  await expect(
+    page.locator('.review-toolbar').getByRole('button', { name: 'Flip board' }),
+  ).toHaveCount(0);
+  const flipBoard = page
+    .locator('.player-strip.opponent')
+    .getByRole('button', { name: 'Flip board' });
+  await expect(flipBoard).toBeVisible();
+  await expectFlipControlAtBoardTopRight(page, '.review-board');
+  await expect(page.locator('.review-board')).toHaveClass(/orientation-white/);
   await expect
     .poll(() =>
       page.locator('.review-board cg-board').evaluate((board) => {
@@ -132,7 +141,8 @@ test('imports both platforms, persists and deduplicates games, then replays move
   await expect(
     page.getByRole('heading', { name: /Reading the whole game|Your game at a glance/ }),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'Flip board' }).click();
+  await flipBoard.click();
+  await expect(page.locator('.review-board')).toHaveClass(/orientation-black/);
   await expect(page.getByRole('img', { name: 'Review chessboard' })).toHaveAttribute(
     'aria-describedby',
     'review-board-description',
@@ -228,13 +238,16 @@ test('analyzes locally, caches the result, and opens a concern position', async 
   await expectPlayerStripsToClearEvaluationRail(page);
   await expect(page.locator('.live-analysis li')).toHaveCount(3, { timeout: 30_000 });
   await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(0);
+  await page.evaluate(() =>
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true })),
+  );
+  await expect(page.locator('.review-board svg.cg-shapes line')).not.toHaveCount(0);
 
-  const candidateLabels = await page
-    .locator('.live-analysis .candidate-action')
-    .evaluateAll((buttons) => buttons.map((button) => button.getAttribute('aria-label') ?? ''));
-  const alternateCandidate = candidateLabels.find((label) => !label.endsWith(': e5'));
-  expect(alternateCandidate).toBeTruthy();
-  await page.getByRole('button', { name: alternateCandidate! }).click();
+  const alternateCandidate = page
+    .locator('.live-analysis .candidate-action:not([aria-label$=": e5"])')
+    .first();
+  await expect(alternateCandidate).toBeVisible();
+  await alternateCandidate.click();
   await expect(page.locator('.score .variation-move')).toHaveCount(1);
   await expect(page.locator('.score .variation-move .move.current')).toBeVisible();
   await page.getByRole('button', { name: 'Remove this variation and all continuations' }).click();
@@ -539,6 +552,15 @@ async function drawReviewArrow(page: Page, from: string, to: string): Promise<vo
   await page.mouse.move(destination.x, destination.y, { steps: 12 });
   await page.waitForTimeout(50);
   await page.mouse.up({ button: 'right' });
+}
+
+async function expectFlipControlAtBoardTopRight(page: Page, boardSelector: string): Promise<void> {
+  const control = await page.getByRole('button', { name: 'Flip board' }).boundingBox();
+  const board = await page.locator(boardSelector).boundingBox();
+  expect(control).not.toBeNull();
+  expect(board).not.toBeNull();
+  expect(Math.abs(control!.x + control!.width - (board!.x + board!.width))).toBeLessThanOrEqual(2);
+  expect(control!.y + control!.height).toBeLessThanOrEqual(board!.y + 1);
 }
 
 async function moveReviewPiece(page: Page, from: string, to: string): Promise<void> {

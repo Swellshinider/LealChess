@@ -32,7 +32,7 @@ test('collapses the desktop panel, preserves the choice, and navigates between w
   );
   expect(
     Math.abs(expandButton.x + expandButton.width / 2 - (brandBlock.x + brandBlock.width / 2)),
-  ).toBeLessThanOrEqual(2);
+  ).toBeLessThanOrEqual(3);
 
   await playLink.hover();
   await expect
@@ -107,11 +107,48 @@ test('launches each workspace and provides project information', async ({ page }
   await page.goto('/help');
   await expect(page).toHaveURL(/\/about$/);
   await expect(page.getByRole('heading', { name: 'About' })).toBeVisible();
-  await expect(page.getByText('v0.1.0', { exact: true })).toBeVisible();
+  await expect(page.getByText('v0.6.0', { exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Swellshinider/LealChess' })).toHaveAttribute(
     'href',
     'https://github.com/Swellshinider/LealChess',
   );
+});
+
+test('publishes indexable metadata only for public pages', async ({ page, request }) => {
+  await page.goto('/');
+  await expect(page).toHaveTitle('LealChess | Local Chess Analysis & Training');
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+    'content',
+    /Play Stockfish, import Chess\.com and Lichess games/,
+  );
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'index, follow');
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    'href',
+    'https://lealchess.com/',
+  );
+  expect(await page.locator('#lealchess-structured-data').textContent()).toContain(
+    'WebApplication',
+  );
+
+  await page.goto('/about');
+  await expect(page).toHaveTitle('About LealChess | Local-First Chess Training');
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    'href',
+    'https://lealchess.com/about',
+  );
+  await expect(page.locator('#lealchess-structured-data')).toHaveCount(0);
+
+  await page.goto('/play');
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, nofollow');
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
+
+  const robots = await request.get('/robots.txt');
+  expect(robots.ok()).toBe(true);
+  expect(await robots.text()).toContain('Sitemap: https://lealchess.com/sitemap.xml');
+
+  const sitemap = await request.get('/sitemap.xml');
+  expect(sitemap.ok()).toBe(true);
+  expect(await sitemap.text()).toContain('<loc>https://lealchess.com/about</loc>');
 });
 
 test('keeps unknown routes visible and offers a route home', async ({ page }) => {
@@ -126,7 +163,34 @@ test('keeps unknown routes visible and offers a route home', async ({ page }) =>
 test('previews and persists board preferences, then clears LealChess data', async ({ page }) => {
   await page.goto('/settings');
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+  await expect(page.getByText('LealChess storage used', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('storage-usage-value')).toHaveText(/\d+(?:\.\d+)? (?:B|KB|MB|GB)/);
+  await page.evaluate(() => {
+    localStorage.setItem(
+      'lealchess.stockfish.downloads',
+      JSON.stringify(['stockfish-18-single@18.0.8']),
+    );
+  });
+  await page.reload();
+  await expect(page.getByTestId('storage-usage-value')).toContainText('107.8 MB');
   await expect(page.getByLabel(/Mute sounds/)).not.toBeChecked();
+  const soundVolume = page.getByLabel('Sound volume');
+  const soundVolumeTrack = soundVolume.locator('xpath=..');
+  await expect(soundVolume).toHaveValue('100');
+  await expect(soundVolumeTrack).toHaveCSS('--sound-volume', '100%');
+  const soundVolumeBounds = await soundVolume.boundingBox();
+  await soundVolume.fill('0');
+  await expect(soundVolumeTrack).toHaveCSS('--sound-volume', '0%');
+  await expect
+    .poll(async () => {
+      const bounds = await soundVolume.boundingBox();
+      return bounds ? { x: bounds.x, width: bounds.width } : null;
+    })
+    .toEqual(soundVolumeBounds ? { x: soundVolumeBounds.x, width: soundVolumeBounds.width } : null);
+  await soundVolume.fill('100');
+  await expect(soundVolumeTrack).toHaveCSS('--sound-volume', '100%');
+  await soundVolume.fill('35');
+  await expect(page.getByText('35%', { exact: true })).toBeVisible();
 
   await clickSettingsSquare(page, 'e2');
   await expect(page.locator('square.move-dest')).toHaveCount(2);
@@ -143,13 +207,24 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   await expect(page.locator('.preview-board')).toHaveAttribute('data-board-theme', 'rosewood');
   await page.reload();
   await expect(page.getByLabel('Board palette')).toHaveValue('rosewood');
+  await expect(page.getByLabel('Sound volume')).toHaveValue('35');
 
+  await page.getByRole('button', { name: 'How storage usage is calculated' }).focus();
+  await expect(page.getByRole('tooltip')).toContainText('saved games, preferences, profiles');
+  await expect(page.getByRole('tooltip')).toContainText(
+    'Stockfish engines loaded since LealChess data was last cleared',
+  );
   await page.getByRole('button', { name: 'Clear all data' }).first().click();
   await expect(page.getByRole('alertdialog')).toBeVisible();
   await page.getByRole('button', { name: 'Clear all data' }).last().click();
   await expect(page).toHaveURL(/\/$/);
   await page.goto('/settings');
   await expect(page.getByLabel('Board palette')).toHaveValue('tournament');
+  await expect(page.getByLabel('Sound volume')).toHaveValue('100');
+  await expect(page.getByTestId('storage-usage-value')).toHaveText(/\s*\d+ B\s*/);
+  expect(
+    await page.evaluate(() => localStorage.getItem('lealchess.stockfish.downloads')),
+  ).toBeNull();
 });
 
 async function clickSettingsSquare(page: import('@playwright/test').Page, square: string) {

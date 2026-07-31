@@ -19,6 +19,7 @@ import { Chess, type Square } from 'chess.js';
 import { StockfishAnalysisEngineService } from '../../../core/engine/stockfish-analysis-engine.service';
 import { legalDestinations, parseUci, turnColor } from '../../../core/game/chess-move';
 import { boardOverlayPosition } from '../../../shared/chess/board-overlay-position';
+import { BoardFlipButtonComponent } from '../../../shared/chess/board-flip-button/board-flip-button.component';
 import { ChessgroundBoardComponent } from '../../../shared/chess/chessground-board/chessground-board.component';
 import type { ChessColor } from '../../../shared/chess/chess.types';
 import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
@@ -26,6 +27,20 @@ import { ConfirmationDialogComponent } from '../../../shared/a11y/confirmation-d
 import { SideNavigationComponent } from '../../../shared/layout/side-navigation/side-navigation.component';
 import { STARTING_FEN, type MoveInput, type PromotionPiece } from '../../../core/game/game.types';
 import { SoundService } from '../../../core/sound/sound.service';
+import {
+  KEYBINDING_ACTIONS,
+  keyChordMatches,
+  type KeybindingAction,
+} from '../../../core/keyboard/keybindings';
+import {
+  EMPTY_MOVE_TREE_NAVIGATION,
+  jumpToEndNodeId,
+  jumpToStartNodeId,
+  nextMoveNodeId,
+  previousMoveNodeId,
+  rememberMoveTreeSelection,
+  type MoveTreeNavigationState,
+} from '../../../shared/chess/move-tree-navigation';
 import { categoryLabel, moveAnalysisForPly, moveToUci } from '../analysis/analysis-rules';
 import type {
   EngineEvaluation,
@@ -78,6 +93,7 @@ import type { ReviewCandidateLine } from './review-analysis-session.types';
 @Component({
   selector: 'app-review-page',
   imports: [
+    BoardFlipButtonComponent,
     ModalFocusDirective,
     ConfirmationDialogComponent,
     PracticeMoveTreeComponent,
@@ -118,6 +134,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   protected readonly orientation = this.store.orientation;
   protected readonly learnerColor = this.store.learnerColor;
   protected readonly boardTheme = this.store.boardTheme;
+  protected readonly keybindings = this.store.keybindings;
   protected readonly mode = this.store.mode;
   protected readonly trainingIndex = this.store.trainingIndex;
   protected readonly puzzleStatus = this.store.puzzleStatus;
@@ -221,6 +238,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   private replayTimers: ReturnType<typeof setTimeout>[] = [];
   private shapes: DrawShape[] = [];
   private readonly ideaShapes = signal<DrawShape[]>([]);
+  private navigationState: MoveTreeNavigationState = EMPTY_MOVE_TREE_NAVIGATION;
 
   constructor() {
     effect(() => {
@@ -301,16 +319,13 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     if (this.mode() !== 'analysis' || this.pendingPromotion() || isInteractive) {
       return;
     }
-    const action: Record<string, () => void> = {
-      ArrowLeft: () => this.goTo(this.currentPly() - 1),
-      ArrowRight: () => this.goTo(this.currentPly() + 1),
-      Home: () => this.goTo(0),
-      End: () => this.goTo(this.game()?.moves.length ?? 0),
-    };
-    if (action[event.key]) {
-      event.preventDefault();
-      action[event.key]?.();
-    }
+    const action = KEYBINDING_ACTIONS.find((candidate) =>
+      keyChordMatches(event, this.keybindings()[candidate]),
+    );
+    if (!action) return;
+    event.preventDefault();
+    if (action === 'showIdea' && event.repeat) return;
+    this.runKeybindingAction(action);
   }
 
   @HostListener('document:keydown.escape')
@@ -379,6 +394,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.currentPly.set(0);
     this.mode.set('summary');
     this.liveAnalysis.cancel();
+    this.navigationState = EMPTY_MOVE_TREE_NAVIGATION;
   }
 
   protected showMoveIdea(): void {
@@ -649,6 +665,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     const session = this.reviewSession();
     const node = session?.nodes[nodeId];
     if (!session || !node) return;
+    this.navigationState = rememberMoveTreeSelection(session, nodeId, this.navigationState);
     this.liveAnalysis.cancel();
     this.pendingPromotion.set(null);
     this.ideaShapes.set([]);
@@ -772,6 +789,11 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       new Chess(parent.fen).move(move);
       const committed = commitReviewMove(session, move);
       this.reviewSession.set(committed.session);
+      this.navigationState = rememberMoveTreeSelection(
+        committed.session,
+        committed.node.id,
+        this.navigationState,
+      );
       if (committed.node.source === 'imported') {
         this.currentPly.set(committed.node.importedPly ?? committed.node.ply);
       }
@@ -781,6 +803,32 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     } catch {
       this.syncBoard();
     }
+  }
+
+  private runKeybindingAction(action: KeybindingAction): void {
+    if (action === 'showIdea') {
+      this.showMoveIdea();
+      return;
+    }
+    const session = this.reviewSession();
+    if (!session) return;
+    const selectedId = session.selectedNodeId;
+    if (action === 'previousMove') {
+      const destination = previousMoveNodeId(session, selectedId);
+      if (destination) this.selectAnalysisNode(destination);
+      return;
+    }
+    if (action === 'nextMove') {
+      const destination = nextMoveNodeId(session, selectedId, this.navigationState);
+      if (destination) this.selectAnalysisNode(destination);
+      return;
+    }
+    const jump =
+      action === 'branchStart'
+        ? jumpToStartNodeId(session, selectedId, this.navigationState)
+        : jumpToEndNodeId(session, selectedId, this.navigationState);
+    if (jump.nodeId !== selectedId) this.selectAnalysisNode(jump.nodeId);
+    this.navigationState = jump.state;
   }
 
   private syncPracticeBoard(): void {

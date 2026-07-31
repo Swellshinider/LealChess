@@ -2,6 +2,7 @@ import type { Square } from 'chess.js';
 import type { ChessColor } from '../../shared/chess/chess.types';
 import type { BotRating } from '../engine/bot-rating';
 import { DEFAULT_BOT_RATING } from '../engine/bot-rating';
+import { cloneDefaultKeybindings, type KeybindingPreferences } from '../keyboard/keybindings';
 
 export type { ChessColor } from '../../shared/chess/chess.types';
 export type ColorSelection = ChessColor | 'random';
@@ -51,11 +52,13 @@ export interface GameResult {
 
 export interface GamePreferences {
   soundEnabled: boolean;
+  soundVolume: number;
   showLegalMoves: boolean;
   premovesEnabled: boolean;
   boardTheme: BoardTheme;
   orientation: ChessColor;
   botRating: BotRating;
+  keybindings: KeybindingPreferences;
 }
 
 export interface GameViewState {
@@ -89,11 +92,13 @@ export interface StartGameOptions {
 
 export const DEFAULT_PREFERENCES: GamePreferences = {
   soundEnabled: true,
+  soundVolume: 100,
   showLegalMoves: true,
   premovesEnabled: true,
   boardTheme: 'tournament',
   orientation: 'white',
   botRating: DEFAULT_BOT_RATING,
+  keybindings: cloneDefaultKeybindings(),
 };
 
 export const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';

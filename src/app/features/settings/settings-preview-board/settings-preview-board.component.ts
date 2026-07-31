@@ -30,6 +30,7 @@ export class SettingsPreviewBoardComponent implements AfterViewInit, OnDestroy {
   readonly orientation = input.required<ChessColor>();
   readonly showLegalMoves = input.required<boolean>();
   readonly soundEnabled = input.required<boolean>();
+  readonly soundVolume = input.required<number>();
 
   protected readonly turn = signal<ChessColor>('white');
   private readonly sound = inject(SoundService);
@@ -43,6 +44,7 @@ export class SettingsPreviewBoardComponent implements AfterViewInit, OnDestroy {
       this.orientation();
       this.showLegalMoves();
       this.sound.setEnabled(this.soundEnabled());
+      this.sound.setVolume(this.soundVolume());
       this.syncBoard();
     });
   }

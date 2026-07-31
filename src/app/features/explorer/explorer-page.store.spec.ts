@@ -24,6 +24,7 @@ describe('ExplorerPageStore', () => {
               game: null,
               preferences: {
                 soundEnabled: true,
+                soundVolume: 100,
                 showLegalMoves: true,
                 premovesEnabled: true,
                 boardTheme: 'rosewood',

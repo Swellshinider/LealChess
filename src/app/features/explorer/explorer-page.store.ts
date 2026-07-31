@@ -1,5 +1,6 @@
 import { Injectable, effect, inject, signal } from '@angular/core';
-import type { BoardTheme } from '../../core/game/game.types';
+import { DEFAULT_PREFERENCES, type BoardTheme } from '../../core/game/game.types';
+import type { KeybindingPreferences } from '../../core/keyboard/keybindings';
 import { PERSISTENCE_PORT } from '../../core/persistence/persistence.types';
 import { ExplorerRepositoryService } from './explorer-repository.service';
 import { createExplorerSession } from './explorer-session';
@@ -15,6 +16,7 @@ export class ExplorerPageStore {
   readonly session = signal(createExplorerSession());
   readonly loading = signal(true);
   readonly boardTheme = signal<BoardTheme>('tournament');
+  readonly keybindings = signal<KeybindingPreferences>(DEFAULT_PREFERENCES.keybindings);
 
   constructor() {
     effect(() => {
@@ -31,6 +33,7 @@ export class ExplorerPageStore {
       this.persistence.restore(),
     ]);
     this.boardTheme.set(persistedState.preferences.boardTheme);
+    this.keybindings.set(persistedState.preferences.keybindings);
     if (restored) {
       this.session.set({
         ...restored,

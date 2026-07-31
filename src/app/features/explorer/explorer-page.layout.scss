@@ -109,8 +109,11 @@ app-explorer-page {
     min-width: 0;
 
     &.setup-mode {
-      grid-template-areas: 'board';
+      grid-template-areas:
+        'heading'
+        'board';
       grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto auto;
     }
   }
 
@@ -187,9 +190,17 @@ app-explorer-page {
   .board-heading {
     align-items: center;
     display: flex;
+    gap: 10px;
     grid-area: heading;
+    justify-self: center;
+    max-width: var(--explorer-board-size);
     min-height: 42px;
-    padding: 4px 2px 7px;
+    padding-bottom: 2px;
+    width: var(--explorer-board-size);
+
+    app-board-flip-button {
+      margin-left: auto;
+    }
 
     strong {
       display: block;

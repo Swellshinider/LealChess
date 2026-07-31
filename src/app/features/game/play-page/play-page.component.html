@@ -1,4 +1,4 @@
-<div class="play-shell">
+<div class="play-shell" [attr.inert]="gameOverOpen() ? '' : null">
   <app-side-navigation />
   <div class="app-frame">
     <main class="game-layout" [attr.data-theme]="state().preferences.boardTheme">
@@ -15,6 +15,8 @@
           @if (state().engineStatus === 'thinking') {
             <span class="thinking-label">Thinking<span aria-hidden="true">…</span></span>
           }
+          <span class="turn-indicator" aria-hidden="true"></span>
+          <app-board-flip-button (flipRequested)="controller.flipBoard()" />
         </div>
 
         <app-chess-board />
@@ -28,6 +30,7 @@
             <strong>You</strong>
             <small>Playing {{ state().playerColor }}</small>
           </span>
+          <span class="turn-indicator" aria-hidden="true"></span>
         </div>
       </section>
 
@@ -59,3 +62,17 @@
   (retryRequested)="controller.retryEngine()"
   (started)="startGame($event)"
 />
+
+@if (gameOverOpen()) {
+  @if (state().result; as result) {
+    <app-game-over-dialog
+      [result]="result"
+      [reviewPending]="reviewPending()"
+      [reviewError]="reviewError()"
+      (dismissed)="gameOverOpen.set(false)"
+      (newGameRequested)="openNewGameFromResult()"
+      (restartRequested)="restartGameFromResult()"
+      (reviewRequested)="reviewGame()"
+    />
+  }
+}
