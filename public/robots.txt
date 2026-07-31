@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://lealchess.com/sitemap.xml

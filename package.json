@@ -1,6 +1,6 @@
 {
   "name": "leal-chess",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -14,8 +14,9 @@
     "test:coverage": "ng test --coverage",
     "e2e": "playwright test",
     "audit": "pnpm audit --audit-level moderate",
-    "verify:quality": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm run audit",
+    "verify:quality": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm verify:seo && pnpm run audit",
     "verify": "pnpm verify:quality && pnpm e2e",
+    "verify:seo": "node scripts/verify-seo.mjs",
     "generate:openings": "node scripts/generate-opening-index.mjs"
   },
   "private": true,
@@ -30,7 +31,9 @@
     "@angular/core": "^22.0.0",
     "@angular/forms": "^22.0.0",
     "@angular/platform-browser": "^22.0.0",
+    "@angular/platform-server": "^22.0.8",
     "@angular/router": "^22.0.8",
+    "@angular/ssr": "^22.0.8",
     "@fontsource/atkinson-hyperlegible": "^5.3.0",
     "@fontsource/barlow-condensed": "^5.3.0",
     "@fontsource/ibm-plex-mono": "^5.3.0",

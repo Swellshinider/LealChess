@@ -108,7 +108,14 @@
 .promise {
   color: var(--primary);
   font-size: 1.12rem;
-  margin: 0 0 30px;
+  margin: 0 0 14px;
+}
+
+.search-summary {
+  color: var(--mist);
+  line-height: 1.45;
+  margin: 0 auto 30px;
+  max-width: 440px;
 }
 
 nav {
@@ -164,6 +171,15 @@ nav {
   font-size: 0.55rem;
   margin: 0;
   position: absolute;
+
+  a {
+    color: inherit;
+    text-underline-offset: 3px;
+
+    &:hover {
+      color: var(--primary);
+    }
+  }
 }
 
 @media (max-width: 520px) {

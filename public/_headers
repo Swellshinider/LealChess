@@ -1,0 +1,14 @@
+/play
+  X-Robots-Tag: noindex, nofollow
+
+/settings
+  X-Robots-Tag: noindex, nofollow
+
+/learn
+  X-Robots-Tag: noindex, nofollow
+
+/learn/review/*
+  X-Robots-Tag: noindex, nofollow
+
+/explorer
+  X-Robots-Tag: noindex, nofollow

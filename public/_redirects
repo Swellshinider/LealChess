@@ -1,0 +1,6 @@
+/help                  /about      301
+/play                  /index.html 200
+/settings              /index.html 200
+/learn/review/*        /index.html 200
+/learn                 /index.html 200
+/explorer              /index.html 200
