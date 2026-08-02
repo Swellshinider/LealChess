@@ -202,7 +202,28 @@
 .utility-links {
   border-top: 1px solid var(--outline-variant, #404848);
   margin-top: auto;
-  padding-bottom: 22px;
+  padding-bottom: 12px;
+}
+
+.version-label {
+  color: var(--outline);
+  display: flex;
+  font-family: var(--font-utility);
+  font-size: var(--type-micro);
+  letter-spacing: 0.04em;
+  margin: 0;
+  padding: 0 24px 18px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+:host:not(.is-expanded) .version-label {
+  justify-content: center;
+  padding-inline: 4px;
+
+  .version-prefix {
+    display: none;
+  }
 }
 
 .mobile-header,
@@ -312,6 +333,17 @@
         }
       }
     }
+  }
+
+  .drawer-version {
+    border-top: 1px solid var(--outline-variant, #404848);
+    color: var(--outline);
+    font-family: var(--font-utility);
+    font-size: var(--type-micro);
+    letter-spacing: 0.06em;
+    margin: auto 0 0;
+    padding: 18px;
+    text-transform: uppercase;
   }
 
   .drawer-heading {

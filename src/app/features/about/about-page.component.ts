@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import packageMetadata from '../../../../package.json';
 import { SideNavigationComponent } from '../../shared/layout/side-navigation/side-navigation.component';
 
 @Component({
@@ -9,6 +8,4 @@ import { SideNavigationComponent } from '../../shared/layout/side-navigation/sid
   styleUrl: './about-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AboutPageComponent {
-  protected readonly version = `v${packageMetadata.version}`;
-}
+export class AboutPageComponent {}
