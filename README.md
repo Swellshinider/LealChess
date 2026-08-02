@@ -1,75 +1,74 @@
+<!-- markdownlint-disable MD033 MD041-->
+<center>
+
 # LealChess
 
-LealChess is a chess training desk for playing Stockfish, studying your own games, and
-practicing the decisions that cost you the most.
+[![CI](https://github.com/Swellshinider/LealChess/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Swellshinider/LealChess/actions/workflows/ci.yml)
 
-![Screenshot](./docs/screenshots/lealchess_screenshot.png)
+LealChess is a free offline chess training application. The
+application has no account service, cloud database, or analytics.
 
-## What you can do
+</center>
 
-- Play full games against Stockfish with premoves, promotion, annotations, sounds, and saved state.
-- Import recent Chess.com and Lichess games with speed and game-count filters.
-- Review every move on a flippable board with keyboard replay controls.
-- Run cancellable local Stockfish analysis and resume it later without losing completed work.
-- Turn inaccuracies, mistakes, and blunders into focused practice positions.
-- Find recurring opening, tactical, positional, and endgame priorities across analyzed games.
+## Requirements
 
-## Local-first by design
+- Node.js 24.15.0 or newer within the 24.x release line
+- pnpm 11.17.0 or newer within the 11.x release line
 
-Stockfish runs in a browser worker on your device. LealChess contacts the public Chess.com or Lichess
-API only when you ask it to import games; imported profiles, games, analysis results, preferences,
-and active play are stored in browser IndexedDB. There is no LealChess account or cloud database.
+The supported ranges are enforced by `package.json`.
 
-Unavailable services do not erase saved games. Imports report each platform independently and
-explain how to recover from invalid usernames, private games, rate limits, malformed exports, or
-connectivity failures.
+## Local development
 
-## Roadmap
-
-LealChess is growing as a training tool, with no fixed delivery dates:
-
-- Richer explanations for why a move lost time, material, safety, or positional value.
-- Opening and endgame drills generated from recurring positions in imported games.
-- More import sources and finer controls for choosing the games that enter the study ledger.
-- More personalized practice plans built from patterns across completed reviews.
-
-## Development
-
-Requirements:
-
-- Node.js 22.22.3+ or 24.15.0+
-- pnpm 11.17.0, pinned in `package.json`
-
-Install and run the application:
+Install the pinned dependencies and start the Angular development server:
 
 ```sh
-pnpm install
+pnpm install --frozen-lockfile
 pnpm start
 ```
 
-The development server is available at <http://localhost:4200>.
+Open <http://localhost:4200>. Stockfish assets are served with the application, so play and
+analysis do not require a separate backend.
 
-Run the full quality suite:
+## Project structure
 
-```sh
-pnpm format:check
-pnpm lint
-pnpm typecheck
-pnpm test:coverage
-pnpm build
-pnpm e2e
+Runtime dependencies flow in one direction:
+
+```text
+features → core → shared
 ```
 
-## Built with
+- `src/app/features` contains routed workflows such as Play, Learn, Review, Explorer, and Settings.
+- `src/app/core` contains application-wide engine, game, persistence, keyboard, SEO, and sound
+  capabilities.
+- `src/app/shared` contains presentation-neutral chess UI, accessibility helpers, and common
+  layout.
+- `e2e` contains Playwright coverage for critical browser workflows.
 
-- [Angular](https://angular.dev/) for the application shell and reactive UI
-- [Chessground](https://github.com/lichess-org/chessground) for board rendering and interaction
-- [chess.js](https://github.com/jhlywa/chess.js) for authoritative chess rules and PGN handling
-- [Stockfish.js](https://github.com/nmrugg/stockfish.js) for local play and analysis
-- [IndexedDB](https://developer.mozilla.org/docs/Web/API/IndexedDB_API) for local persistence
-- [Vitest](https://vitest.dev/) and [Playwright](https://playwright.dev/) for automated confidence
+Read [the architecture guide](docs/ARCHITECTURE.md) before changing runtime boundaries,
+persistence records, or engine orchestration.
 
-## License
+## Quality checks
 
-LealChess is licensed under GPL-3.0-only. See [LICENSE](LICENSE) and
-[third-party notices](docs/THIRD_PARTY_NOTICES.md).
+| Command              | Purpose                                          |
+| -------------------- | ------------------------------------------------ |
+| `pnpm format:check`  | Check formatting without rewriting files         |
+| `pnpm lint`          | Run the Angular ESLint configuration             |
+| `pnpm typecheck`     | Type-check application and unit-test code        |
+| `pnpm test:coverage` | Run Vitest with coverage                         |
+| `pnpm build`         | Create the production browser and server build   |
+| `pnpm verify:seo`    | Verify generated SEO pages and deployment assets |
+| `pnpm e2e`           | Run Playwright in Chromium, Firefox, and WebKit  |
+| `pnpm verify`        | Run the complete local verification pipeline     |
+
+## Contributing
+
+Start with [CONTRIBUTING.md](CONTRIBUTING.md) for setup, branch, implementation, and pull-request
+expectations. Additional project policies are documented in:
+
+- [Maintainer workflow](docs/MAINTAINING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Security policy](SECURITY.md)
+- [Support](SUPPORT.md)
+- [Third-party notices](docs/THIRD_PARTY_NOTICES.md)
+
+LealChess is licensed under [GPL-3.0-only](LICENSE).

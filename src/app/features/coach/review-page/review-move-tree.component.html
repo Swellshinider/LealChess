@@ -19,7 +19,11 @@
             entry.node.san +
             (classification(entry.node) ? ', ' + classificationLabel(entry.node) : '')
           "
-          (click)="nodeSelected.emit(entry.node.id)"
+          (pointerenter)="showMovePreview(entry.node, $event)"
+          (pointerleave)="hideMovePreview(entry.node.id)"
+          (focus)="showMovePreview(entry.node, $event)"
+          (blur)="hideMovePreview(entry.node.id)"
+          (click)="selectNode(entry.node.id)"
         >
           {{ entry.node.san }}
           @if (classification(entry.node)) {
@@ -52,7 +56,11 @@
                 class="move"
                 [class.current]="session().selectedNodeId === node.id"
                 [attr.aria-label]="node.san + ', variation'"
-                (click)="nodeSelected.emit(node.id)"
+                (pointerenter)="showMovePreview(node, $event)"
+                (pointerleave)="hideMovePreview(node.id)"
+                (focus)="showMovePreview(node, $event)"
+                (blur)="hideMovePreview(node.id)"
+                (click)="selectNode(node.id)"
               >
                 {{ node.san }}
               </button>
@@ -74,3 +82,12 @@
     }
   }
 </ol>
+
+@if (movePreview(); as preview) {
+  <app-review-move-preview
+    [node]="preview.node"
+    [orientation]="orientation()"
+    [boardTheme]="boardTheme()"
+    [position]="preview.position"
+  />
+}

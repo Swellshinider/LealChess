@@ -263,6 +263,8 @@
                           [liveState]="liveAnalysis.state()"
                           [currentPly]="currentPly()"
                           [learnerColor]="learnerColor()!"
+                          [orientation]="orientation()"
+                          [boardTheme]="boardTheme()"
                           [explanation]="moveExplanation()"
                           [ideaVisible]="ideaVisible()"
                           [evaluations]="summary.evaluations"
@@ -272,6 +274,7 @@
                           (removeVariationRequested)="removeAnalysisVariation($event)"
                           (retryRequested)="retryLiveAnalysis()"
                           (candidateRequested)="playAnalysisCandidate($event)"
+                          (candidatePreviewed)="previewAnalysisCandidate($event)"
                           (ideaToggled)="toggleMoveIdea()"
                           (practiceRequested)="enterPractice(practiceIndexForPly($event))"
                         />
