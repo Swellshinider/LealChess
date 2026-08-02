@@ -292,6 +292,7 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   const confirmVariationRemoval = page.getByLabel(/Confirm variation removal/);
   await expect(confirmVariationRemoval).toBeChecked();
   await confirmVariationRemoval.uncheck();
+  await expect.poll(() => storedPreference(page, 'confirmVariationRemoval')).toBe(false);
   await page.reload();
   await expect(page.getByLabel(/Confirm variation removal/)).not.toBeChecked();
   await expect(page.getByLabel(/Mute sounds/)).not.toBeChecked();
@@ -338,7 +339,12 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   await page.getByRole('button', { name: 'Clear all data' }).first().click();
   await expect(page.getByRole('alertdialog')).toBeVisible();
   await page.getByRole('button', { name: 'Clear all data' }).last().click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/play$/);
+  const onboarding = page.getByRole('dialog', {
+    name: 'Set the board, then make the first plan',
+  });
+  await expect(onboarding).toBeVisible();
+  await onboarding.getByRole('button', { name: 'Skip tour' }).click();
   await page.goto('/settings');
   await expect(page.getByLabel('Board palette')).toHaveValue('tournament');
   await expect(page.getByLabel('Sound volume')).toHaveValue('100');
@@ -469,4 +475,21 @@ async function expectFontSizeAtLeast(
   await expect
     .poll(() => locator.evaluate((element) => parseFloat(getComputedStyle(element).fontSize)))
     .toBeGreaterThanOrEqual(minimumPixels);
+}
+
+async function storedPreference(page: import('@playwright/test').Page, key: string) {
+  return page.evaluate(async (preferenceKey) => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('leal-chess');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const value = await new Promise<unknown>((resolve, reject) => {
+      const request = database.transaction('state').objectStore('state').get('preferences');
+      request.onsuccess = () => resolve(request.result?.value?.[preferenceKey]);
+      request.onerror = () => reject(request.error);
+    });
+    database.close();
+    return value;
+  }, key);
 }

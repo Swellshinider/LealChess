@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { KeybindingAction } from '../../core/keyboard/keybindings';
+import { OnboardingService } from '../../core/onboarding/onboarding.service';
 import { PERSISTENCE_PORT } from '../../core/persistence/persistence.types';
 import { SettingsPersistenceService } from '../../core/persistence/settings-persistence.service';
 import { CoachImportService } from '../coach/data/coach-import.service';
@@ -62,6 +63,7 @@ describe('SettingsPageComponent keybindings', () => {
         },
         { provide: SettingsPersistenceService, useValue: {} },
         { provide: CoachImportService, useValue: {} },
+        { provide: OnboardingService, useValue: { start: vi.fn() } },
       ],
     });
   });

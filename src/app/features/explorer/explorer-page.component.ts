@@ -14,6 +14,7 @@ import type { Config } from '@lichess-org/chessground/config';
 import type { DrawShape } from '@lichess-org/chessground/draw';
 import type { Key } from '@lichess-org/chessground/types';
 import { StockfishAnalysisEngineService } from '../../core/engine/stockfish-analysis-engine.service';
+import { OnboardingAnchorDirective } from '../../core/onboarding/onboarding-anchor.directive';
 import { legalDestinations } from '../../core/game/chess-move';
 import { STARTING_FEN, type MoveInput, type PromotionPiece } from '../../core/game/game.types';
 import {
@@ -85,6 +86,7 @@ interface PendingSessionReplacement {
     ConfirmationDialogComponent,
     ExplorerAnalysisPanelComponent,
     ModalFocusDirective,
+    OnboardingAnchorDirective,
     SideNavigationComponent,
   ],
   providers: [

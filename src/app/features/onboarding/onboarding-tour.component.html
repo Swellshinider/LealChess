@@ -1,0 +1,103 @@
+@if (onboarding.active()) {
+  <div class="tour-layer">
+    @if (geometry(); as target) {
+      <div class="scrim scrim-top" [style.height.px]="target.top"></div>
+      <div
+        class="scrim scrim-left"
+        [style.top.px]="target.top"
+        [style.width.px]="target.left"
+        [style.height.px]="target.height"
+      ></div>
+      <div
+        class="scrim scrim-right"
+        [style.top.px]="target.top"
+        [style.left.px]="target.right"
+        [style.height.px]="target.height"
+      ></div>
+      <div class="scrim scrim-bottom" [style.top.px]="target.bottom"></div>
+      <div
+        class="target-frame"
+        aria-hidden="true"
+        [style.top.px]="target.top"
+        [style.left.px]="target.left"
+        [style.width.px]="target.width"
+        [style.height.px]="target.height"
+      ></div>
+    } @else {
+      <div class="scrim scrim-full"></div>
+    }
+
+    <section
+      class="tour-card"
+      role="dialog"
+      aria-modal="false"
+      aria-labelledby="onboarding-title"
+      aria-describedby="onboarding-description onboarding-hint"
+      [attr.data-placement]="coachmarkPosition().placement"
+      [style.top.px]="coachmarkPosition().top"
+      [style.left.px]="coachmarkPosition().left"
+    >
+      <header>
+        <div>
+          <span class="line-label">Opening line</span>
+          <span class="step-count"> {{ onboarding.currentStep() + 1 }} / {{ steps.length }} </span>
+        </div>
+        <button type="button" class="skip-action" (click)="onboarding.skip()">Skip tour</button>
+      </header>
+
+      <ol aria-label="Onboarding progress">
+        @for (item of steps; track item.id; let index = $index) {
+          <li
+            [class.current]="index === onboarding.currentStep()"
+            [class.complete]="index < onboarding.currentStep()"
+          >
+            <button
+              type="button"
+              [disabled]="index > onboarding.currentStep() || onboarding.transitioning()"
+              [attr.aria-current]="index === onboarding.currentStep() ? 'step' : null"
+              [attr.aria-label]="'Go to ' + item.eyebrow"
+              (click)="selectStep(index)"
+            >
+              <span>{{ index + 1 }}</span>
+            </button>
+          </li>
+        }
+      </ol>
+
+      <div class="tour-copy" aria-live="polite" aria-atomic="true">
+        <span>{{ onboarding.step().eyebrow }}</span>
+        <h2 #tourHeading id="onboarding-title" tabindex="-1">
+          {{ onboarding.step().title }}
+        </h2>
+        <p id="onboarding-description">{{ onboarding.step().description }}</p>
+        <p id="onboarding-hint" class="tour-hint">
+          @if (!onboarding.activeAnchor()) {
+            <i aria-hidden="true"></i>
+            Preparing this workspace…
+          } @else {
+            {{ onboarding.step().hint }}
+          }
+        </p>
+      </div>
+
+      <footer>
+        <button
+          type="button"
+          class="back-action"
+          [disabled]="onboarding.currentStep() === 0 || onboarding.transitioning()"
+          (click)="onboarding.back()"
+        >
+          Back
+        </button>
+        <button
+          type="button"
+          class="next-action"
+          [disabled]="onboarding.transitioning() || !onboarding.activeAnchor()"
+          (click)="onboarding.next()"
+        >
+          {{ onboarding.finalStep() ? 'Finish on Learn' : 'Next' }}
+        </button>
+      </footer>
+    </section>
+  </div>
+}

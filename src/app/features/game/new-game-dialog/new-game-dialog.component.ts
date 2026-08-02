@@ -1,20 +1,31 @@
-import { ChangeDetectionStrategy, Component, effect, input, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import {
   BOT_RATING_STOPS,
   DEFAULT_BOT_RATING,
   type BotRating,
 } from '../../../core/engine/bot-rating';
 import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
+import { OnboardingAnchorDirective } from '../../../core/onboarding/onboarding-anchor.directive';
+import { OnboardingService } from '../../../core/onboarding/onboarding.service';
 import type { ColorSelection, EngineStatus, StartGameOptions } from '../../../core/game/game.types';
 
 @Component({
   selector: 'app-new-game-dialog',
-  imports: [ModalFocusDirective],
+  imports: [ModalFocusDirective, OnboardingAnchorDirective],
   templateUrl: './new-game-dialog.component.html',
   styleUrl: './new-game-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewGameDialogComponent {
+  protected readonly onboarding = inject(OnboardingService);
   readonly open = input(false);
   readonly defaultBotRating = input<BotRating>(DEFAULT_BOT_RATING);
   readonly engineStatus = input<EngineStatus>('idle');

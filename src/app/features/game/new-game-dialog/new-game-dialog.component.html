@@ -2,8 +2,10 @@
   <div class="dialog-backdrop">
     <section
       appModalFocus
+      appOnboardingAnchor="play-setup"
+      [modalFocusDisabled]="onboarding.active()"
       role="dialog"
-      aria-modal="true"
+      [attr.aria-modal]="onboarding.active() ? 'false' : 'true'"
       aria-labelledby="new-game-title"
       aria-describedby="new-game-intro engine-startup-status"
       tabindex="-1"
@@ -61,7 +63,10 @@
       >
         <span class="engine-mark" aria-hidden="true">SF</span>
         <div>
-          @if (engineStatus() === 'loading') {
+          @if (engineStatus() === 'idle') {
+            <strong>Stockfish has not started yet</strong>
+            <small>Continue or skip the tour when you are ready to load the engine.</small>
+          } @else if (engineStatus() === 'loading') {
             <strong>Starting Stockfish</strong>
             <small>Preparing the engine on this device…</small>
           } @else if (engineStatus() === 'error') {

@@ -1,7 +1,11 @@
 <div class="play-shell" [attr.inert]="gameOverOpen() ? '' : null">
   <app-side-navigation />
   <div class="app-frame">
-    <main class="game-layout" [attr.data-theme]="state().preferences.boardTheme">
+    <main
+      appOnboardingAnchor="play-workspace"
+      class="game-layout"
+      [attr.data-theme]="state().preferences.boardTheme"
+    >
       <section class="board-column" aria-label="Chess game">
         <div
           class="player-strip opponent"
