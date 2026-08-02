@@ -238,11 +238,57 @@ test('analyzes locally, caches the result, and opens a concern position', async 
   await expectPlayerStripsToClearEvaluationRail(page);
   await expect(page.locator('.live-analysis li')).toHaveCount(3, { timeout: 30_000 });
   await expectReviewResponsiveness(page);
-  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(0);
-  await page.evaluate(() =>
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true })),
-  );
-  await expect(page.locator('.review-board svg.cg-shapes line')).not.toHaveCount(0);
+  const ideaArrows = page.locator('.review-board svg.cg-shapes line');
+  const nextReplayButton = page
+    .getByRole('navigation', { name: 'Replay controls' })
+    .getByRole('button', { name: 'Next', exact: true });
+  const previousReplayButton = page
+    .getByRole('navigation', { name: 'Replay controls' })
+    .getByRole('button', { name: 'Previous', exact: true });
+  const lastReplayButton = page
+    .getByRole('navigation', { name: 'Replay controls' })
+    .getByRole('button', { name: 'Last', exact: true });
+
+  await expect(ideaArrows).toHaveCount(0);
+  await nextReplayButton.click();
+  await expect(nextReplayButton).not.toBeFocused();
+  const moveAfterNext = page.locator('.score .move.current');
+  const moveAfterNextLabel = await moveAfterNext.getAttribute('aria-label');
+  await page.keyboard.press('Space');
+  await expect(ideaArrows).not.toHaveCount(0);
+  await expect(moveAfterNext).toHaveAttribute('aria-label', moveAfterNextLabel!);
+
+  const scoreMove = page.locator('.score .move').first();
+  await scoreMove.click();
+  await expect(scoreMove).not.toBeFocused();
+  await expect(scoreMove).toHaveClass(/current/);
+  await expect(ideaArrows).toHaveCount(0);
+  await page.keyboard.press('Space');
+  await expect(ideaArrows).not.toHaveCount(0);
+  await expect(scoreMove).toHaveClass(/current/);
+
+  await nextReplayButton.focus();
+  await page.keyboard.press('Space');
+  await expect(nextReplayButton).toBeFocused();
+  await expect(scoreMove).not.toHaveClass(/current/);
+  await scoreMove.click();
+  await expect(scoreMove).toHaveClass(/current/);
+
+  await page.keyboard.press('Control+ArrowRight');
+  await expect(nextReplayButton).toBeDisabled();
+  await expect(lastReplayButton).toBeDisabled();
+  await previousReplayButton.click();
+  await expect(nextReplayButton).toBeEnabled();
+  await expect(lastReplayButton).toBeEnabled();
+  await page.keyboard.press('Control+ArrowRight');
+  await expect(nextReplayButton).toBeDisabled();
+  await expect(lastReplayButton).toBeDisabled();
+  await page.keyboard.press('Control+ArrowLeft');
+  await expect(previousReplayButton).toBeDisabled();
+  await expect(nextReplayButton).toBeEnabled();
+  await expect(lastReplayButton).toBeEnabled();
+  await scoreMove.click();
+  await expect(scoreMove).toHaveClass(/current/);
 
   const alternateCandidate = page
     .locator('.live-analysis .candidate-action:not([aria-label$=": e5"])')
