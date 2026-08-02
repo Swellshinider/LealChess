@@ -154,6 +154,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   protected readonly reviewSession = this.store.reviewSession;
   protected readonly selectedReviewNode = this.store.selectedReviewNode;
   protected readonly pendingVariationRemoval = signal<string | null>(null);
+  protected readonly ideaVisible = signal(false);
   protected readonly liveAnalysis = inject(ReviewLiveAnalysisService);
   protected readonly currentAnalysis = computed<MoveAnalysis | undefined>(() =>
     this.selectedReviewNode()?.source === 'imported'
@@ -170,6 +171,11 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       ? createMoveExplanation(game, this.coachAnalysis.analysis(), this.currentPly())
       : null;
   });
+  private readonly ideaShapes = computed<DrawShape[]>(() =>
+    this.ideaVisible()
+      ? (this.moveExplanation()?.arrows ?? []).map((arrow) => this.ideaArrowShape(arrow))
+      : [],
+  );
   private readonly whiteEvaluationValue = computed(() => {
     if (this.mode() !== 'analysis') return null;
     const selected = this.selectedReviewNode();
@@ -239,7 +245,6 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   });
   private replayTimers: ReturnType<typeof setTimeout>[] = [];
   private shapes: DrawShape[] = [];
-  private readonly ideaShapes = signal<DrawShape[]>([]);
   private navigationState: MoveTreeNavigationState = EMPTY_MOVE_TREE_NAVIGATION;
 
   constructor() {
@@ -379,7 +384,6 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       ? Object.values(session.nodes).find((candidate) => candidate.importedPly === nextPly)
       : undefined;
     if (nextPly === previousPly && importedNode?.id === session?.selectedNodeId) return;
-    this.ideaShapes.set([]);
     this.currentPly.set(nextPly);
     if (importedNode) this.selectAnalysisNode(importedNode.id, false);
     const traversedMove = this.game()?.moves[Math.max(previousPly, nextPly) - 1];
@@ -390,7 +394,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
 
   protected startAnalysis(): void {
     if (this.coachAnalysis.state().phase !== 'complete') return;
-    this.ideaShapes.set([]);
+    this.ideaVisible.set(false);
     this.mode.set('analysis');
     this.goToImportedPly(this.game()?.moves.length ? 1 : 0);
   }
@@ -401,18 +405,15 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.pendingPromotion.set(null);
     this.practiceReplayFen.set(null);
     this.practiceReplaying.set(false);
-    this.ideaShapes.set([]);
+    this.ideaVisible.set(false);
     this.currentPly.set(0);
     this.mode.set('summary');
     this.liveAnalysis.cancel();
     this.navigationState = EMPTY_MOVE_TREE_NAVIGATION;
   }
 
-  protected showMoveIdea(): void {
-    const explanation = this.moveExplanation();
-    if (!explanation) return;
-    const arrows = explanation.arrows.map((arrow) => this.ideaArrowShape(arrow));
-    this.ideaShapes.set(arrows);
+  protected toggleMoveIdea(): void {
+    this.ideaVisible.update((visible) => !visible);
   }
 
   protected enterPractice(index = 0): void {
@@ -421,7 +422,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.puzzleStatus.set('ready');
     this.shapes = [];
     this.pendingPromotion.set(null);
-    this.ideaShapes.set([]);
+    this.ideaVisible.set(false);
     this.ensureActiveSession();
     this.mode.set('practice');
     this.replayOpponentMove();
@@ -679,7 +680,6 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.navigationState = rememberMoveTreeSelection(session, nodeId, this.navigationState);
     this.liveAnalysis.cancel();
     this.pendingPromotion.set(null);
-    this.ideaShapes.set([]);
     this.reviewSession.set(selectReviewNode(session, nodeId));
     if (node.importedPly !== undefined) this.currentPly.set(node.importedPly);
     if (playSound && node.move) this.sound.play('move');
@@ -808,7 +808,6 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       if (committed.node.source === 'imported') {
         this.currentPly.set(committed.node.importedPly ?? committed.node.ply);
       }
-      this.ideaShapes.set([]);
       this.sound.play('move');
       this.analyzeSelectedReviewNode();
     } catch {
@@ -818,7 +817,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
 
   private runKeybindingAction(action: KeybindingAction): void {
     if (action === 'showIdea') {
-      this.showMoveIdea();
+      this.toggleMoveIdea();
       return;
     }
     const session = this.reviewSession();

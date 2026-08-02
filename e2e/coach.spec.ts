@@ -228,7 +228,9 @@ test('analyzes locally, caches the result, and opens a concern position', async 
   await expect(page.getByRole('heading', { name: 'Game review', exact: true })).toBeVisible();
   await expect(page.getByText('Guided analysis', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Next move', exact: true })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Show idea on board' })).toBeVisible();
+  const ideaToggle = page.locator('.secondary-action');
+  await expect(ideaToggle).toHaveAccessibleName('Show idea on board');
+  await expect(ideaToggle).toHaveAttribute('aria-pressed', 'false');
   await expect(page.getByText('Advantage graph', { exact: true })).toBeVisible();
   await expect(page.locator('.advantage-label, .equal-label')).toHaveCount(0);
   await expect(page.locator('.zero-line')).toHaveCSS('stroke', 'rgb(137, 139, 131)');
@@ -254,17 +256,27 @@ test('analyzes locally, caches the result, and opens a concern position', async 
   await expect(nextReplayButton).not.toBeFocused();
   const moveAfterNext = page.locator('.score .move.current');
   const moveAfterNextLabel = await moveAfterNext.getAttribute('aria-label');
-  await page.keyboard.press('Space');
+  await ideaToggle.click();
   await expect(ideaArrows).not.toHaveCount(0);
+  await expect(ideaToggle).toHaveAccessibleName('Hide idea on board');
+  await expect(ideaToggle).toHaveAttribute('aria-pressed', 'true');
   await expect(moveAfterNext).toHaveAttribute('aria-label', moveAfterNextLabel!);
 
   const scoreMove = page.locator('.score .move').first();
   await scoreMove.click();
   await expect(scoreMove).not.toBeFocused();
   await expect(scoreMove).toHaveClass(/current/);
+  await expect(ideaArrows).not.toHaveCount(0);
+  await expect(ideaToggle).toHaveAccessibleName('Hide idea on board');
+  await ideaToggle.click();
   await expect(ideaArrows).toHaveCount(0);
+  await expect(ideaToggle).toHaveAccessibleName('Show idea on board');
   await page.keyboard.press('Space');
   await expect(ideaArrows).not.toHaveCount(0);
+  await expect(ideaToggle).toHaveAccessibleName('Hide idea on board');
+  await page.keyboard.press('Space');
+  await expect(ideaArrows).toHaveCount(0);
+  await expect(ideaToggle).toHaveAccessibleName('Show idea on board');
   await expect(scoreMove).toHaveClass(/current/);
 
   await nextReplayButton.focus();

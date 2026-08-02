@@ -31,7 +31,7 @@ export const KEYBINDING_LABELS: Record<KeybindingAction, string> = {
   nextMove: 'Next move',
   branchStart: 'Branch or game start',
   branchEnd: 'Branch or game end',
-  showIdea: 'Show idea',
+  showIdea: 'Toggle idea',
 };
 
 export function keyChordFromEvent(event: KeyboardEvent): KeyChord | null {

@@ -15,8 +15,8 @@ describe('ReviewAnalysisPanelComponent', () => {
     const fixture = TestBed.createComponent(ReviewAnalysisPanelComponent);
     const imported = game();
     const session = createReviewAnalysisSession(imported);
-    const requested = vi.fn();
-    fixture.componentInstance.ideaRequested.subscribe(requested);
+    const toggled = vi.fn();
+    fixture.componentInstance.ideaToggled.subscribe(toggled);
     fixture.componentRef.setInput('game', imported);
     fixture.componentRef.setInput('analysis', {
       ...analysis(imported),
@@ -65,10 +65,17 @@ describe('ReviewAnalysisPanelComponent', () => {
     expect(host.querySelector('.analysis-scroll')?.contains(footer)).toBe(true);
     expect(footer.querySelector('.evaluation')).not.toBeNull();
     expect(action.textContent).toContain('Show idea on board');
+    expect(action.getAttribute('aria-pressed')).toBe('false');
 
     action.click();
 
-    expect(requested).toHaveBeenCalledOnce();
+    expect(toggled).toHaveBeenCalledOnce();
+
+    fixture.componentRef.setInput('ideaVisible', true);
+    fixture.detectChanges();
+
+    expect(action.textContent).toContain('Hide idea on board');
+    expect(action.getAttribute('aria-pressed')).toBe('true');
   });
 
   it('emits the first move when an engine candidate is clicked', async () => {
