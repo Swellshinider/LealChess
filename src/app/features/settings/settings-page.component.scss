@@ -22,7 +22,7 @@
   p {
     color: var(--primary);
     font-family: var(--font-utility);
-    font-size: 0.65rem;
+    font-size: var(--type-caption);
     letter-spacing: 0.08em;
     margin: 0 0 5px;
     text-transform: uppercase;
@@ -63,7 +63,7 @@
   > span {
     color: var(--mist);
     font-family: var(--font-utility);
-    font-size: 0.6rem;
+    font-size: var(--type-caption);
     text-transform: uppercase;
   }
 }
@@ -71,7 +71,7 @@
 .folio {
   color: var(--primary);
   font-family: var(--font-utility);
-  font-size: 0.62rem;
+  font-size: var(--type-caption);
   letter-spacing: 0.05em;
   margin: 0;
   text-transform: uppercase;
@@ -87,7 +87,7 @@ form {
     color: var(--mist);
     display: grid;
     font-family: var(--font-utility);
-    font-size: 0.62rem;
+    font-size: var(--type-small);
     gap: 7px;
     text-transform: uppercase;
   }
@@ -114,7 +114,7 @@ form > button {
 .form-help,
 .field-error {
   color: var(--mist);
-  font-size: 0.84rem;
+  font-size: var(--type-small);
   margin: 10px 0 0;
 }
 
@@ -156,7 +156,7 @@ form > button {
   span {
     color: var(--amber);
     font-family: var(--font-utility);
-    font-size: 0.58rem;
+    font-size: var(--type-caption);
     text-transform: uppercase;
   }
 
@@ -434,7 +434,7 @@ form > button {
 
   span {
     color: var(--mist);
-    font-size: 0.78rem;
+    font-size: var(--type-small);
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
@@ -463,7 +463,7 @@ form > button {
     color: var(--mist);
     cursor: help;
     display: inline-flex;
-    font-size: 0.72rem;
+    font-size: var(--type-small);
     height: 20px;
     justify-content: center;
     min-height: 20px;
@@ -484,7 +484,7 @@ form > button {
   bottom: calc(100% + 8px);
   box-shadow: 0 12px 32px rgb(0 0 0 / 45%);
   color: var(--paper);
-  font-size: 0.82rem;
+  font-size: var(--type-small);
   font-weight: 400;
   line-height: 1.4;
   opacity: 0;

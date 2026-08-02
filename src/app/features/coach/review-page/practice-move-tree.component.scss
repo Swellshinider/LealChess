@@ -17,7 +17,7 @@
   small {
     color: var(--mist);
     font-family: var(--font-utility);
-    font-size: 0.52rem;
+    font-size: var(--type-micro);
   }
 
   span {
@@ -56,7 +56,7 @@
 .move-number {
   color: var(--mist);
   font-family: var(--font-utility);
-  font-size: 0.52rem;
+  font-size: var(--type-micro);
 }
 
 .side-variation {
@@ -89,7 +89,7 @@ button {
   small {
     color: var(--classification-color, var(--mist));
     font-family: var(--font-utility);
-    font-size: 0.48rem;
+    font-size: var(--type-micro);
     font-style: normal;
   }
 }
@@ -97,6 +97,6 @@ button {
 .start-node {
   color: var(--primary);
   font-family: var(--font-utility);
-  font-size: 0.55rem;
+  font-size: var(--type-micro);
   text-transform: uppercase;
 }

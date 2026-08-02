@@ -76,7 +76,7 @@ li {
 .parenthesis {
   color: var(--mist);
   font-family: var(--font-utility);
-  font-size: 0.52rem;
+  font-size: var(--type-micro);
   text-align: right;
 }
 
@@ -102,7 +102,7 @@ li {
     color: var(--classification-color, var(--mist));
     display: block;
     font-family: var(--font-utility);
-    font-size: 0.46rem;
+    font-size: var(--type-micro);
     font-style: normal;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -115,7 +115,7 @@ li {
   border: 0;
   color: var(--danger);
   font-family: var(--font-utility);
-  font-size: 0.68rem;
+  font-size: var(--type-caption);
   font-weight: 700;
   height: 20px;
   line-height: 1;

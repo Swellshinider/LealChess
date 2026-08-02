@@ -27,7 +27,7 @@ app-explorer-page {
   .piece-palette > div > span {
     color: var(--primary);
     font-family: var(--font-utility);
-    font-size: 0.62rem;
+    font-size: var(--type-caption);
     letter-spacing: 0.09em;
     text-transform: uppercase;
   }
@@ -131,7 +131,7 @@ app-explorer-page {
   .evaluation-score {
     color: var(--paper);
     font-family: var(--font-utility);
-    font-size: 0.58rem;
+    font-size: var(--type-caption);
     font-weight: 700;
     left: 50%;
     position: absolute;
@@ -205,7 +205,7 @@ app-explorer-page {
     strong {
       display: block;
       font-family: var(--font-utility);
-      font-size: 0.72rem;
+      font-size: var(--type-small);
       font-weight: 500;
       text-transform: capitalize;
     }
@@ -278,13 +278,13 @@ app-explorer-page {
     > span {
       color: var(--mist);
       font-family: var(--font-utility);
-      font-size: 0.58rem;
+      font-size: var(--type-caption);
       text-transform: uppercase;
     }
 
     strong {
       font-family: var(--font-utility);
-      font-size: 0.72rem;
+      font-size: var(--type-small);
       font-weight: 500;
       margin-top: 3px;
     }
@@ -316,7 +316,7 @@ app-explorer-page {
     > div:first-child {
       display: flex;
       font-family: var(--font-utility);
-      font-size: 0.65rem;
+      font-size: var(--type-caption);
       justify-content: space-between;
       text-transform: uppercase;
     }
@@ -326,7 +326,7 @@ app-explorer-page {
       border: 0;
       color: var(--primary);
       font-family: var(--font-utility);
-      font-size: 0.62rem;
+      font-size: var(--type-caption);
       margin-top: 9px;
       padding: 0;
       text-decoration: underline;
@@ -335,7 +335,7 @@ app-explorer-page {
 
     p {
       color: #ffb4ab;
-      font-size: 0.72rem;
+      font-size: var(--type-small);
     }
   }
 
@@ -369,7 +369,7 @@ app-explorer-page {
     small {
       color: var(--mist);
       font-family: var(--font-utility);
-      font-size: 0.55rem;
+      font-size: var(--type-micro);
     }
   }
 
@@ -395,7 +395,7 @@ app-explorer-page {
     strong,
     li > span:last-child {
       font-family: var(--font-utility);
-      font-size: 0.68rem;
+      font-size: var(--type-caption);
     }
 
     li > span:last-child {
@@ -425,7 +425,7 @@ app-explorer-page {
 
   .terminal-position {
     color: var(--mist);
-    font-size: 0.78rem;
+    font-size: var(--type-small);
     margin: 16px 0 2px;
   }
 
@@ -487,16 +487,16 @@ app-explorer-page {
 
     small {
       color: var(--mist);
-      font-size: 0.55rem;
+      font-size: var(--type-micro);
     }
 
     strong {
-      font-size: 0.78rem;
+      font-size: var(--type-small);
     }
 
     i {
       color: var(--mist);
-      font-size: 0.5rem;
+      font-size: var(--type-micro);
       font-style: normal;
       grid-column: 4;
     }
@@ -510,7 +510,7 @@ app-explorer-page {
   .move-badge {
     border-left: 3px solid var(--classification-color, var(--outline));
     color: var(--classification-color, var(--mist));
-    font-size: 0.57rem;
+    font-size: var(--type-micro);
     justify-self: end;
     padding-left: 6px;
     text-transform: uppercase;
@@ -522,7 +522,7 @@ app-explorer-page {
 
     p {
       color: #ffb4ab;
-      font-size: 0.72rem;
+      font-size: var(--type-small);
     }
 
     button {
@@ -568,7 +568,7 @@ app-explorer-page {
 
     .eraser {
       font-family: var(--font-utility);
-      font-size: 0.65rem;
+      font-size: var(--type-caption);
       padding: 0 10px;
     }
   }
@@ -584,7 +584,7 @@ app-explorer-page {
   .setup-panel fieldset {
     color: var(--mist);
     font-family: var(--font-utility);
-    font-size: 0.61rem;
+    font-size: var(--type-caption);
   }
 
   .setup-fields select {
@@ -616,7 +616,7 @@ app-explorer-page {
   .setup-error,
   .import-error {
     color: #ffb4ab;
-    font-size: 0.72rem;
+    font-size: var(--type-small);
   }
 
   .setup-utilities,
@@ -700,7 +700,7 @@ app-explorer-page {
     label {
       color: var(--mist);
       display: block;
-      font-size: 0.75rem;
+      font-size: var(--type-small);
       margin-top: 14px;
     }
 
@@ -709,7 +709,7 @@ app-explorer-page {
       border: 1px solid var(--outline-variant);
       color: var(--paper);
       font-family: var(--font-utility);
-      font-size: 0.72rem;
+      font-size: var(--type-small);
       line-height: 1.55;
       margin-top: 7px;
       padding: 12px;
@@ -789,7 +789,7 @@ app-explorer-page {
       span {
         display: block;
         font-family: var(--font-utility);
-        font-size: 0.58rem;
+        font-size: var(--type-caption);
         margin-top: 4px;
       }
     }

@@ -47,6 +47,13 @@
   --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
   --font-body: 'Atkinson Hyperlegible', system-ui, sans-serif;
   --font-utility: 'IBM Plex Mono', ui-monospace, monospace;
+  --type-micro: 0.75rem;
+  --type-caption: 0.8125rem;
+  --type-small: 0.875rem;
+  --type-body: 1rem;
+  --type-lead: 1.125rem;
+  --type-subtitle: 1.25rem;
+  --type-title: 1.5rem;
   color-scheme: dark;
   font-family: var(--font-body);
   font-synthesis: none;
@@ -142,6 +149,8 @@ body {
 body {
   background: var(--night);
   color: var(--paper);
+  font-size: var(--type-body);
+  line-height: 1.5;
   overflow-x: hidden;
 }
 
@@ -199,7 +208,7 @@ app-review-page {
   .folio {
     color: var(--amber);
     font-family: var(--font-utility);
-    font-size: 0.62rem;
+    font-size: var(--type-caption);
     letter-spacing: 0.04em;
     margin: 0 0 4px;
     text-transform: uppercase;
@@ -258,7 +267,7 @@ app-learn-page {
 
     p {
       color: var(--mist);
-      font-size: 0.84rem;
+      font-size: var(--type-small);
     }
 
     button {
@@ -301,7 +310,7 @@ app-learn-page {
   .eyebrow {
     color: var(--primary);
     font-family: var(--font-utility);
-    font-size: 0.63rem;
+    font-size: var(--type-caption);
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }

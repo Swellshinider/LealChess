@@ -26,7 +26,7 @@
   > span {
     color: var(--danger);
     font-family: var(--font-utility);
-    font-size: 0.6rem;
+    font-size: var(--type-caption);
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -42,7 +42,7 @@
 
   p {
     color: var(--mist);
-    font-size: 0.82rem;
+    font-size: var(--type-small);
     line-height: 1.45;
     margin: 0;
   }

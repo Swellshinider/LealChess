@@ -39,7 +39,7 @@ footer {
 .eyebrow {
   color: var(--primary);
   font-family: var(--font-utility);
-  font-size: 0.56rem;
+  font-size: var(--type-micro);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -48,7 +48,7 @@ footer {
   background: var(--surface-container-high);
   color: var(--paper);
   font-family: var(--font-utility);
-  font-size: 0.65rem;
+  font-size: var(--type-caption);
   padding: 5px 7px;
 }
 
@@ -58,7 +58,7 @@ footer {
 
   p {
     color: var(--mist);
-    font-size: 0.72rem;
+    font-size: var(--type-small);
     line-height: 1.4;
     margin: 0;
   }
@@ -69,7 +69,7 @@ footer {
   color: var(--mist);
   display: flex;
   font-family: var(--font-utility);
-  font-size: 0.58rem;
+  font-size: var(--type-caption);
   justify-content: space-between;
 
   strong {
@@ -140,14 +140,14 @@ footer {
 .player-heading {
   color: var(--paper);
   font-family: var(--font-utility);
-  font-size: 0.62rem;
+  font-size: var(--type-caption);
 }
 
 .player-ratings,
 .classification-row {
   color: var(--mist);
   font-family: var(--font-utility);
-  font-size: 0.58rem;
+  font-size: var(--type-caption);
 
   strong {
     color: var(--paper);
@@ -187,7 +187,7 @@ footer {
   dt,
   dd {
     font-family: var(--font-utility);
-    font-size: 0.56rem;
+    font-size: var(--type-micro);
     margin: 0;
   }
 
@@ -206,7 +206,7 @@ footer {
   small {
     color: var(--mist);
     font-family: var(--font-utility);
-    font-size: 0.54rem;
+    font-size: var(--type-micro);
   }
 }
 
