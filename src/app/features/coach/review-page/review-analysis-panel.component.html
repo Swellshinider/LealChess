@@ -22,8 +22,13 @@
               <span>After {{ evaluationLabel(note.playedEvaluation) }}</span>
             </div>
           }
-          <button type="button" class="secondary-action" (click)="ideaRequested.emit()">
-            Show idea on board
+          <button
+            type="button"
+            class="secondary-action"
+            [attr.aria-pressed]="ideaVisible()"
+            (click)="ideaToggled.emit()"
+          >
+            {{ ideaVisible() ? 'Hide idea on board' : 'Show idea on board' }}
           </button>
         </div>
       } @else {

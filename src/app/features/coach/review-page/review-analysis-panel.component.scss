@@ -51,6 +51,12 @@ header {
   color: var(--paper);
 }
 
+.secondary-action[aria-pressed='true'] {
+  background: var(--primary-container);
+  border-color: var(--primary);
+  color: var(--on-primary-container);
+}
+
 .back-action {
   font-family: var(--font-utility);
   font-size: var(--type-micro);

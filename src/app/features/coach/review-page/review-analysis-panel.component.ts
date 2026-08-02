@@ -38,13 +38,14 @@ export class ReviewAnalysisPanelComponent {
   readonly currentPly = input.required<number>();
   readonly learnerColor = input.required<ChessColor>();
   readonly explanation = input<MoveExplanation | null>(null);
+  readonly ideaVisible = input(false);
   readonly evaluations = input.required<ReviewEvaluationPoint[]>();
   readonly session = input.required<ReviewAnalysisSession>();
   readonly selectedNode = input.required<ReviewMoveNode>();
   readonly liveState = input.required<ReviewLiveAnalysisState>();
   readonly summaryRequested = output<void>();
   readonly plyRequested = output<number>();
-  readonly ideaRequested = output<void>();
+  readonly ideaToggled = output<void>();
   readonly practiceRequested = output<number>();
   readonly nodeRequested = output<string>();
   readonly removeVariationRequested = output<string>();

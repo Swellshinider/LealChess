@@ -265,6 +265,7 @@
                           [currentPly]="currentPly()"
                           [learnerColor]="learnerColor()!"
                           [explanation]="moveExplanation()"
+                          [ideaVisible]="ideaVisible()"
                           [evaluations]="summary.evaluations"
                           (summaryRequested)="showSummary()"
                           (plyRequested)="goTo($event)"
@@ -272,7 +273,7 @@
                           (removeVariationRequested)="removeAnalysisVariation($event)"
                           (retryRequested)="retryLiveAnalysis()"
                           (candidateRequested)="playAnalysisCandidate($event)"
-                          (ideaRequested)="showMoveIdea()"
+                          (ideaToggled)="toggleMoveIdea()"
                           (practiceRequested)="enterPractice(practiceIndexForPly($event))"
                         />
                       }
