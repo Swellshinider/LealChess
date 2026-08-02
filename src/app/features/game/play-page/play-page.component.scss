@@ -12,18 +12,20 @@
 }
 
 .app-frame {
-  --play-padding: clamp(14px, 2vw, 28px);
+  --play-padding-block: clamp(8px, 1.2dvh, 12px);
+  --play-padding-inline: clamp(12px, 1.8vw, 24px);
 
   container-type: inline-size;
   flex: 1 1 auto;
   height: 100%;
   min-width: 0;
-  overflow: auto;
-  padding: var(--play-padding);
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: var(--play-padding-block) var(--play-padding-inline);
 }
 
 .game-layout {
-  --desk-width: clamp(280px, 26cqw, 336px);
+  --desk-width: clamp(336px, 40cqw, 640px);
 
   align-items: stretch;
   display: grid;
@@ -31,18 +33,30 @@
   grid-template-columns: minmax(0, 1fr) var(--desk-width);
   height: 100%;
   margin: 0 auto;
-  max-width: 1280px;
+  max-width: 1600px;
   min-height: 0;
   width: 100%;
 }
 
 .board-column {
+  --player-strip-height: 34px;
+  --player-strips-height: calc(var(--player-strip-height) + var(--player-strip-height));
+  --play-fit-tolerance: 2px;
+
   align-self: center;
   display: flex;
   flex-direction: column;
-  margin: auto;
-  max-width: 820px;
-  width: min(100%, calc(100dvh - var(--play-padding) - var(--play-padding) - 84px));
+  justify-self: end;
+  margin: auto 0;
+  max-width: 1024px;
+  width: min(
+    100%,
+    calc(
+      100dvh - var(--play-padding-block) - var(--play-padding-block) - var(
+          --player-strips-height
+        ) - var(--play-fit-tolerance)
+    )
+  );
 }
 
 .player-strip {
@@ -50,13 +64,14 @@
   color: var(--paper);
   display: flex;
   gap: 9px;
-  min-height: 42px;
-  padding: 5px 2px;
+  min-height: var(--player-strip-height);
+  padding: 2px;
   position: relative;
 
   strong,
   small {
     display: block;
+    line-height: 1.1;
   }
 
   strong {
@@ -95,9 +110,9 @@
   font-family: var(--font-display);
   font-size: var(--type-small);
   font-weight: 700;
-  height: 30px;
+  height: 28px;
   justify-content: center;
-  width: 30px;
+  width: 28px;
 
   &.bot {
     color: var(--amber);

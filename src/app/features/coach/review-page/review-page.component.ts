@@ -68,6 +68,7 @@ import type {
   PracticeSession,
 } from './practice.types';
 import { ReviewAnalysisPanelComponent } from './review-analysis-panel.component';
+import { ReviewReplayControlsComponent } from './review-replay-controls.component';
 import {
   createGameReviewSummary,
   createMoveExplanation,
@@ -98,6 +99,7 @@ import type { ReviewCandidateLine } from './review-analysis-session.types';
     ConfirmationDialogComponent,
     PracticeMoveTreeComponent,
     ReviewAnalysisPanelComponent,
+    ReviewReplayControlsComponent,
     ReviewSummaryComponent,
     ChessgroundBoardComponent,
     RouterLink,

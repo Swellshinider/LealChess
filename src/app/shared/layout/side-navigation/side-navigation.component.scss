@@ -6,8 +6,8 @@
   width: 72px;
 
   &.is-expanded {
-    flex-basis: 256px;
-    width: 256px;
+    flex-basis: var(--navigation-expanded-width, 256px);
+    width: var(--navigation-expanded-width, 256px);
   }
 }
 

@@ -1,5 +1,46 @@
 import { expect, test } from '@playwright/test';
 
+const responsivenessViewports = [
+  { width: 320, height: 568 },
+  { width: 820, height: 1180 },
+  { width: 1024, height: 600 },
+  { width: 1280, height: 720 },
+] as const;
+
+const publicWorkspaceRoutes = [
+  '/',
+  '/play',
+  '/settings',
+  '/learn',
+  '/explorer',
+  '/about',
+  '/not-a-route',
+] as const;
+
+test('keeps every route shell within the supported viewport widths', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'Responsive route-shell regression suite');
+
+  for (const viewport of responsivenessViewports) {
+    await page.setViewportSize(viewport);
+
+    for (const route of publicWorkspaceRoutes) {
+      await page.goto(route);
+      await expectDocumentNotToOverflowHorizontally(page);
+    }
+
+    await page.goto('/about');
+    const finalAboutLink = page.getByRole('link', { name: 'Report a security issue privately' });
+    await finalAboutLink.scrollIntoViewIfNeeded();
+    await expect(finalAboutLink).toBeVisible();
+
+    await page.goto('/settings');
+    await page.getByRole('button', { name: 'How storage usage is calculated' }).focus();
+    const tooltip = page.getByRole('tooltip');
+    await expect(tooltip).toBeVisible();
+    await expect.poll(() => elementFitsViewportHorizontally(tooltip)).toBe(true);
+  }
+});
+
 test('collapses the desktop panel, preserves the choice, and navigates between workspaces', async ({
   page,
 }, testInfo) => {
@@ -88,6 +129,39 @@ test('adapts Play from a landscape tablet desk to a portrait board-first stack',
       return portraitControls.y > portraitBoard.y + portraitBoard.height - 2;
     })
     .toBe(true);
+
+  const wideViewports = [
+    { width: 1648, height: 828, minimumDeskWidth: 520 },
+    { width: 2048, height: 941, minimumDeskWidth: 620 },
+  ];
+
+  for (const viewport of wideViewports) {
+    await page.setViewportSize(viewport);
+    const geometry = await page.evaluate(() => {
+      const boardFrame = document
+        .querySelector<HTMLElement>('app-chess-board .board-frame')!
+        .getBoundingClientRect();
+      const frame = document.querySelector<HTMLElement>('.app-frame')!;
+      const sidebar = document.querySelector<HTMLElement>('.game-panel')!.getBoundingClientRect();
+      return {
+        boardHeight: boardFrame.height,
+        boardRight: boardFrame.right,
+        boardWidth: boardFrame.width,
+        frameClientHeight: frame.clientHeight,
+        frameScrollHeight: frame.scrollHeight,
+        sidebarLeft: sidebar.left,
+        sidebarWidth: sidebar.width,
+      };
+    });
+
+    expect(Math.abs(geometry.boardWidth - geometry.boardHeight)).toBeLessThanOrEqual(1);
+    expect(geometry.boardHeight).toBeGreaterThanOrEqual(viewport.height * 0.86);
+    expect(geometry.frameScrollHeight).toBeLessThanOrEqual(geometry.frameClientHeight + 1);
+    expect(geometry.sidebarWidth).toBeGreaterThanOrEqual(viewport.minimumDeskWidth);
+    expect(geometry.sidebarWidth).toBeLessThanOrEqual(641);
+    expect(geometry.sidebarLeft - geometry.boardRight).toBeGreaterThanOrEqual(13);
+    expect(geometry.sidebarLeft - geometry.boardRight).toBeLessThanOrEqual(27);
+  }
 });
 
 test('launches each workspace and provides project information', async ({ page }, testInfo) => {
@@ -313,6 +387,24 @@ async function expectWorkspaceToFitViewport(page: import('@playwright/test').Pag
   expect(geometry.frameWidth).toBeLessThanOrEqual(geometry.frameClientWidth + 1);
   expect(geometry.boardBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
   expect(geometry.controlsBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
+}
+
+async function expectDocumentNotToOverflowHorizontally(page: import('@playwright/test').Page) {
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const scrollingElement = document.scrollingElement!;
+        return scrollingElement.scrollWidth <= scrollingElement.clientWidth + 1;
+      }),
+    )
+    .toBe(true);
+}
+
+async function elementFitsViewportHorizontally(locator: import('@playwright/test').Locator) {
+  return locator.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    return bounds.left >= 0 && bounds.right <= window.innerWidth;
+  });
 }
 
 async function expectTypographyTokens(page: import('@playwright/test').Page) {

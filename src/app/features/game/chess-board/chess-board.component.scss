@@ -3,22 +3,23 @@
   min-width: 0;
 }
 
+.board-stage {
+  aspect-ratio: 1;
+  box-shadow: 0 12px 28px rgb(1 16 23 / 24%);
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
 .board-frame {
   --coordinate-on-dark: #fff;
   --coordinate-on-light: var(--night);
   --move-marker: rgb(23 36 44 / 62%);
   --premove-marker: rgb(217 154 61 / 72%);
 
-  aspect-ratio: 1;
-  background: var(--carbon);
-  box-shadow: 0 12px 28px rgb(1 16 23 / 24%);
-  overflow: hidden;
-  position: relative;
-  width: 100%;
-}
-
-.chessground-host {
   height: 100%;
+  overflow: hidden;
   width: 100%;
 }
 

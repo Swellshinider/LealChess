@@ -10,6 +10,7 @@ import type { AfterViewInit, OnDestroy } from '@angular/core';
 import { Chessground } from '@lichess-org/chessground';
 import type { Api } from '@lichess-org/chessground/api';
 import type { Config } from '@lichess-org/chessground/config';
+import type { DrawShape } from '@lichess-org/chessground/draw';
 
 @Component({
   selector: 'app-chessground-board',
@@ -18,6 +19,8 @@ import type { Config } from '@lichess-org/chessground/config';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '(click)': 'boardClick.emit($event)',
+    '(mousedown)': 'refreshBounds()',
+    '(touchstart)': 'refreshBounds()',
   },
 })
 export class ChessgroundBoardComponent implements AfterViewInit, OnDestroy {
@@ -50,6 +53,14 @@ export class ChessgroundBoardComponent implements AfterViewInit, OnDestroy {
     this.api?.cancelMove();
   }
 
+  cancelPremove(): void {
+    this.api?.cancelPremove();
+  }
+
+  setShapes(shapes: DrawShape[]): void {
+    this.api?.setShapes(shapes);
+  }
+
   bounds(): DOMRect {
     return this.host.nativeElement.getBoundingClientRect();
   }
@@ -62,7 +73,11 @@ export class ChessgroundBoardComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  private redraw(): void {
+  refreshBounds(): void {
+    this.api?.state.dom.bounds.clear();
+  }
+
+  redraw(): void {
     this.api?.state.dom.bounds.clear();
     this.api?.redrawAll();
   }
