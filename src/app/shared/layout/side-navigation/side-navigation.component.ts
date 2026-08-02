@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import packageMetadata from '../../../../../package.json';
 import { ModalFocusDirective } from '../../a11y/modal-focus.directive';
 import { NavigationPanelService } from '../navigation-panel.service';
 
@@ -15,4 +16,5 @@ import { NavigationPanelService } from '../navigation-panel.service';
 })
 export class SideNavigationComponent {
   protected readonly navigation = inject(NavigationPanelService);
+  protected readonly version = `v${packageMetadata.version}`;
 }

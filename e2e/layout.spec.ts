@@ -90,7 +90,7 @@ test('adapts Play from a landscape tablet desk to a portrait board-first stack',
     .toBe(true);
 });
 
-test('launches each workspace and provides project information', async ({ page }) => {
+test('launches each workspace and provides project information', async ({ page }, testInfo) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'LealChess' })).toBeVisible();
   await expect(page.getByRole('link', { name: /Play/ })).toHaveAttribute('href', '/play');
@@ -98,20 +98,33 @@ test('launches each workspace and provides project information', async ({ page }
   await expect(page.getByRole('link', { name: /Settings/ })).toHaveAttribute('href', '/settings');
 
   await page.goto('/about');
-  await expect(page.getByRole('heading', { name: 'About' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Private report' })).toHaveAttribute(
-    'href',
-    'https://github.com/Swellshinider/LealChess/security/advisories/new',
-  );
+  await expect(page.getByRole('heading', { name: 'About LealChess' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Why LealChess' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Our Mission' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'We Are Open Source' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Issues and Contributions' })).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: 'Report a security issue privately' }),
+  ).toHaveAttribute('href', 'https://github.com/Swellshinider/LealChess/security/advisories/new');
 
   await page.goto('/help');
   await expect(page).toHaveURL(/\/about$/);
-  await expect(page.getByRole('heading', { name: 'About' })).toBeVisible();
-  await expect(page.getByText('v0.6.0', { exact: true })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Swellshinider/LealChess' })).toHaveAttribute(
+  await expect(page.getByRole('heading', { name: 'About LealChess' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'View the source on GitHub' })).toHaveAttribute(
     'href',
     'https://github.com/Swellshinider/LealChess',
   );
+
+  if (testInfo.project.name.includes('mobile')) {
+    await page.getByRole('button', { name: 'Open navigation' }).click();
+    await expect(page.getByRole('dialog', { name: 'Navigation menu' })).toContainText(
+      'Version v0.6.0',
+    );
+  } else {
+    await expect(page.locator('#primary-navigation .version-label')).toContainText(
+      'Version v0.6.0',
+    );
+  }
 });
 
 test('uses the shared readable typography scale across pages and controls', async ({

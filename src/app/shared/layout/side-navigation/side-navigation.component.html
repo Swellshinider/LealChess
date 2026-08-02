@@ -76,6 +76,11 @@
       <span class="nav-copy">About</span>
     </a>
   </div>
+
+  <p class="version-label" [attr.aria-label]="'LealChess version ' + version">
+    <span class="version-prefix">Version&nbsp;</span>
+    <span>{{ version }}</span>
+  </p>
 </nav>
 
 <header class="mobile-header">
@@ -141,5 +146,6 @@
         About
       </a>
     </nav>
+    <p class="drawer-version">Version {{ version }}</p>
   </section>
 }

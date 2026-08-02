@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import packageMetadata from '../../../../../package.json';
 import { NavigationPanelService } from '../navigation-panel.service';
 import { SideNavigationComponent } from './side-navigation.component';
 
@@ -36,6 +37,9 @@ describe('SideNavigationComponent', () => {
       host.querySelector<HTMLAnchorElement>('[data-tooltip="About"]')?.getAttribute('href'),
     ).toBe('/about');
     expect(host.querySelector('[aria-disabled="true"]')).toBeNull();
+    expect(host.querySelector('.version-label')?.getAttribute('aria-label')).toBe(
+      `LealChess version v${packageMetadata.version}`,
+    );
 
     const toggle = host.querySelector<HTMLButtonElement>('.rail-toggle')!;
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
@@ -61,6 +65,9 @@ describe('SideNavigationComponent', () => {
     expect(drawer).not.toBeNull();
     expect(drawer.getAttribute('aria-modal')).toBe('true');
     expect(drawer.querySelector<HTMLAnchorElement>('a[href="/about"]')).not.toBeNull();
+    expect(drawer.querySelector('.drawer-version')?.textContent).toContain(
+      `Version v${packageMetadata.version}`,
+    );
 
     drawer.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     fixture.detectChanges();
