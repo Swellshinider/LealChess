@@ -55,6 +55,7 @@ export interface GamePreferences {
   soundVolume: number;
   showLegalMoves: boolean;
   premovesEnabled: boolean;
+  confirmVariationRemoval: boolean;
   boardTheme: BoardTheme;
   orientation: ChessColor;
   botRating: BotRating;
@@ -95,6 +96,7 @@ export const DEFAULT_PREFERENCES: GamePreferences = {
   soundVolume: 100,
   showLegalMoves: true,
   premovesEnabled: true,
+  confirmVariationRemoval: true,
   boardTheme: 'tournament',
   orientation: 'white',
   botRating: DEFAULT_BOT_RATING,

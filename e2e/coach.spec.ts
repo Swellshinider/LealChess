@@ -312,9 +312,14 @@ test('analyzes locally, caches the result, and opens a concern position', async 
   await page.getByRole('button', { name: 'Remove this variation and all continuations' }).click();
   const removalDialog = page.getByRole('alertdialog', { name: 'Remove this variation?' });
   await expect(removalDialog).toBeVisible();
+  await removalDialog.getByRole('checkbox', { name: "Don't ask me again" }).check();
   await removalDialog.getByRole('button', { name: 'Keep variation' }).click();
   await expect(page.locator('.score .variation-move')).toHaveCount(1);
   await page.getByRole('button', { name: 'Remove this variation and all continuations' }).click();
+  await expect(
+    removalDialog.getByRole('checkbox', { name: "Don't ask me again" }),
+  ).not.toBeChecked();
+  await removalDialog.getByRole('checkbox', { name: "Don't ask me again" }).check();
   await removalDialog.getByRole('button', { name: 'Remove variation' }).click();
   await expect(page.locator('.score .variation-move')).toHaveCount(0);
 
@@ -346,10 +351,7 @@ test('analyzes locally, caches the result, and opens a concern position', async 
   await expect(page.locator('.score .variation-move')).toHaveCount(2);
   await page.locator('.score .variation-move .move').last().click();
   await page.getByRole('button', { name: 'Remove this variation and all continuations' }).click();
-  await page
-    .getByRole('alertdialog', { name: 'Remove this variation?' })
-    .getByRole('button', { name: 'Remove variation' })
-    .click();
+  await expect(page.getByRole('alertdialog', { name: 'Remove this variation?' })).toHaveCount(0);
   await expect(page.locator('.score .variation-move')).toHaveCount(1);
 
   await page.getByRole('button', { name: 'f3' }).click();

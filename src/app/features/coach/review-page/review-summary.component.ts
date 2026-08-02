@@ -18,7 +18,6 @@ export class ReviewSummaryComponent {
   readonly completed = input(0);
   readonly total = input(0);
   readonly error = input<string | null>(null);
-  readonly depth = input<number | undefined>(undefined);
   readonly analysisRequested = output<void>();
   readonly cancelRequested = output<void>();
   readonly reanalysisRequested = output<void>();

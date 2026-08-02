@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { Chess } from 'chess.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { DEFAULT_PREFERENCES } from '../../../core/game/game.types';
 import { PERSISTENCE_PORT } from '../../../core/persistence/persistence.types';
 import { SoundService } from '../../../core/sound/sound.service';
 import { CoachAnalysisService } from '../analysis/coach-analysis.service';
@@ -24,10 +25,12 @@ describe('ReviewPageStore', () => {
     cancel: vi.fn(),
   };
   const sound = { setEnabled: vi.fn(), setVolume: vi.fn() };
+  const savePreferences = vi.fn();
   let routeValues: Record<string, string | null>;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    savePreferences.mockResolvedValue(undefined);
     routeValues = {};
     TestBed.configureTestingModule({
       providers: [
@@ -46,15 +49,14 @@ describe('ReviewPageStore', () => {
             restore: vi.fn().mockResolvedValue({
               game: null,
               preferences: {
+                ...DEFAULT_PREFERENCES,
                 soundEnabled: false,
                 soundVolume: 35,
-                showLegalMoves: true,
-                premovesEnabled: true,
                 boardTheme: 'blue-steel',
-                orientation: 'white',
-                botRating: 1500,
+                confirmVariationRemoval: false,
               },
             }),
+            savePreferences,
           },
         },
         { provide: SoundService, useValue: sound },
@@ -76,8 +78,21 @@ describe('ReviewPageStore', () => {
     expect(store.loading()).toBe(false);
     expect(store.game()).toBeNull();
     expect(store.boardTheme()).toBe('blue-steel');
+    expect(store.confirmVariationRemoval()).toBe(false);
     expect(sound.setEnabled).toHaveBeenCalledWith(false);
     expect(sound.setVolume).toHaveBeenCalledWith(35);
+  });
+
+  it('updates and persists the variation removal confirmation preference', async () => {
+    const store = TestBed.inject(ReviewPageStore);
+    await store.initialize();
+
+    store.setConfirmVariationRemoval(true);
+
+    expect(store.confirmVariationRemoval()).toBe(true);
+    expect(savePreferences).toHaveBeenCalledWith(
+      expect.objectContaining({ confirmVariationRemoval: true, boardTheme: 'blue-steel' }),
+    );
   });
 
   it('detects and persists a missing opening when the review loads', async () => {

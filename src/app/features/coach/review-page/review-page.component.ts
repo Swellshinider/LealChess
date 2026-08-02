@@ -153,7 +153,9 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   protected readonly practiceInputLocked = this.store.practiceInputLocked;
   protected readonly reviewSession = this.store.reviewSession;
   protected readonly selectedReviewNode = this.store.selectedReviewNode;
+  protected readonly confirmVariationRemovalPreference = this.store.confirmVariationRemoval;
   protected readonly pendingVariationRemoval = signal<string | null>(null);
+  protected readonly skipVariationRemovalConfirmation = signal(false);
   protected readonly ideaVisible = signal(false);
   protected readonly liveAnalysis = inject(ReviewLiveAnalysisService);
   protected readonly currentAnalysis = computed<MoveAnalysis | undefined>(() =>
@@ -698,18 +700,31 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     const session = this.reviewSession();
     const node = session?.nodes[nodeId];
     if (!session || node?.source !== 'manual') return;
-    this.pendingVariationRemoval.set(nodeId);
+    if (this.confirmVariationRemovalPreference()) {
+      this.pendingVariationRemoval.set(nodeId);
+      return;
+    }
+    this.performVariationRemoval(nodeId);
   }
 
   protected closeVariationRemoval(): void {
     this.pendingVariationRemoval.set(null);
+    this.skipVariationRemovalConfirmation.set(false);
   }
 
   protected confirmVariationRemoval(): void {
     const nodeId = this.pendingVariationRemoval();
-    const session = this.reviewSession();
-    const node = nodeId ? session?.nodes[nodeId] : undefined;
     this.pendingVariationRemoval.set(null);
+    if (this.skipVariationRemovalConfirmation()) {
+      this.store.setConfirmVariationRemoval(false);
+    }
+    this.skipVariationRemovalConfirmation.set(false);
+    if (nodeId) this.performVariationRemoval(nodeId);
+  }
+
+  private performVariationRemoval(nodeId: string): void {
+    const session = this.reviewSession();
+    const node = session?.nodes[nodeId];
     if (!session || !nodeId || node?.source !== 'manual') return;
     this.liveAnalysis.cancel();
     const next = removeReviewVariation(session, nodeId);

@@ -127,7 +127,10 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
     await this.refreshStorageUsage();
   }
 
-  protected updateBoolean(key: 'showLegalMoves' | 'premovesEnabled', event: Event): void {
+  protected updateBoolean(
+    key: 'showLegalMoves' | 'premovesEnabled' | 'confirmVariationRemoval',
+    event: Event,
+  ): void {
     this.savePreferences({ [key]: (event.target as HTMLInputElement).checked });
   }
 
