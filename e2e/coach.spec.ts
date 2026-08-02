@@ -239,6 +239,17 @@ test('analyzes locally, caches the result, and opens a concern position', async 
   await expect(page.locator('.evaluation-rail')).toHaveAttribute('aria-label', /White evaluation/);
   await expectPlayerStripsToClearEvaluationRail(page);
   await expect(page.locator('.live-analysis li')).toHaveCount(3, { timeout: 30_000 });
+  const previewMove = page.locator('.score .move').first();
+  await previewMove.hover();
+  await expect(page.locator('.move-preview')).toBeVisible();
+  await expect(page.locator('.move-preview')).toContainText('Position preview');
+
+  const candidateArrow = page.locator('.review-board svg.cg-shapes line');
+  await page.locator('.candidate-action').first().hover();
+  await expect(page.locator('.move-preview')).toHaveCount(0);
+  await expect(candidateArrow).toHaveCount(1);
+  await page.locator('.candidate-heading').hover();
+  await expect(candidateArrow).toHaveCount(0);
   await expectReviewResponsiveness(page);
   const ideaArrows = page.locator('.review-board svg.cg-shapes line');
   const nextReplayButton = page
@@ -326,18 +337,21 @@ test('analyzes locally, caches the result, and opens a concern position', async 
   await moveReviewPiece(page, 'c7', 'c5');
   await expect(page.locator('.score .variation-move')).toHaveCount(1);
   await expect(page.locator('.live-analysis li')).toHaveCount(3, { timeout: 30_000 });
-  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(3);
-  await expect
-    .poll(() =>
-      page
-        .locator('.review-board svg.cg-shapes line')
-        .evaluateAll((lines) =>
-          lines
-            .map((line) => Number(line.getAttribute('stroke-width')) * 64)
-            .sort((left, right) => right - left),
-        ),
-    )
-    .toEqual([14, 9, 5]);
+  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(0);
+  for (const [index, width] of [14, 9, 5].entries()) {
+    await page.locator('.candidate-action').nth(index).hover();
+    await expect
+      .poll(() =>
+        page
+          .locator('.review-board svg.cg-shapes line')
+          .evaluateAll((lines) =>
+            lines.map((line) => Math.round(Number(line.getAttribute('stroke-width')) * 64)),
+          ),
+      )
+      .toEqual([width]);
+  }
+  await page.locator('.candidate-heading').hover();
+  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(0);
 
   await moveReviewPiece(page, 'e2', 'e4');
   await expect(page.locator('.score .variation-move')).toHaveCount(2);

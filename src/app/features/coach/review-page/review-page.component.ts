@@ -157,6 +157,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   protected readonly pendingVariationRemoval = signal<string | null>(null);
   protected readonly skipVariationRemovalConfirmation = signal(false);
   protected readonly ideaVisible = signal(false);
+  protected readonly previewedAnalysisCandidate = signal<ReviewCandidateLine | null>(null);
   protected readonly liveAnalysis = inject(ReviewLiveAnalysisService);
   protected readonly currentAnalysis = computed<MoveAnalysis | undefined>(() =>
     this.selectedReviewNode()?.source === 'imported'
@@ -264,6 +265,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       this.reviewSession();
       this.liveAnalysis.state();
       this.ideaShapes();
+      this.previewedAnalysisCandidate();
       this.syncBoard();
     });
     effect(() => {
@@ -408,6 +410,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.practiceReplayFen.set(null);
     this.practiceReplaying.set(false);
     this.ideaVisible.set(false);
+    this.previewedAnalysisCandidate.set(null);
     this.currentPly.set(0);
     this.mode.set('summary');
     this.liveAnalysis.cancel();
@@ -425,6 +428,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.shapes = [];
     this.pendingPromotion.set(null);
     this.ideaVisible.set(false);
+    this.previewedAnalysisCandidate.set(null);
     this.ensureActiveSession();
     this.mode.set('practice');
     this.replayOpponentMove();
@@ -437,6 +441,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.practiceReplayFen.set(null);
     this.practiceReplaying.set(false);
     this.shapes = [];
+    this.previewedAnalysisCandidate.set(null);
     const position = this.activePosition();
     if (position) this.currentPly.set(position.ply);
     this.mode.set('analysis');
@@ -682,6 +687,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.navigationState = rememberMoveTreeSelection(session, nodeId, this.navigationState);
     this.liveAnalysis.cancel();
     this.pendingPromotion.set(null);
+    this.previewedAnalysisCandidate.set(null);
     this.reviewSession.set(selectReviewNode(session, nodeId));
     if (node.importedPly !== undefined) this.currentPly.set(node.importedPly);
     if (playSound && node.move) this.sound.play('move');
@@ -693,7 +699,12 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   }
 
   protected playAnalysisCandidate(move: MoveInput): void {
+    this.previewedAnalysisCandidate.set(null);
     this.commitAnalysisMove(move);
+  }
+
+  protected previewAnalysisCandidate(line: ReviewCandidateLine | null): void {
+    this.previewedAnalysisCandidate.set(line);
   }
 
   protected removeAnalysisVariation(nodeId: string): void {
@@ -762,10 +773,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     const board = this.board();
     if (!node || !board) return;
     const color = turnColor(node.fen);
-    const candidates =
-      this.liveAnalysis.state().nodeId === node.id
-        ? this.liveAnalysis.state().candidates
-        : node.candidates;
+    const candidatePreview = this.previewedAnalysisCandidate();
     board.set({
       fen: node.fen,
       orientation: this.orientation(),
@@ -779,11 +787,9 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       drawable: {
         enabled: true,
         shapes: this.shapes,
-        autoShapes: this.ideaShapes().length
-          ? this.ideaShapes()
-          : node.source === 'manual'
-            ? this.engineCandidateShapes(candidates)
-            : [],
+        autoShapes: candidatePreview
+          ? [this.engineCandidateShape(candidatePreview)]
+          : this.ideaShapes(),
       },
     });
   }
@@ -994,13 +1000,16 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   private engineCandidateShapes(
     lines: Array<PracticeCandidateLine | ReviewCandidateLine>,
   ): DrawShape[] {
-    const widths = [14, 9, 5];
-    return lines.map((line, index) => ({
+    return lines.map((line) => this.engineCandidateShape(line));
+  }
+
+  private engineCandidateShape(line: PracticeCandidateLine | ReviewCandidateLine): DrawShape {
+    return {
       orig: line.firstMove.from as Key,
       dest: line.firstMove.to as Key,
       brush: 'green',
-      modifiers: { lineWidth: widths[index] ?? 6 },
-    }));
+      modifiers: { lineWidth: { 1: 14, 2: 9, 3: 5 }[line.rank] ?? 6 },
+    };
   }
 
   private ensureActiveSession(): void {

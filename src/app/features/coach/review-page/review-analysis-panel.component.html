@@ -60,7 +60,11 @@
                 type="button"
                 class="candidate-action"
                 [attr.aria-label]="candidateAriaLabel(line)"
-                (click)="candidateRequested.emit(line.firstMove)"
+                (pointerenter)="candidatePreviewed.emit(line)"
+                (pointerleave)="candidatePreviewed.emit(null)"
+                (focus)="candidatePreviewed.emit(line)"
+                (blur)="candidatePreviewed.emit(null)"
+                (click)="selectCandidate(line)"
               >
                 <span>{{ line.rank }}</span>
                 <i [style.height]="candidateRuleWidth(line.rank)" aria-hidden="true"></i>
@@ -82,6 +86,8 @@
     <app-review-move-tree
       [session]="session()"
       [analysis]="analysis()"
+      [orientation]="orientation()"
+      [boardTheme]="boardTheme()"
       (nodeSelected)="nodeRequested.emit($event)"
       (removeRequested)="removeVariationRequested.emit($event)"
     />

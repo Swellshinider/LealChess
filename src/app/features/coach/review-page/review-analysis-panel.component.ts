@@ -18,7 +18,7 @@ import type {
 } from './review-analysis-session.types';
 import type { ReviewLiveAnalysisState } from './review-live-analysis.service';
 import { turnColor } from '../../../core/game/chess-move';
-import type { MoveInput } from '../../../core/game/game.types';
+import type { BoardTheme, MoveInput } from '../../../core/game/game.types';
 import { ReviewReplayControlsComponent } from './review-replay-controls.component';
 
 @Component({
@@ -37,6 +37,8 @@ export class ReviewAnalysisPanelComponent {
   readonly analysis = input.required<GameAnalysis>();
   readonly currentPly = input.required<number>();
   readonly learnerColor = input.required<ChessColor>();
+  readonly orientation = input.required<ChessColor>();
+  readonly boardTheme = input.required<BoardTheme>();
   readonly explanation = input<MoveExplanation | null>(null);
   readonly ideaVisible = input(false);
   readonly evaluations = input.required<ReviewEvaluationPoint[]>();
@@ -51,6 +53,7 @@ export class ReviewAnalysisPanelComponent {
   readonly removeVariationRequested = output<string>();
   readonly retryRequested = output<void>();
   readonly candidateRequested = output<MoveInput>();
+  readonly candidatePreviewed = output<ReviewCandidateLine | null>();
 
   protected readonly currentNote = computed<MoveAnalysis | undefined>(() =>
     (this.analysis().reviewMoves ?? this.analysis().moves).find(
@@ -109,5 +112,10 @@ export class ReviewAnalysisPanelComponent {
 
   protected candidateAriaLabel(line: ReviewCandidateLine): string {
     return `Play engine candidate ${line.rank}: ${line.san[0] ?? 'move'}`;
+  }
+
+  protected selectCandidate(line: ReviewCandidateLine): void {
+    this.candidatePreviewed.emit(null);
+    this.candidateRequested.emit(line.firstMove);
   }
 }

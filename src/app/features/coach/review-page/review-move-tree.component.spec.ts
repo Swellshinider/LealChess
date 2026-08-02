@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import type { Api } from '@lichess-org/chessground/api';
+import type { Config } from '@lichess-org/chessground/config';
 import { Chess } from 'chess.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ImportedGame } from '../domain/coach.types';
@@ -9,8 +11,28 @@ import {
 } from './review-analysis-session';
 import { ReviewMoveTreeComponent } from './review-move-tree.component';
 
+const chessgroundMock = vi.hoisted(() => ({
+  config: null as Config | null,
+  api: {
+    set: vi.fn(),
+    redrawAll: vi.fn(),
+    destroy: vi.fn(),
+    state: { dom: { bounds: { clear: vi.fn() } } },
+  },
+}));
+
+vi.mock('@lichess-org/chessground', () => ({
+  Chessground: vi.fn((_element: HTMLElement, config: Config) => {
+    chessgroundMock.config = config;
+    return chessgroundMock.api as unknown as Api;
+  }),
+}));
+
 describe('ReviewMoveTreeComponent', () => {
-  afterEach(() => TestBed.resetTestingModule());
+  afterEach(() => {
+    TestBed.resetTestingModule();
+    vi.unstubAllGlobals();
+  });
 
   it('groups a branch continuation into one wrapping variation line', async () => {
     const fixture = await renderTree(branchSession());
@@ -58,13 +80,64 @@ describe('ReviewMoveTreeComponent', () => {
       )!.id,
     );
   });
+
+  it('previews mainline and variation positions on pointer and keyboard focus', async () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn((query: string) => ({ matches: query === '(hover: hover)' }) as MediaQueryList),
+    );
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe = vi.fn();
+        disconnect = vi.fn();
+      },
+    );
+    const session = branchSession();
+    const fixture = await renderTree(session, 'black', 'classic');
+    const host = fixture.nativeElement as HTMLElement;
+    const mainline = host.querySelector<HTMLButtonElement>('.score > li .move')!;
+    const mainlineNode = Object.values(session.nodes).find(
+      (node) => node.san === mainline.textContent?.trim(),
+    )!;
+
+    mainline.dispatchEvent(new Event('pointerenter'));
+    fixture.detectChanges();
+
+    expect(host.querySelector('.move-preview')?.textContent).toContain(mainlineNode.san);
+    expect(host.querySelector('.move-preview')?.getAttribute('data-board-theme')).toBe('classic');
+    expect(chessgroundMock.config).toMatchObject({
+      fen: mainlineNode.fen,
+      orientation: 'black',
+      lastMove: [mainlineNode.move?.from, mainlineNode.move?.to],
+    });
+
+    mainline.dispatchEvent(new Event('pointerleave'));
+    fixture.detectChanges();
+    expect(host.querySelector('.move-preview')).toBeNull();
+
+    const variation = host.querySelector<HTMLButtonElement>('.variation-move .move')!;
+    variation.focus();
+    fixture.detectChanges();
+    expect(host.querySelector('.move-preview')?.textContent).toContain('c5');
+
+    variation.blur();
+    fixture.detectChanges();
+    expect(host.querySelector('.move-preview')).toBeNull();
+  });
 });
 
-async function renderTree(session: ReturnType<typeof createReviewAnalysisSession>) {
+async function renderTree(
+  session: ReturnType<typeof createReviewAnalysisSession>,
+  orientation: 'white' | 'black' = 'white',
+  boardTheme: 'tournament' | 'classic' = 'tournament',
+) {
   await TestBed.configureTestingModule({ imports: [ReviewMoveTreeComponent] }).compileComponents();
   const fixture = TestBed.createComponent(ReviewMoveTreeComponent);
   fixture.componentRef.setInput('session', session);
   fixture.componentRef.setInput('analysis', null);
+  fixture.componentRef.setInput('orientation', orientation);
+  fixture.componentRef.setInput('boardTheme', boardTheme);
   fixture.detectChanges();
   return fixture;
 }

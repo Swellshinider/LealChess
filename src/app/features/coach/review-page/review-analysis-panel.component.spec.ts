@@ -44,6 +44,8 @@ describe('ReviewAnalysisPanelComponent', () => {
     });
     fixture.componentRef.setInput('currentPly', 1);
     fixture.componentRef.setInput('learnerColor', 'white');
+    fixture.componentRef.setInput('orientation', 'white');
+    fixture.componentRef.setInput('boardTheme', 'tournament');
     fixture.componentRef.setInput('explanation', {
       classification: 'best',
       title: 'A strong move',
@@ -87,11 +89,15 @@ describe('ReviewAnalysisPanelComponent', () => {
     const session = createReviewAnalysisSession(imported);
     const firstMove = { from: 'e2' as const, to: 'e4' as const };
     const requested = vi.fn();
+    const previewed = vi.fn();
     fixture.componentInstance.candidateRequested.subscribe(requested);
+    fixture.componentInstance.candidatePreviewed.subscribe(previewed);
     fixture.componentRef.setInput('game', imported);
     fixture.componentRef.setInput('analysis', analysis(imported));
     fixture.componentRef.setInput('currentPly', 0);
     fixture.componentRef.setInput('learnerColor', 'white');
+    fixture.componentRef.setInput('orientation', 'black');
+    fixture.componentRef.setInput('boardTheme', 'classic');
     fixture.componentRef.setInput('explanation', null);
     fixture.componentRef.setInput('evaluations', []);
     fixture.componentRef.setInput('session', session);
@@ -112,11 +118,23 @@ describe('ReviewAnalysisPanelComponent', () => {
     fixture.detectChanges();
     const host = fixture.nativeElement as HTMLElement;
 
-    host
-      .querySelector<HTMLButtonElement>('button[aria-label="Play engine candidate 1: e4"]')!
-      .click();
+    const candidate = host.querySelector<HTMLButtonElement>(
+      'button[aria-label="Play engine candidate 1: e4"]',
+    )!;
+    candidate.dispatchEvent(new Event('pointerenter'));
+    candidate.dispatchEvent(new Event('pointerleave'));
+    candidate.focus();
+    candidate.blur();
+    candidate.click();
 
     expect(requested).toHaveBeenCalledWith(firstMove);
+    expect(previewed.mock.calls).toEqual([
+      [expect.objectContaining({ rank: 1, firstMove })],
+      [null],
+      [expect.objectContaining({ rank: 1, firstMove })],
+      [null],
+      [null],
+    ]);
   });
 });
 
