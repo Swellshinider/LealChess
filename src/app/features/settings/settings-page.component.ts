@@ -31,6 +31,8 @@ import {
   SettingsPersistenceService,
   type LealChessStorageUsage,
 } from '../../core/persistence/settings-persistence.service';
+import { OnboardingAnchorDirective } from '../../core/onboarding/onboarding-anchor.directive';
+import { OnboardingService } from '../../core/onboarding/onboarding.service';
 import { ModalFocusDirective } from '../../shared/a11y/modal-focus.directive';
 import { SideNavigationComponent } from '../../shared/layout/side-navigation/side-navigation.component';
 import { CoachImportService } from '../coach/data/coach-import.service';
@@ -42,6 +44,7 @@ import type { Subscription } from 'rxjs';
   selector: 'app-settings-page',
   imports: [
     ModalFocusDirective,
+    OnboardingAnchorDirective,
     ReactiveFormsModule,
     SettingsPreviewBoardComponent,
     SideNavigationComponent,
@@ -53,6 +56,7 @@ import type { Subscription } from 'rxjs';
 export class SettingsPageComponent implements OnInit, OnDestroy {
   private readonly persistence = inject(PERSISTENCE_PORT);
   private readonly settingsPersistence = inject(SettingsPersistenceService);
+  protected readonly onboarding = inject(OnboardingService);
   protected readonly coach = inject(CoachImportService);
   protected readonly themes = BOARD_THEMES;
   protected readonly preferences = signal<GamePreferences>({ ...DEFAULT_PREFERENCES });

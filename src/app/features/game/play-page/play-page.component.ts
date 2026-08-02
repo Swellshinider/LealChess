@@ -9,6 +9,8 @@ import {
 import type { OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { GameController } from '../../../core/game/game-controller.service';
+import { OnboardingAnchorDirective } from '../../../core/onboarding/onboarding-anchor.directive';
+import { OnboardingService } from '../../../core/onboarding/onboarding.service';
 import type { GamePhase, StartGameOptions } from '../../../core/game/game.types';
 import { BoardFlipButtonComponent } from '../../../shared/chess/board-flip-button/board-flip-button.component';
 import { SideNavigationComponent } from '../../../shared/layout/side-navigation/side-navigation.component';
@@ -27,6 +29,7 @@ import { NewGameDialogComponent } from '../new-game-dialog/new-game-dialog.compo
     GameOverDialogComponent,
     GameSidebarComponent,
     NewGameDialogComponent,
+    OnboardingAnchorDirective,
     SideNavigationComponent,
   ],
   providers: [GameController],
@@ -44,6 +47,9 @@ export class PlayPageComponent implements OnInit, OnDestroy {
   protected readonly state = this.controller.state;
   private readonly repository = inject(CoachRepositoryService);
   private readonly router = inject(Router);
+  private readonly onboarding = inject(OnboardingService);
+  private viewInitialized = false;
+  private controllerInitialized = false;
   private newGameTrigger: HTMLElement | null = null;
   private previousPhase: GamePhase = this.state().phase;
 
@@ -59,10 +65,14 @@ export class PlayPageComponent implements OnInit, OnDestroy {
         this.gameOverOpen.set(false);
       }
     });
+    effect(() => {
+      if (this.viewInitialized && !this.onboarding.active()) this.initializeController();
+    });
   }
 
   ngOnInit(): void {
-    void this.controller.initialize();
+    this.viewInitialized = true;
+    if (!this.onboarding.active()) this.initializeController();
   }
 
   ngOnDestroy(): void {
@@ -127,5 +137,11 @@ export class PlayPageComponent implements OnInit, OnDestroy {
   private clearReviewState(): void {
     this.reviewPending.set(false);
     this.reviewError.set(null);
+  }
+
+  private initializeController(): void {
+    if (this.controllerInitialized) return;
+    this.controllerInitialized = true;
+    void this.controller.initialize();
   }
 }

@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { markStockfishEngineDownloaded } from '../engine/stockfish-assets';
+import { ONBOARDING_COMPLETION_KEY } from '../onboarding/onboarding.service';
 import { LealChessDatabaseService } from './leal-chess-database.service';
 import { SettingsPersistenceService } from './settings-persistence.service';
 
@@ -85,6 +86,7 @@ describe('SettingsPersistenceService', () => {
       value: { chessComUsername: '', lichessUsername: 'player', maxGames: 20, speed: 'any' },
     });
     markStockfishEngineDownloaded('analysis');
+    localStorage.setItem(ONBOARDING_COMPLETION_KEY, '1');
 
     await TestBed.inject(SettingsPersistenceService).clearAll();
 
@@ -101,5 +103,6 @@ describe('SettingsPersistenceService', () => {
       engines: 0,
       total: 0,
     });
+    expect(localStorage.getItem(ONBOARDING_COMPLETION_KEY)).toBeNull();
   });
 });

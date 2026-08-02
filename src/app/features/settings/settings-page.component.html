@@ -6,7 +6,7 @@
       <h1>Settings</h1>
     </header>
 
-    <section aria-labelledby="accounts-heading">
+    <section appOnboardingAnchor="settings-import" aria-labelledby="accounts-heading">
       <div class="section-heading">
         <div>
           <p class="folio">Accounts & imports</p>
@@ -232,6 +232,17 @@
         <p aria-live="polite">{{ keybindingError() }}</p>
         <button type="button" (click)="restoreDefaultKeybindings()">Restore defaults</button>
       </div>
+    </section>
+
+    <section class="getting-started" aria-labelledby="getting-started-heading">
+      <div>
+        <p class="folio">Getting started</p>
+        <h2 id="getting-started-heading">Take the workspace tour again</h2>
+        <p>
+          Review how Play, Learn, and Explorer fit together without changing your saved progress.
+        </p>
+      </div>
+      <button type="button" (click)="onboarding.start()">Replay onboarding</button>
     </section>
 
     <section class="danger-zone" aria-labelledby="danger-heading">

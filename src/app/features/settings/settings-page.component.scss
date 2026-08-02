@@ -390,9 +390,9 @@ form > button {
   }
 }
 
+.getting-started,
 .danger-zone {
   align-items: center;
-  border-left: 4px solid var(--danger) !important;
   display: flex;
   justify-content: space-between;
 
@@ -407,6 +407,24 @@ form > button {
     margin: 0;
     max-width: 720px;
   }
+}
+
+.getting-started {
+  border-left: 4px solid var(--primary) !important;
+
+  > button {
+    background: var(--primary);
+    border: 1px solid var(--primary);
+    color: var(--on-primary);
+    flex: 0 0 auto;
+    font-weight: 700;
+    min-height: 44px;
+    padding: 8px 16px;
+  }
+}
+
+.danger-zone {
+  border-left: 4px solid var(--danger) !important;
 
   > .local-data-actions > button {
     background: transparent;
@@ -568,6 +586,7 @@ form > button {
   }
 
   .section-heading,
+  .getting-started,
   .danger-zone {
     align-items: start;
     gap: 14px;
@@ -585,6 +604,7 @@ form > button {
   }
 
   .section-heading,
+  .getting-started,
   .danger-zone {
     flex-direction: column;
   }
@@ -604,6 +624,7 @@ form > button {
   }
 
   .local-data-actions,
+  .getting-started > button,
   .danger-zone > .local-data-actions > button {
     width: 100%;
   }

@@ -4,6 +4,7 @@ import {
   clearStockfishEngineDownloads,
   downloadedStockfishEngineBytes,
 } from '../engine/stockfish-assets';
+import { clearOnboardingCompletion } from '../onboarding/onboarding.service';
 import { DEFAULT_IMPORT_PREFERENCES, type ImportPreferences } from './persistence.types';
 import { LealChessDatabaseService } from './leal-chess-database.service';
 
@@ -78,6 +79,7 @@ export class SettingsPersistenceService {
     await Promise.all(stores.map((store) => transaction.objectStore(store).clear()));
     await transaction.done;
     clearStockfishEngineDownloads();
+    clearOnboardingCompletion();
   }
 }
 

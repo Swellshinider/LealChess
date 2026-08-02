@@ -1,4 +1,4 @@
-import { Directive, ElementRef, HostListener, inject, input, output } from '@angular/core';
+import { Directive, ElementRef, HostListener, effect, inject, input, output } from '@angular/core';
 import type { AfterViewInit, OnDestroy } from '@angular/core';
 
 const FOCUSABLE_SELECTOR = [
@@ -18,11 +18,32 @@ export class ModalFocusDirective implements AfterViewInit, OnDestroy {
   private readonly opener =
     document.activeElement instanceof HTMLElement ? document.activeElement : null;
   private focusFrame: number | null = null;
+  private viewReady = false;
 
   readonly modalCanDismiss = input(true);
+  readonly modalFocusDisabled = input(false);
   readonly modalDismissed = output<void>();
 
+  constructor() {
+    effect(() => {
+      const disabled = this.modalFocusDisabled();
+      if (!this.viewReady) return;
+      if (disabled) {
+        if (this.focusFrame !== null) cancelAnimationFrame(this.focusFrame);
+        this.focusFrame = null;
+        return;
+      }
+      this.scheduleInitialFocus();
+    });
+  }
+
   ngAfterViewInit(): void {
+    this.viewReady = true;
+    if (!this.modalFocusDisabled()) this.scheduleInitialFocus();
+  }
+
+  private scheduleInitialFocus(): void {
+    if (this.focusFrame !== null) cancelAnimationFrame(this.focusFrame);
     this.focusFrame = requestAnimationFrame(() => {
       const initial = this.element.querySelector<HTMLElement>('[data-modal-initial]');
       (initial ?? this.focusableElements()[0] ?? this.element).focus();
@@ -39,6 +60,7 @@ export class ModalFocusDirective implements AfterViewInit, OnDestroy {
 
   @HostListener('keydown', ['$event'])
   protected handleKeydown(event: KeyboardEvent): void {
+    if (this.modalFocusDisabled()) return;
     if (event.key === 'Escape' && this.modalCanDismiss()) {
       event.preventDefault();
       event.stopPropagation();
