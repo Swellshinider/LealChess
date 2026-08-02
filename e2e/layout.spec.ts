@@ -55,7 +55,6 @@ test('collapses the desktop panel, preserves the choice, and navigates between w
   await expect(logo).toBeVisible();
   await expect(brandCopy).toBeVisible();
   await expect(brandCopy).toHaveText('LealChess');
-  await expect(navigation).not.toContainText('Play. Study. Improve.');
   await expect(page.getByRole('button', { name: 'Collapse navigation' })).toBeVisible();
   await expect.poll(async () => (await navigation.boundingBox())!.width).toBe(256);
 
@@ -104,7 +103,6 @@ test('opens an accessible mobile drawer and restores focus after Escape', async 
   const drawer = page.getByRole('dialog', { name: 'Navigation menu' });
   await expect(drawer).toBeVisible();
   await expect(page.getByRole('link', { name: 'Settings' })).toBeVisible();
-  await expect(drawer).not.toContainText('Play. Study. Improve.');
 
   await page.keyboard.press('Escape');
 

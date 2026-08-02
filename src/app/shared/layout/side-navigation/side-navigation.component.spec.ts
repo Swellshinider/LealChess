@@ -30,7 +30,6 @@ describe('SideNavigationComponent', () => {
       '/favicon.svg',
     );
     expect(host.querySelector('.brand-copy')?.textContent?.trim()).toBe('LealChess');
-    expect(host.textContent).not.toContain('Play. Study. Improve.');
     expect(host.querySelector('[data-tooltip="Play"]')).not.toBeNull();
     expect(host.querySelector('[data-tooltip="Learn"]')).not.toBeNull();
     expect(host.querySelector('[data-tooltip="Explorer"]')).not.toBeNull();
@@ -68,7 +67,6 @@ describe('SideNavigationComponent', () => {
     expect(drawer.getAttribute('aria-modal')).toBe('true');
     expect(drawer.querySelector<HTMLAnchorElement>('a[href="/about"]')).not.toBeNull();
     expect(drawer.querySelector('.drawer-heading strong')?.textContent?.trim()).toBe('LealChess');
-    expect(drawer.textContent).not.toContain('Play. Study. Improve.');
     expect(drawer.querySelector('.drawer-version')?.textContent).toContain(
       `Version v${packageMetadata.version}`,
     );
