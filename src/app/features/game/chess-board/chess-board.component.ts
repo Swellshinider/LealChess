@@ -7,9 +7,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import type { AfterViewInit, ElementRef, OnDestroy } from '@angular/core';
-import { Chessground } from '@lichess-org/chessground';
-import type { Api } from '@lichess-org/chessground/api';
+import type { AfterViewInit } from '@angular/core';
 import type { DrawShape } from '@lichess-org/chessground/draw';
 import type { Config } from '@lichess-org/chessground/config';
 import type { Dests, Key } from '@lichess-org/chessground/types';
@@ -17,6 +15,7 @@ import type { Square } from 'chess.js';
 import { GameController } from '../../../core/game/game-controller.service';
 import type { MoveInput, PromotionPiece } from '../../../core/game/game.types';
 import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
+import { ChessgroundBoardComponent } from '../../../shared/chess/chessground-board/chessground-board.component';
 
 interface PendingPromotion {
   move: Omit<MoveInput, 'promotion'>;
@@ -25,26 +24,20 @@ interface PendingPromotion {
 
 @Component({
   selector: 'app-chess-board',
-  imports: [ModalFocusDirective],
+  imports: [ChessgroundBoardComponent, ModalFocusDirective],
   templateUrl: './chess-board.component.html',
   styleUrl: './chess-board.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ChessBoardComponent implements AfterViewInit, OnDestroy {
-  @ViewChild('boardHost', { static: true }) private boardHost!: ElementRef<HTMLElement>;
+export class ChessBoardComponent implements AfterViewInit {
+  @ViewChild(ChessgroundBoardComponent, { static: true })
+  private board?: ChessgroundBoardComponent;
 
   private readonly controller = inject(GameController);
   protected readonly promotion = signal<PendingPromotion | null>(null);
   protected readonly promotionPieces: readonly PromotionPiece[] = ['q', 'r', 'b', 'n'];
   protected readonly state = this.controller.state;
-  private api: Api | null = null;
   private shapes: DrawShape[] = [];
-  private redrawFrame: number | null = null;
-  private resizeFrame: number | null = null;
-  private resizeObserver: ResizeObserver | null = null;
-  private layoutKey = '';
-  private fullRedrawPending = false;
-  private readonly refreshBounds = () => this.api?.state.dom.bounds.clear();
 
   constructor() {
     effect(() => {
@@ -54,44 +47,19 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    this.api = Chessground(this.boardHost.nativeElement, this.createConfig());
-    this.boardHost.nativeElement.addEventListener('mousedown', this.refreshBounds, true);
-    this.boardHost.nativeElement.addEventListener('touchstart', this.refreshBounds, true);
-    this.resizeObserver = new ResizeObserver(() => {
-      if (this.resizeFrame !== null) cancelAnimationFrame(this.resizeFrame);
-      this.resizeFrame = requestAnimationFrame(() => {
-        this.api?.state.dom.bounds.clear();
-        this.api?.redrawAll();
-        this.resizeFrame = null;
-      });
-    });
-    this.resizeObserver.observe(this.boardHost.nativeElement);
     this.syncBoard(this.state());
-  }
-
-  ngOnDestroy(): void {
-    if (this.redrawFrame !== null) {
-      cancelAnimationFrame(this.redrawFrame);
-    }
-    if (this.resizeFrame !== null) {
-      cancelAnimationFrame(this.resizeFrame);
-    }
-    this.resizeObserver?.disconnect();
-    this.boardHost.nativeElement.removeEventListener('mousedown', this.refreshBounds, true);
-    this.boardHost.nativeElement.removeEventListener('touchstart', this.refreshBounds, true);
-    this.api?.destroy();
   }
 
   @HostListener('document:keydown.escape')
   protected cancelPending(): void {
     if (this.promotion()) {
       this.promotion.set(null);
-      this.api?.cancelMove();
+      this.board?.cancelMove();
       this.syncBoard(this.state());
       return;
     }
     this.controller.cancelPremove();
-    this.api?.cancelPremove();
+    this.board?.cancelPremove();
   }
 
   protected choosePromotion(piece: PromotionPiece): void {
@@ -104,14 +72,14 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy {
     if (pending.mode === 'move') {
       void this.controller.makePlayerMove(move).then(() => this.syncBoard(this.state()));
     } else if (!this.controller.queuePremove(move)) {
-      this.api?.cancelPremove();
+      this.board?.cancelPremove();
     }
   }
 
   protected cancelPromotion(): void {
     this.promotion.set(null);
-    this.api?.cancelMove();
-    this.api?.cancelPremove();
+    this.board?.cancelMove();
+    this.board?.cancelPremove();
     this.syncBoard(this.state());
   }
 
@@ -119,7 +87,7 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy {
     return { q: 'Queen', r: 'Rook', b: 'Bishop', n: 'Knight' }[piece];
   }
 
-  private createConfig(): Config {
+  protected boardConfig(): Config {
     return {
       disableContextMenu: true,
       coordinates: true,
@@ -160,12 +128,12 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy {
   }
 
   private syncBoard(state: ReturnType<GameController['state']>): void {
-    if (!this.api) {
+    if (!this.board) {
       return;
     }
     const active = state.phase === 'active' && !state.result;
     const movableColor = active ? state.playerColor : undefined;
-    this.api.set({
+    this.board.set({
       fen: state.fen,
       orientation: state.orientation,
       turnColor: state.turn,
@@ -181,25 +149,8 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy {
       },
       drawable: { shapes: this.shapes },
     });
-    const nextLayoutKey = `${state.gameId}:${state.restored}:${state.orientation}`;
-    const requiresFullRedraw = nextLayoutKey !== this.layoutKey;
-    this.layoutKey = nextLayoutKey;
-    this.fullRedrawPending ||= requiresFullRedraw;
-    if (this.redrawFrame !== null) {
-      cancelAnimationFrame(this.redrawFrame);
-    }
-    this.redrawFrame = requestAnimationFrame(() => {
-      if (this.fullRedrawPending) {
-        this.api?.state.dom.bounds.clear();
-        this.api?.redrawAll();
-        this.fullRedrawPending = false;
-      } else {
-        this.api?.state.dom.bounds.clear();
-      }
-      this.redrawFrame = null;
-    });
     if (!state.pendingPremove) {
-      this.api.cancelPremove();
+      this.board.cancelPremove();
     }
   }
 
@@ -220,13 +171,13 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy {
       return;
     }
     if (!this.controller.queuePremove(move)) {
-      this.api?.cancelPremove();
+      this.board?.cancelPremove();
     }
   }
 
   private clearShapes(): void {
     this.shapes = [];
-    this.api?.setShapes([]);
+    this.board?.setShapes([]);
   }
 
   private toDests(destinations: ReadonlyMap<Square, readonly Square[]>): Dests {

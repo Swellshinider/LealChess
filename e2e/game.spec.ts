@@ -18,11 +18,11 @@ test('starts as White, supports click moves, premoves, annotations, and restorat
     .getByRole('button', { name: 'Flip board' });
   await expect(flipBoard).toBeVisible();
   await expectFlipControlAtBoardTopRight(page, '.board-frame');
-  await expect(page.locator('.chessground-host')).toHaveClass(/orientation-white/);
+  await expect(page.locator('app-chess-board .board-frame')).toHaveClass(/orientation-white/);
   await flipBoard.click();
-  await expect(page.locator('.chessground-host')).toHaveClass(/orientation-black/);
+  await expect(page.locator('app-chess-board .board-frame')).toHaveClass(/orientation-black/);
   await flipBoard.click();
-  await expect(page.locator('.chessground-host')).toHaveClass(/orientation-white/);
+  await expect(page.locator('app-chess-board .board-frame')).toHaveClass(/orientation-white/);
   await expect(page.locator('coords.files coord').nth(0)).toHaveCSS('color', 'rgb(255, 255, 255)');
   await expect(page.locator('coords.files coord').nth(1)).toHaveCSS('color', 'rgb(24, 27, 21)');
   await expect(page.locator('coords.ranks coord').nth(0)).toHaveCSS('color', 'rgb(255, 255, 255)');

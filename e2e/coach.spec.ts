@@ -621,6 +621,8 @@ async function expectReviewResponsiveness(page: Page): Promise<void> {
     { width: 820, height: 1180, stacked: true },
     { width: 1024, height: 600, stacked: true },
     { width: 1280, height: 720, stacked: false },
+    { width: 1648, height: 828, stacked: false, minimumDeskWidth: 520 },
+    { width: 2048, height: 941, stacked: false, minimumDeskWidth: 620 },
   ];
 
   for (const viewport of viewports) {
@@ -663,6 +665,7 @@ async function expectReviewResponsiveness(page: Page): Promise<void> {
       const geometry = await page.evaluate(() => {
         const board = document.querySelector<HTMLElement>('.board-stage')!.getBoundingClientRect();
         const desk = document.querySelector<HTMLElement>('.review-desk')!.getBoundingClientRect();
+        const frame = document.querySelector<HTMLElement>('.review-frame')!;
         const note = document.querySelector<HTMLElement>('.coach-note')!.getBoundingClientRect();
         const candidates = document
           .querySelector<HTMLElement>('.live-analysis')!
@@ -671,10 +674,16 @@ async function expectReviewResponsiveness(page: Page): Promise<void> {
           .querySelector<HTMLElement>('.panel-replay-controls')!
           .getBoundingClientRect();
         return {
+          boardHeight: board.height,
+          boardRight: board.right,
           boardWidth: board.width,
           candidatesTop: candidates.top,
           controlsBottom: controls.bottom,
           deskBottom: desk.bottom,
+          deskLeft: desk.left,
+          deskWidth: desk.width,
+          frameClientHeight: frame.clientHeight,
+          frameScrollHeight: frame.scrollHeight,
           noteBottom: note.bottom,
           viewportWidth: window.innerWidth,
         };
@@ -682,6 +691,16 @@ async function expectReviewResponsiveness(page: Page): Promise<void> {
       expect(geometry.boardWidth).toBeGreaterThanOrEqual(geometry.viewportWidth * 0.4);
       expect(geometry.candidatesTop).toBeGreaterThanOrEqual(geometry.noteBottom - 1);
       expect(geometry.controlsBottom).toBeLessThanOrEqual(geometry.deskBottom + 1);
+      expect(geometry.frameScrollHeight).toBeLessThanOrEqual(geometry.frameClientHeight + 1);
+
+      if (viewport.minimumDeskWidth) {
+        expect(Math.abs(geometry.boardWidth - geometry.boardHeight)).toBeLessThanOrEqual(1);
+        expect(geometry.boardHeight).toBeGreaterThanOrEqual(viewport.height * 0.86);
+        expect(geometry.deskWidth).toBeGreaterThanOrEqual(viewport.minimumDeskWidth);
+        expect(geometry.deskWidth).toBeLessThanOrEqual(641);
+        expect(geometry.deskLeft - geometry.boardRight).toBeGreaterThanOrEqual(13);
+        expect(geometry.deskLeft - geometry.boardRight).toBeLessThanOrEqual(23);
+      }
     }
   }
 }

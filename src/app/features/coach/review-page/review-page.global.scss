@@ -15,7 +15,8 @@ app-review-page {
   }
 
   .review-frame {
-    --review-padding: clamp(12px, 1.8vw, 24px);
+    --review-padding-block: clamp(8px, 1.2dvh, 12px);
+    --review-padding-inline: clamp(12px, 1.8vw, 24px);
 
     container-type: inline-size;
     flex: 1 1 auto;
@@ -23,7 +24,7 @@ app-review-page {
     min-width: 0;
     overflow-x: hidden;
     overflow-y: auto;
-    padding: var(--review-padding);
+    padding: var(--review-padding-block) var(--review-padding-inline);
   }
 
   .review-page {
@@ -31,7 +32,7 @@ app-review-page {
     grid-template-rows: minmax(0, 1fr);
     height: 100%;
     margin: 0 auto;
-    max-width: 1280px;
+    max-width: 1600px;
     min-height: 0;
     width: 100%;
   }
@@ -124,7 +125,7 @@ app-review-page {
     align-items: stretch;
     column-gap: clamp(14px, 1.6cqw, 22px);
     display: grid;
-    grid-template-columns: minmax(0, 1fr) clamp(430px, 38cqw, 560px);
+    grid-template-columns: minmax(0, 1fr) clamp(430px, 40cqw, 640px);
     grid-template-rows: auto minmax(0, 1fr);
     height: 100%;
     min-height: 0;
@@ -132,16 +133,28 @@ app-review-page {
 
   .board-column {
     --evaluation-gutter: 0px;
+    --player-strip-height: 34px;
+    --player-strips-height: calc(var(--player-strip-height) + var(--player-strip-height));
+    --review-fit-tolerance: 2px;
 
     align-self: center;
     display: flex;
     flex-direction: column;
     grid-column: 1;
     grid-row: 1 / span 2;
-    margin: auto;
-    max-width: 790px;
+    justify-self: end;
+    margin: auto 0;
+    max-width: 1024px;
     min-width: 0;
-    width: min(100%, calc(100dvh - var(--review-padding) - var(--review-padding) - 80px));
+    width: min(
+      100%,
+      calc(
+        100dvh - var(--review-padding-block) - var(--review-padding-block) - var(
+            --player-strips-height
+          ) - var(--review-fit-tolerance) +
+          var(--evaluation-gutter)
+      )
+    );
 
     &.has-evaluation {
       --evaluation-gutter: 34px;
@@ -158,12 +171,13 @@ app-review-page {
     display: flex;
     gap: 9px;
     margin-left: var(--evaluation-gutter);
-    min-height: 40px;
-    padding: 4px 2px;
+    min-height: var(--player-strip-height);
+    padding: 2px;
 
     strong,
     small {
       display: block;
+      line-height: 1.1;
     }
 
     strong {
@@ -187,11 +201,11 @@ app-review-page {
     border-radius: 4px 0 4px 0;
     color: var(--primary);
     display: flex;
-    flex: 0 0 30px;
+    flex: 0 0 28px;
     font-family: var(--font-display);
     font-size: var(--type-small);
     font-weight: 700;
-    height: 30px;
+    height: 28px;
     justify-content: center;
   }
 

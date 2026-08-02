@@ -129,6 +129,39 @@ test('adapts Play from a landscape tablet desk to a portrait board-first stack',
       return portraitControls.y > portraitBoard.y + portraitBoard.height - 2;
     })
     .toBe(true);
+
+  const wideViewports = [
+    { width: 1648, height: 828, minimumDeskWidth: 520 },
+    { width: 2048, height: 941, minimumDeskWidth: 620 },
+  ];
+
+  for (const viewport of wideViewports) {
+    await page.setViewportSize(viewport);
+    const geometry = await page.evaluate(() => {
+      const boardFrame = document
+        .querySelector<HTMLElement>('app-chess-board .board-frame')!
+        .getBoundingClientRect();
+      const frame = document.querySelector<HTMLElement>('.app-frame')!;
+      const sidebar = document.querySelector<HTMLElement>('.game-panel')!.getBoundingClientRect();
+      return {
+        boardHeight: boardFrame.height,
+        boardRight: boardFrame.right,
+        boardWidth: boardFrame.width,
+        frameClientHeight: frame.clientHeight,
+        frameScrollHeight: frame.scrollHeight,
+        sidebarLeft: sidebar.left,
+        sidebarWidth: sidebar.width,
+      };
+    });
+
+    expect(Math.abs(geometry.boardWidth - geometry.boardHeight)).toBeLessThanOrEqual(1);
+    expect(geometry.boardHeight).toBeGreaterThanOrEqual(viewport.height * 0.86);
+    expect(geometry.frameScrollHeight).toBeLessThanOrEqual(geometry.frameClientHeight + 1);
+    expect(geometry.sidebarWidth).toBeGreaterThanOrEqual(viewport.minimumDeskWidth);
+    expect(geometry.sidebarWidth).toBeLessThanOrEqual(641);
+    expect(geometry.sidebarLeft - geometry.boardRight).toBeGreaterThanOrEqual(13);
+    expect(geometry.sidebarLeft - geometry.boardRight).toBeLessThanOrEqual(27);
+  }
 });
 
 test('launches each workspace and provides project information', async ({ page }, testInfo) => {
