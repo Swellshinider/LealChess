@@ -59,7 +59,7 @@
   span {
     color: var(--mist);
     font-family: var(--font-utility);
-    font-size: 0.72rem;
+    font-size: var(--type-small);
     letter-spacing: 0.04em;
     margin-top: 8px;
   }
@@ -123,7 +123,7 @@
       color: var(--paper);
       content: attr(data-tooltip);
       font-family: var(--font-utility);
-      font-size: 0.68rem;
+      font-size: var(--type-caption);
       font-weight: 500;
       left: calc(100% + 12px);
       letter-spacing: 0.02em;
@@ -163,7 +163,7 @@
   color: var(--mist);
   display: flex;
   font-family: var(--font-utility);
-  font-size: 0.78rem;
+  font-size: var(--type-small);
   gap: 14px;
   min-height: 50px;
   padding: 0 14px;
@@ -339,7 +339,7 @@
       span {
         color: var(--mist);
         font-family: var(--font-utility);
-        font-size: 0.68rem;
+        font-size: var(--type-caption);
         margin-top: 5px;
       }
     }

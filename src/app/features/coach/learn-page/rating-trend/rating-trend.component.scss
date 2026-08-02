@@ -16,7 +16,7 @@ figcaption {
   p {
     color: var(--primary);
     font-family: var(--font-utility);
-    font-size: 0.65rem;
+    font-size: var(--type-caption);
     letter-spacing: 0.04em;
     margin: 0 0 4px;
     text-transform: uppercase;
@@ -42,7 +42,7 @@ figcaption {
     color: var(--mist);
     display: flex;
     font-family: var(--font-utility);
-    font-size: 0.62rem;
+    font-size: var(--type-caption);
     gap: 7px;
     text-transform: uppercase;
 
@@ -83,7 +83,7 @@ svg {
   text {
     fill: var(--mist);
     font-family: var(--font-utility);
-    font-size: 9px;
+    font-size: var(--type-micro);
     opacity: 0.72;
     text-anchor: end;
   }
@@ -116,7 +116,7 @@ svg {
 .date-axis text {
   fill: var(--mist);
   font-family: var(--font-utility);
-  font-size: 9px;
+  font-size: var(--type-micro);
   opacity: 0.72;
 }
 
@@ -143,7 +143,7 @@ svg {
   small {
     color: var(--mist);
     font-family: var(--font-utility);
-    font-size: 0.61rem;
+    font-size: var(--type-caption);
     text-transform: uppercase;
   }
 

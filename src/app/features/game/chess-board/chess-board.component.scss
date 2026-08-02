@@ -147,7 +147,7 @@
     color: var(--night);
     display: flex;
     flex-direction: column;
-    font-size: 0.7rem;
+    font-size: var(--type-small);
     min-height: 76px;
     padding: 6px;
   }

@@ -38,7 +38,7 @@ header {
 .section-label {
   color: var(--amber);
   font-family: var(--font-utility);
-  font-size: 0.68rem;
+  font-size: var(--type-caption);
   letter-spacing: 0.1em;
   margin: 0 0 9px;
   text-transform: uppercase;
@@ -113,7 +113,7 @@ h2 {
 
 .capabilities p {
   color: var(--mist);
-  font-size: 0.9rem;
+  font-size: var(--type-body);
   line-height: 1.55;
   margin-bottom: 0;
 }
@@ -134,7 +134,7 @@ h2 {
 .project-record dt {
   color: var(--outline);
   font-family: var(--font-utility);
-  font-size: 0.62rem;
+  font-size: var(--type-caption);
   letter-spacing: 0.08em;
   margin-bottom: 6px;
   text-transform: uppercase;
@@ -143,7 +143,7 @@ h2 {
 .project-record dd {
   color: var(--paper);
   font-family: var(--font-utility);
-  font-size: 0.78rem;
+  font-size: var(--type-small);
   margin: 0;
   overflow-wrap: anywhere;
 }

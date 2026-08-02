@@ -114,6 +114,30 @@ test('launches each workspace and provides project information', async ({ page }
   );
 });
 
+test('uses the shared readable typography scale across pages and controls', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'Computed typography smoke test');
+
+  await page.goto('/');
+  await expectTypographyTokens(page);
+  await expectFontSizeAtLeast(page.locator('.search-summary'), 16);
+  await expectFontSizeAtLeast(page.locator('.kicker'), 13);
+  await expectFontSizeAtLeast(page.locator('nav small').first(), 13);
+
+  await page.goto('/settings');
+  await expectFontSizeAtLeast(page.locator('#primary-navigation .route-links a').first(), 14);
+  await expectFontSizeAtLeast(page.locator('form label').first(), 14);
+  await expectFontSizeAtLeast(page.locator('.form-help'), 14);
+
+  await page.goto('/play');
+  const setupDialog = page.getByRole('dialog', { name: 'Choose your side' });
+  await expectFontSizeAtLeast(setupDialog.locator('.kicker'), 13);
+  await expectFontSizeAtLeast(setupDialog.locator('.intro'), 16);
+  await expectFontSizeAtLeast(setupDialog.locator('label'), 14);
+  await expectFontSizeAtLeast(setupDialog.locator('.color-options button').first(), 14);
+});
+
 test('publishes indexable metadata only for public pages', async ({ page, request }) => {
   await page.goto('/');
   await expect(page).toHaveTitle('LealChess | Local Chess Analysis & Training');
@@ -276,4 +300,33 @@ async function expectWorkspaceToFitViewport(page: import('@playwright/test').Pag
   expect(geometry.frameWidth).toBeLessThanOrEqual(geometry.frameClientWidth + 1);
   expect(geometry.boardBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
   expect(geometry.controlsBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
+}
+
+async function expectTypographyTokens(page: import('@playwright/test').Page) {
+  const tokens = await page.locator('html').evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      micro: style.getPropertyValue('--type-micro').trim(),
+      caption: style.getPropertyValue('--type-caption').trim(),
+      small: style.getPropertyValue('--type-small').trim(),
+      body: style.getPropertyValue('--type-body').trim(),
+    };
+  });
+
+  expect(tokens).toEqual({
+    micro: '0.75rem',
+    caption: '0.8125rem',
+    small: '0.875rem',
+    body: '1rem',
+  });
+}
+
+async function expectFontSizeAtLeast(
+  locator: import('@playwright/test').Locator,
+  minimumPixels: number,
+) {
+  await expect(locator).toBeVisible();
+  await expect
+    .poll(() => locator.evaluate((element) => parseFloat(getComputedStyle(element).fontSize)))
+    .toBeGreaterThanOrEqual(minimumPixels);
 }
