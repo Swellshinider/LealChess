@@ -244,7 +244,6 @@
                     [completed]="coachAnalysis.state().completed"
                     [total]="coachAnalysis.state().total"
                     [error]="coachAnalysis.state().error"
-                    [depth]="coachAnalysis.analysis()?.depth"
                     (analysisRequested)="analyze()"
                     (cancelRequested)="cancelAnalysis()"
                     (reanalysisRequested)="reanalyze()"
@@ -434,7 +433,10 @@
     description="This move and every continuation after it will be removed from your analysis."
     cancelLabel="Keep variation"
     confirmLabel="Remove variation"
+    checkboxLabel="Don't ask me again"
+    [checkboxChecked]="skipVariationRemovalConfirmation()"
     (cancelled)="closeVariationRemoval()"
     (confirmed)="confirmVariationRemoval()"
+    (checkboxChanged)="skipVariationRemovalConfirmation.set($event)"
   />
 }

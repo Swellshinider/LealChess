@@ -7,6 +7,12 @@ import { CoachImportService } from '../coach/data/coach-import.service';
 import { SettingsPageComponent, formatStorageUsage } from './settings-page.component';
 
 class TestableSettingsPageComponent extends SettingsPageComponent {
+  updateConfirmationPreference(checked: boolean): void {
+    const input = document.createElement('input');
+    input.checked = checked;
+    this.updateBoolean('confirmVariationRemoval', { target: input } as unknown as Event);
+  }
+
   beginCapture(action: KeybindingAction): void {
     this.beginKeybindingCapture(action);
   }
@@ -86,5 +92,15 @@ describe('SettingsPageComponent keybindings', () => {
     component.capture('previousMove', new KeyboardEvent('keydown', { key: 'p' }));
     component.reset('previousMove');
     expect(component.shortcut('previousMove')).toBe('←');
+  });
+
+  it('immediately saves the variation removal confirmation preference', () => {
+    const component = TestBed.runInInjectionContext(() => new TestableSettingsPageComponent());
+
+    component.updateConfirmationPreference(false);
+
+    expect(savePreferences).toHaveBeenCalledWith(
+      expect.objectContaining({ confirmVariationRemoval: false }),
+    );
   });
 });

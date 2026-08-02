@@ -291,6 +291,11 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   });
   await page.reload();
   await expect(page.getByTestId('storage-usage-value')).toContainText('107.8 MB');
+  const confirmVariationRemoval = page.getByLabel(/Confirm variation removal/);
+  await expect(confirmVariationRemoval).toBeChecked();
+  await confirmVariationRemoval.uncheck();
+  await page.reload();
+  await expect(page.getByLabel(/Confirm variation removal/)).not.toBeChecked();
   await expect(page.getByLabel(/Mute sounds/)).not.toBeChecked();
   const soundVolume = page.getByLabel('Sound volume');
   const soundVolumeTrack = soundVolume.locator('xpath=..');
@@ -339,6 +344,7 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   await page.goto('/settings');
   await expect(page.getByLabel('Board palette')).toHaveValue('tournament');
   await expect(page.getByLabel('Sound volume')).toHaveValue('100');
+  await expect(page.getByLabel(/Confirm variation removal/)).toBeChecked();
   await expect(page.getByTestId('storage-usage-value')).toHaveText(/\s*\d+ B\s*/);
   expect(
     await page.evaluate(() => localStorage.getItem('lealchess.stockfish.downloads')),

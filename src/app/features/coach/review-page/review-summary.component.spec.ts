@@ -16,7 +16,6 @@ describe('ReviewSummaryComponent', () => {
     fixture.componentRef.setInput('game', game);
     fixture.componentRef.setInput('summary', summary);
     fixture.componentRef.setInput('phase', 'complete');
-    fixture.componentRef.setInput('depth', 16);
     fixture.detectChanges();
 
     const host = fixture.nativeElement as HTMLElement;
@@ -24,6 +23,7 @@ describe('ReviewSummaryComponent', () => {
       candidate.textContent?.includes('Reanalyze game'),
     );
     expect(button).toBeDefined();
+    expect(host.textContent).not.toContain('Stockfish depth');
 
     button!.click();
 

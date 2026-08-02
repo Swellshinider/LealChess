@@ -12,6 +12,12 @@
     <span>{{ eyebrow() }}</span>
     <h2 [id]="titleId">{{ title() }}</h2>
     <p [id]="descriptionId">{{ description() }}</p>
+    @if (checkboxLabel(); as label) {
+      <label class="confirmation-option">
+        <input type="checkbox" [checked]="checkboxChecked()" (change)="updateCheckbox($event)" />
+        <span>{{ label }}</span>
+      </label>
+    }
     <footer>
       <button type="button" data-modal-initial (click)="cancelled.emit()">
         {{ cancelLabel() }}

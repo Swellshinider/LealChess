@@ -145,6 +145,17 @@
               (change)="updateBoolean('premovesEnabled', $event)"
             />
           </label>
+          <label class="switch-row">
+            <span
+              ><strong>Confirm variation removal</strong
+              ><small>Ask before removing a variation and all its continuations.</small></span
+            >
+            <input
+              type="checkbox"
+              [checked]="preferences().confirmVariationRemoval"
+              (change)="updateBoolean('confirmVariationRemoval', $event)"
+            />
+          </label>
           <label class="select-row">
             <span>Board palette</span>
             <select [value]="preferences().boardTheme" (change)="updateTheme($event)">

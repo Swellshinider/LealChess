@@ -47,6 +47,21 @@
     margin: 0;
   }
 
+  .confirmation-option {
+    align-items: center;
+    display: flex;
+    font-size: var(--type-small);
+    gap: 9px;
+    margin-top: 16px;
+
+    input {
+      accent-color: var(--danger);
+      height: 18px;
+      margin: 0;
+      width: 18px;
+    }
+  }
+
   footer {
     display: flex;
     flex-wrap: wrap;
