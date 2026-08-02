@@ -343,6 +343,15 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.sound.unlock();
   }
 
+  @HostListener('document:click', ['$event'])
+  protected releasePointerActivatedAnalysisButton(event: MouseEvent): void {
+    if (this.mode() !== 'analysis' || event.detail === 0) return;
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const button = target.closest('.review-workspace button');
+    if (button instanceof HTMLElement) button.blur();
+  }
+
   protected async analyze(): Promise<void> {
     const game = this.game();
     const color = this.learnerColor();
@@ -672,7 +681,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.pendingPromotion.set(null);
     this.ideaShapes.set([]);
     this.reviewSession.set(selectReviewNode(session, nodeId));
-    if (node.source === 'imported') this.currentPly.set(node.importedPly ?? node.ply);
+    if (node.importedPly !== undefined) this.currentPly.set(node.importedPly);
     if (playSound && node.move) this.sound.play('move');
     this.analyzeSelectedReviewNode();
   }

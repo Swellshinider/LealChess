@@ -20,7 +20,7 @@ verifyPage(about, {
 
 assertIncludes(home, 'Play Stockfish, study games from Chess.com and Lichess');
 assertIncludes(home, '"@type":"WebApplication"');
-assertIncludes(about, '>About</h1>');
+assertIncludes(about, '>About LealChess</h1>');
 
 for (const asset of ['robots.txt', 'sitemap.xml', '_redirects', '_headers', 'social-preview.png']) {
   assert(existsSync(resolve(browserOutput, asset)), `Missing deployment asset: ${asset}`);
