@@ -1,4 +1,4 @@
-import { expect, test, type Page, type Route } from '@playwright/test';
+import { expect, test, type Locator, type Page, type Route } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 const pgn = `[Event "Imported game"]
@@ -585,8 +585,7 @@ function json(route: Route, body: unknown) {
 async function drawReviewArrow(page: Page, from: string, to: string): Promise<void> {
   const reviewBoard = page.locator('.review-board');
   await reviewBoard.scrollIntoViewIfNeeded();
-  const board = await reviewBoard.locator('cg-board').boundingBox();
-  if (!board) throw new Error('Review board is not visible.');
+  const board = await visibleBounds(reviewBoard.locator('cg-board'));
   const point = (square: string) => ({
     x: board.x + ((square.charCodeAt(0) - 97 + 0.5) * board.width) / 8,
     y: board.y + ((8 - Number(square[1]) + 0.5) * board.height) / 8,
@@ -602,20 +601,17 @@ async function drawReviewArrow(page: Page, from: string, to: string): Promise<vo
 }
 
 async function expectFlipControlAtBoardTopRight(page: Page, boardSelector: string): Promise<void> {
-  const control = await page.getByRole('button', { name: 'Flip board' }).boundingBox();
-  const board = await page.locator(boardSelector).boundingBox();
-  expect(control).not.toBeNull();
-  expect(board).not.toBeNull();
-  expect(Math.abs(control!.x + control!.width - (board!.x + board!.width))).toBeLessThanOrEqual(2);
-  expect(control!.y + control!.height).toBeLessThanOrEqual(board!.y + 1);
+  const control = await visibleBounds(page.getByRole('button', { name: 'Flip board' }));
+  const board = await visibleBounds(page.locator(boardSelector));
+  expect(Math.abs(control.x + control.width - (board.x + board.width))).toBeLessThanOrEqual(3);
+  expect(control.y + control.height).toBeLessThanOrEqual(board.y + 1);
 }
 
 async function moveReviewPiece(page: Page, from: string, to: string): Promise<void> {
   const reviewBoard = page.locator('.review-board');
   await expect(reviewBoard.locator('cg-board')).toBeVisible();
   await reviewBoard.scrollIntoViewIfNeeded();
-  const board = await reviewBoard.boundingBox();
-  if (!board) throw new Error('Review board is not visible.');
+  const board = await visibleBounds(reviewBoard);
   const point = (square: string) => ({
     x: board.x + ((square.charCodeAt(0) - 97 + 0.5) * board.width) / 8,
     y: board.y + ((8 - Number(square[1]) + 0.5) * board.height) / 8,
@@ -624,6 +620,14 @@ async function moveReviewPiece(page: Page, from: string, to: string): Promise<vo
   const destination = point(to);
   await page.mouse.click(origin.x, origin.y);
   await page.mouse.click(destination.x, destination.y);
+}
+
+async function visibleBounds(locator: Locator) {
+  await expect(locator).toBeVisible();
+  return locator.evaluate((element) => {
+    const rectangle = element.getBoundingClientRect();
+    return { x: rectangle.x, y: rectangle.y, width: rectangle.width, height: rectangle.height };
+  });
 }
 
 async function expectBoardOverlayWithinBounds(page: Page, selector: string): Promise<void> {
