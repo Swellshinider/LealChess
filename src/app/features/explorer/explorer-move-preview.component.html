@@ -1,0 +1,13 @@
+<aside
+  class="move-preview"
+  aria-hidden="true"
+  [attr.data-board-theme]="boardTheme()"
+  [style.left.px]="position().left"
+  [style.top.px]="position().top"
+>
+  <header>
+    <span>Position preview</span>
+    <strong>{{ moveLabel() }}</strong>
+  </header>
+  <app-chessground-board class="preview-board" [initialConfig]="boardConfig()" />
+</aside>

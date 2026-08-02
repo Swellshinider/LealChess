@@ -1,0 +1,137 @@
+<section class="analysis-panel" aria-labelledby="explorer-analysis-heading">
+  <header class="desk-header">
+    <div>
+      <span>Explorer</span>
+      <h2 id="explorer-analysis-heading">Position analysis</h2>
+    </div>
+    <div class="desk-actions" aria-label="Explorer actions">
+      <button type="button" (click)="importRequested.emit()">Import</button>
+      <button type="button" (click)="setupRequested.emit()">Set up position</button>
+      <button type="button" (click)="newAnalysisRequested.emit()">New analysis</button>
+    </div>
+  </header>
+
+  <div class="analysis-scroll">
+    <section class="engine-status" aria-live="polite">
+      <span class="engine-pulse" [class.active]="analysisActive()" aria-hidden="true"></span>
+      <div>
+        <small>Stockfish 18</small><strong>{{ analysisMessage() }}</strong>
+      </div>
+      <span>Depth {{ session().nodes[session().selectedNodeId]?.candidateDepth ?? '—' }}</span>
+    </section>
+
+    @if (session().batch.total) {
+      <section class="batch-progress" aria-labelledby="batch-heading">
+        <div>
+          <span id="batch-heading">PGN move review</span
+          ><strong>{{ session().batch.completed }} / {{ session().batch.total }}</strong>
+        </div>
+        <div
+          class="progress-track"
+          role="progressbar"
+          aria-label="PGN analysis progress"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          [attr.aria-valuenow]="batchProgress()"
+        >
+          <i [style.width.%]="batchProgress()"></i>
+        </div>
+        @if (session().batch.status === 'running') {
+          <button type="button" (click)="pauseRequested.emit()">Pause PGN analysis</button>
+        } @else if (session().batch.status === 'paused' || session().batch.status === 'error') {
+          <button type="button" (click)="resumeRequested.emit()">Resume PGN analysis</button>
+        }
+        @if (session().batch.error; as error) {
+          <p role="alert">{{ error }}</p>
+        }
+      </section>
+    }
+
+    <section class="candidate-lines" aria-labelledby="candidate-heading">
+      <div class="section-heading">
+        <h3 id="candidate-heading">Engine candidates</h3>
+        <small>White evaluation</small>
+      </div>
+      @if (session().nodes[session().selectedNodeId]?.candidates?.length) {
+        <ol>
+          @for (line of session().nodes[session().selectedNodeId]!.candidates; track line.rank) {
+            <li>
+              <button
+                type="button"
+                class="candidate-action"
+                [attr.aria-label]="
+                  'Play engine candidate ' + line.rank + ': ' + (line.san[0] ?? 'move')
+                "
+                (pointerenter)="candidatePreviewed.emit(line)"
+                (pointerleave)="candidatePreviewed.emit(null)"
+                (focus)="candidatePreviewed.emit(line)"
+                (blur)="candidatePreviewed.emit(null)"
+                (click)="selectCandidate(line)"
+              >
+                <span>{{ line.rank }}</span
+                ><i [style.height]="candidateRuleWidth(line.rank)" aria-hidden="true"></i>
+                <strong>{{ candidateEvaluation(line) }}</strong
+                ><span>{{ line.san.join(' ') }}</span>
+              </button>
+            </li>
+          }
+        </ol>
+      } @else if (gameOverLabel(); as result) {
+        <p class="terminal-position">{{ result }}. This line has ended.</p>
+      } @else {
+        <div class="line-skeleton" aria-hidden="true"><i></i><i></i><i></i></div>
+      }
+    </section>
+
+    <section class="move-score" aria-labelledby="moves-heading">
+      <div class="section-heading">
+        <h3 id="moves-heading">Moves</h3>
+        <small>{{ moveCount() }} moves</small>
+      </div>
+      <app-explorer-move-score
+        [session]="session()"
+        [orientation]="session().orientation"
+        [boardTheme]="boardTheme()"
+        (nodeSelected)="nodeRequested.emit($event)"
+      />
+    </section>
+
+    @if (session().nodes[session().selectedNodeId]?.analysisError; as error) {
+      <section class="analysis-error" role="alert">
+        <p>{{ error }}</p>
+        <button type="button" (click)="retryRequested.emit()">Retry position</button>
+      </section>
+    }
+  </div>
+
+  <nav class="replay-controls" aria-label="Move navigation">
+    <button
+      type="button"
+      [disabled]="session().selectedNodeId === session().rootId"
+      (click)="firstRequested.emit()"
+    >
+      First
+    </button>
+    <button
+      type="button"
+      [disabled]="!session().nodes[session().selectedNodeId]?.parentId"
+      (click)="previousRequested.emit()"
+    >
+      Previous
+    </button>
+    <button
+      type="button"
+      [disabled]="!session().nodes[session().selectedNodeId]?.children?.length"
+      (click)="nextRequested.emit()"
+    >
+      Next
+    </button>
+    <button
+      type="button"
+      [disabled]="!session().nodes[session().selectedNodeId]?.children?.length"
+      (click)="lastRequested.emit()"
+    >
+      Last
+    </button>
+  </nav>
+</section>

@@ -53,12 +53,11 @@ import {
   commitExplorerMove,
   createExplorerSession,
   createPgnExplorerSession,
-  explorerAncestorIds,
   importedExplorerNodes,
-  moveNumberLabel,
   selectExplorerNode,
   updateExplorerNode,
 } from './explorer-session';
+import { ExplorerAnalysisPanelComponent } from './explorer-analysis-panel.component';
 import type {
   ExplorerCandidateLine,
   ExplorerMoveAnalysisRequest,
@@ -78,18 +77,13 @@ interface PendingSessionReplacement {
   context: ReplacementContext;
 }
 
-interface TreeRow {
-  node: ExplorerMoveNode;
-  depth: number;
-  onSelectedLine: boolean;
-}
-
 @Component({
   selector: 'app-explorer-page',
   imports: [
     BoardFlipButtonComponent,
     ChessgroundBoardComponent,
     ConfirmationDialogComponent,
+    ExplorerAnalysisPanelComponent,
     ModalFocusDirective,
     SideNavigationComponent,
   ],
@@ -128,6 +122,7 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
   protected readonly boardTheme = this.store.boardTheme;
   protected readonly keybindings = this.store.keybindings;
   protected readonly candidateArrowsVisible = signal(true);
+  private readonly previewedCandidate = signal<ExplorerCandidateLine | null>(null);
   protected readonly promotionPieces: readonly PromotionPiece[] = ['q', 'r', 'b', 'n'];
   protected readonly pieceTypes: readonly PieceSymbol[] = ['k', 'q', 'r', 'b', 'n', 'p'];
   protected readonly setupColors: readonly ['w', 'b'] = ['w', 'b'];
@@ -141,7 +136,6 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
   protected readonly turn = computed<ChessColor>(() =>
     this.currentFen().split(' ')[1] === 'b' ? 'black' : 'white',
   );
-  protected readonly treeRows = computed(() => flattenTree(this.session()));
   protected readonly selectedCandidates = computed(() => this.selectedNode().candidates);
   protected readonly setupFen = computed(() => setupStateToFen(this.setup()));
   protected readonly enPassantSquares = computed(() =>
@@ -177,10 +171,6 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
     if (whiteValue === null) return 50;
     return Math.max(5, Math.min(95, 50 + 45 * Math.tanh(whiteValue / 500)));
   });
-  protected readonly batchProgress = computed(() => {
-    const batch = this.session().batch;
-    return batch.total ? Math.round((batch.completed / batch.total) * 100) : 100;
-  });
   protected readonly gameOverLabel = computed(() => {
     const chess = new Chess(this.selectedNode().fen);
     if (chess.isCheckmate()) return 'Checkmate';
@@ -201,6 +191,7 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
       this.mode();
       this.setup();
       this.candidateArrowsVisible();
+      this.previewedCandidate();
       this.syncBoard();
     });
   }
@@ -427,6 +418,35 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
     if (childId) this.selectNode(childId);
   }
 
+  protected selectFirst(): void {
+    const result = jumpToStartNodeId(
+      this.session(),
+      this.session().selectedNodeId,
+      this.navigationState,
+    );
+    if (result.nodeId !== this.session().selectedNodeId) this.selectNode(result.nodeId);
+    this.navigationState = result.state;
+  }
+
+  protected selectLast(): void {
+    const result = jumpToEndNodeId(
+      this.session(),
+      this.session().selectedNodeId,
+      this.navigationState,
+    );
+    if (result.nodeId !== this.session().selectedNodeId) this.selectNode(result.nodeId);
+    this.navigationState = result.state;
+  }
+
+  protected previewCandidate(line: ExplorerCandidateLine | null): void {
+    this.previewedCandidate.set(line);
+  }
+
+  protected playCandidate(move: MoveInput): void {
+    this.previewedCandidate.set(null);
+    this.commitMove(move);
+  }
+
   protected choosePromotion(piece: PromotionPiece): void {
     const pending = this.pendingPromotion();
     if (!pending) return;
@@ -438,21 +458,6 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
     this.pendingPromotion.set(null);
     this.board()?.cancelMove();
     this.syncBoard();
-  }
-
-  protected classificationLabel(classification?: string): string {
-    return classification
-      ? classification.charAt(0).toUpperCase() + classification.slice(1)
-      : 'Analyzing';
-  }
-
-  protected moveNumber(node: ExplorerMoveNode): string {
-    const parent = node.parentId ? this.session().nodes[node.parentId] : undefined;
-    return parent ? moveNumberLabel(parent.fen) : '';
-  }
-
-  protected candidateEvaluation(line: ExplorerCandidateLine): string {
-    return formatEvaluation(line.evaluation, this.turn());
   }
 
   protected pauseBatch(): void {
@@ -543,7 +548,13 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
         selectable: { enabled: movable },
         drawable: {
           enabled: true,
-          autoShapes: this.candidateArrowsVisible() ? candidateShapes(node.candidates) : [],
+          autoShapes: candidateShapes(
+            this.previewedCandidate()
+              ? [this.previewedCandidate()!]
+              : this.candidateArrowsVisible()
+                ? node.candidates
+                : [],
+          ),
         },
       });
     }
@@ -597,6 +608,7 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
       EMPTY_MOVE_TREE_NAVIGATION,
     );
     this.candidateArrowsVisible.set(true);
+    this.previewedCandidate.set(null);
     this.store.save(session);
     this.requestInteractiveAnalysis();
   }
@@ -879,34 +891,6 @@ function candidateShapes(lines: ExplorerCandidateLine[]): DrawShape[] {
     brush: 'green',
     modifiers: { lineWidth: widths[index] ?? 5 },
   }));
-}
-
-function flattenTree(session: ExplorerSession): TreeRow[] {
-  const selectedLine = explorerAncestorIds(session, session.selectedNodeId);
-  const rows: TreeRow[] = [];
-  const visit = (parentId: string, depth: number) => {
-    for (const childId of session.nodes[parentId]?.children ?? []) {
-      const node = session.nodes[childId];
-      if (!node) continue;
-      rows.push({ node, depth, onSelectedLine: selectedLine.has(node.id) });
-      visit(node.id, depth + 1);
-    }
-  };
-  visit(session.rootId, 0);
-  return rows;
-}
-
-function formatEvaluation(
-  evaluation: ExplorerCandidateLine['evaluation'],
-  turn: ChessColor,
-): string {
-  const sign = turn === 'white' ? 1 : -1;
-  if (evaluation.score.kind === 'mate') {
-    const moves = evaluation.score.moves * sign;
-    return `${moves < 0 ? '−' : '+'}M${Math.abs(moves)}`;
-  }
-  const pawns = (evaluation.score.value * sign) / 100;
-  return `${pawns >= 0 ? '+' : '−'}${Math.abs(pawns).toFixed(2)}`;
 }
 
 function squareAtPoint(

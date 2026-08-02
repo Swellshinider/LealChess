@@ -22,16 +22,16 @@ test('persists a custom navigation shortcut from Settings', async ({ page }) => 
     page.getByRole('button', { name: /Change Previous move shortcut, currently P$/ }),
   ).toBeVisible();
   await page.goto('/explorer');
-  await page.getByRole('button', { name: 'Import FEN or PGN' }).click();
+  await page.getByRole('button', { name: 'Import', exact: true }).click();
   await page.getByRole('tab', { name: 'PGN' }).click();
   await page.getByLabel('Paste a standard PGN').fill(pgn);
   await page.getByRole('button', { name: 'Analyze game' }).click();
 
-  await expect(page.locator('.move-node.current')).toContainText('Nc6');
+  await expect(page.locator('app-explorer-move-score button.current')).toContainText('Nc6');
   await page.evaluate(() =>
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'p', bubbles: true })),
   );
-  await expect(page.locator('.move-node.current')).toContainText('Nf3');
+  await expect(page.locator('app-explorer-move-score button.current')).toContainText('Nf3');
 });
 
 test('imports and restores a PGN, then exposes the full position editor', async ({ page }) => {
@@ -39,9 +39,6 @@ test('imports and restores a PGN, then exposes the full position editor', async 
 
   await expect(page.getByRole('heading', { name: 'Explorer', exact: true })).toBeAttached();
   await expect(page.getByRole('img', { name: /Analysis chessboard/ })).toBeVisible();
-  await expect(
-    page.locator('.workspace-actions').getByRole('button', { name: 'Flip board' }),
-  ).toHaveCount(0);
   const flipBoard = page.locator('.board-heading').getByRole('button', { name: 'Flip board' });
   await expect(flipBoard).toBeVisible();
   await expectFlipControlAtBoardTopRight(page, '.explorer-board');
@@ -63,17 +60,24 @@ test('imports and restores a PGN, then exposes the full position editor', async 
     'rgb(24, 27, 21)',
   );
   await expect(page.locator('.explorer-board-frame')).toHaveCSS('border-top-style', 'none');
-  await expect(page.locator('.analysis-ledger')).toHaveCSS('border-top-style', 'none');
-  await page.getByRole('button', { name: 'Import FEN or PGN' }).click();
+  await expect(page.locator('.analysis-ledger')).toHaveCSS('border-top-style', 'solid');
+  await page.getByRole('button', { name: 'Import', exact: true }).click();
   await page.getByRole('tab', { name: 'PGN' }).click();
   await page.getByLabel('Paste a standard PGN').fill(pgn);
   await page.getByRole('button', { name: 'Analyze game' }).click();
 
-  await expect(page.locator('.move-node')).toHaveCount(4);
+  await expect(page.locator('app-explorer-move-score .move')).toHaveCount(4);
+  if ((page.viewportSize()?.width ?? 0) > 520) {
+    await page.locator('app-explorer-move-score .move').first().focus();
+    await expect(page.locator('app-explorer-move-preview .move-preview')).toBeVisible();
+    await expect(page.locator('app-explorer-move-preview')).toContainText('e4');
+    await page.locator('app-explorer-move-score .move').first().blur();
+    await expect(page.locator('app-explorer-move-preview')).toHaveCount(0);
+  }
   await expect(page.getByRole('progressbar', { name: 'PGN analysis progress' })).toBeVisible();
   await page.waitForTimeout(400);
   await page.reload();
-  await expect(page.locator('.move-node')).toHaveCount(4);
+  await expect(page.locator('app-explorer-move-score .move')).toHaveCount(4);
 
   await page.getByRole('button', { name: 'Set up position' }).click();
   await expect(page.getByRole('heading', { name: 'Position setup' })).toBeVisible();
@@ -100,10 +104,19 @@ test('grades a manual board move and displays ranked engine lines', async ({ pag
 
   await movePiece(page, 'e2', 'e4');
 
-  await expect(page.locator('.move-node[data-classification]')).toHaveCount(1, {
+  await expect(page.locator('app-explorer-move-score [data-classification] .move')).toHaveCount(1, {
     timeout: 30_000,
   });
   await expect(page.locator('.candidate-lines li')).toHaveCount(3, { timeout: 30_000 });
+  await expect(page.locator('.explorer-board svg.cg-shapes line')).toHaveCount(3);
+  const secondCandidate = page.getByRole('button', { name: /Play engine candidate 2:/ });
+  await secondCandidate.hover();
+  await expect(page.locator('.explorer-board svg.cg-shapes line')).toHaveCount(1);
+  await page.locator('.board-heading').hover();
+  await expect(page.locator('.explorer-board svg.cg-shapes line')).toHaveCount(3);
+  await secondCandidate.focus();
+  await expect(page.locator('.explorer-board svg.cg-shapes line')).toHaveCount(1);
+  await secondCandidate.blur();
   await expect(page.locator('.explorer-board svg.cg-shapes line')).toHaveCount(3);
   await page.keyboard.press('Space');
   await expect(page.locator('.explorer-board svg.cg-shapes line')).toHaveCount(0);
@@ -112,14 +125,18 @@ test('grades a manual board move and displays ranked engine lines', async ({ pag
 
   const board = await page.locator('.explorer-board').boundingBox();
   const evaluationTrack = await page.locator('.evaluation-track').boundingBox();
+  const desk = await page.locator('.analysis-ledger').boundingBox();
   expect(board).not.toBeNull();
   expect(evaluationTrack).not.toBeNull();
+  expect(desk).not.toBeNull();
+  expect(board!.height).toBeGreaterThan(page.viewportSize()!.height * 0.65);
+  expect(desk!.x - (board!.x + board!.width)).toBeLessThanOrEqual(30);
   expect(Math.abs(board!.height - evaluationTrack!.height)).toBeLessThanOrEqual(1);
   expect(evaluationTrack!.width).toBeGreaterThanOrEqual(27);
   await expect(page.locator('.rail-side')).toHaveCount(0);
-  const navigation = await page.locator('.position-navigation').boundingBox();
-  expect(navigation).not.toBeNull();
-  expect(Math.abs(board!.width - navigation!.width)).toBeLessThanOrEqual(1);
+  await expect(page.getByRole('navigation', { name: 'Move navigation' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'First' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Last' })).toBeDisabled();
   const scoreBeforeFlip = await page.locator('.evaluation-score').getAttribute('class');
   expect(scoreBeforeFlip).toMatch(/\b(top|bottom)\b/);
 
@@ -142,16 +159,58 @@ test('grades a manual board move and displays ranked engine lines', async ({ pag
   expect(geometry.documentHeight).toBeLessThanOrEqual(geometry.documentClientHeight + 1);
   expect(geometry.explorerHeight).toBeLessThanOrEqual(geometry.explorerClientHeight + 1);
 
+  await secondCandidate.click();
+  await expect(page.locator('app-explorer-move-score .move')).toHaveCount(2);
   await page.getByRole('button', { name: 'New analysis' }).click();
   const replacementDialog = page.getByRole('alertdialog', {
     name: 'Replace the current session?',
   });
   await expect(replacementDialog).toBeVisible();
   await replacementDialog.getByRole('button', { name: 'Keep session' }).click();
-  await expect(page.locator('.move-node')).toHaveCount(1);
+  await expect(page.locator('app-explorer-move-score .move')).toHaveCount(2);
   await page.getByRole('button', { name: 'New analysis' }).click();
   await replacementDialog.getByRole('button', { name: 'Replace session' }).click();
-  await expect(page.locator('.move-node')).toHaveCount(0);
+  await expect(page.locator('app-explorer-move-score .move')).toHaveCount(0);
+});
+
+test('stacks the Review-style workspace at the shared mobile breakpoint', async ({ page }) => {
+  await page.setViewportSize({ width: 760, height: 900 });
+  await page.goto('/explorer');
+  const board = await page.locator('.board-workbench').boundingBox();
+  const desk = await page.locator('.analysis-ledger').boundingBox();
+
+  expect(board).not.toBeNull();
+  expect(desk).not.toBeNull();
+  expect(desk!.y).toBeGreaterThan(board!.y + board!.height - 2);
+  await expect(page.getByRole('button', { name: 'Import', exact: true })).toBeVisible();
+});
+
+test('uses the board column and viewport space like the Play board', async ({ page }) => {
+  await page.setViewportSize({ width: 2000, height: 1000 });
+  await page.goto('/explorer');
+  await expect(page.locator('.explorer-board')).toBeVisible();
+
+  const geometry = await page.evaluate(() => {
+    const board = document.querySelector<HTMLElement>('.explorer-board')!.getBoundingClientRect();
+    const workbench = document
+      .querySelector<HTMLElement>('.board-workbench')!
+      .getBoundingClientRect();
+    const pageElement = document.querySelector<HTMLElement>('.explorer-page')!;
+    const pageStyles = getComputedStyle(pageElement);
+    const verticalLimit =
+      innerHeight -
+      Number.parseFloat(pageStyles.paddingTop) -
+      Number.parseFloat(pageStyles.paddingBottom) -
+      68 -
+      2;
+    return {
+      actual: board.width,
+      expected: Math.min(1024, workbench.width - 44, verticalLimit),
+    };
+  });
+
+  expect(Math.abs(geometry.actual - geometry.expected)).toBeLessThanOrEqual(2);
+  expect(geometry.actual).toBeGreaterThan(820);
 });
 
 async function movePiece(page: Page, from: string, to: string): Promise<void> {

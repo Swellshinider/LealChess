@@ -1,0 +1,90 @@
+<ol class="score" role="tree" aria-label="Explorer moves and analysis variations">
+  <li
+    role="treeitem"
+    aria-level="1"
+    class="start-position"
+    [attr.aria-current]="session().selectedNodeId === session().rootId ? 'step' : null"
+    [class.selected-path]="selectedPath().has(session().rootId)"
+  >
+    <button
+      type="button"
+      [class.current]="session().selectedNodeId === session().rootId"
+      (click)="selectNode(session().rootId)"
+    >
+      Start
+    </button>
+  </li>
+  @for (entry of entries(); track entry.kind === 'mainline' ? entry.node.id : entry.id) {
+    @if (entry.kind === 'mainline') {
+      <li
+        role="treeitem"
+        aria-level="1"
+        [attr.aria-current]="session().selectedNodeId === entry.node.id ? 'step' : null"
+        [class.selected-path]="selectedPath().has(entry.node.id)"
+        [attr.data-classification]="entry.node.assessment?.classification ?? null"
+      >
+        <span class="move-number">{{ moveNumber(entry.node) }}</span>
+        <button
+          type="button"
+          class="move"
+          [class.current]="session().selectedNodeId === entry.node.id"
+          [attr.aria-label]="
+            entry.node.san +
+            (classificationLabel(entry.node) ? ', ' + classificationLabel(entry.node) : '')
+          "
+          (pointerenter)="showMovePreview(entry.node, $event)"
+          (pointerleave)="hideMovePreview(entry.node.id)"
+          (focus)="showMovePreview(entry.node, $event)"
+          (blur)="hideMovePreview(entry.node.id)"
+          (click)="selectNode(entry.node.id)"
+        >
+          {{ entry.node.san }}
+          @if (classificationLabel(entry.node); as label) {
+            <i aria-hidden="true">{{ label }}</i>
+          }
+        </button>
+      </li>
+    } @else {
+      <li class="variation-row" role="none" [style.--variation-depth]="entry.variationDepth">
+        <span aria-hidden="true">(</span>
+        <ol role="group" [attr.aria-label]="'Variation beginning with ' + entry.nodes[0]?.san">
+          @for (node of entry.nodes; track node.id; let moveIndex = $index) {
+            <li
+              role="treeitem"
+              [attr.aria-level]="entry.variationDepth + 1"
+              [attr.aria-current]="session().selectedNodeId === node.id ? 'step' : null"
+              [class.selected-path]="selectedPath().has(node.id)"
+            >
+              @if (variationMoveNumber(entry.nodes, moveIndex); as number) {
+                <span class="move-number">{{ number }}</span>
+              }
+              <button
+                type="button"
+                class="move"
+                [class.current]="session().selectedNodeId === node.id"
+                [attr.aria-label]="node.san + ', variation'"
+                (pointerenter)="showMovePreview(node, $event)"
+                (pointerleave)="hideMovePreview(node.id)"
+                (focus)="showMovePreview(node, $event)"
+                (blur)="hideMovePreview(node.id)"
+                (click)="selectNode(node.id)"
+              >
+                {{ node.san }}
+              </button>
+            </li>
+          }
+        </ol>
+        <span aria-hidden="true">)</span>
+      </li>
+    }
+  }
+</ol>
+
+@if (movePreview(); as preview) {
+  <app-explorer-move-preview
+    [node]="preview.node"
+    [orientation]="orientation()"
+    [boardTheme]="boardTheme()"
+    [position]="preview.position"
+  />
+}

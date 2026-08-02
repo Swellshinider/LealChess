@@ -10,7 +10,8 @@ app-explorer-page {
   }
 
   .explorer-page {
-    --explorer-padding: clamp(14px, 2vw, 28px);
+    --explorer-padding-block: clamp(8px, 1.2dvh, 12px);
+    --explorer-padding-inline: clamp(12px, 1.8vw, 24px);
 
     background: var(--night);
     container-type: inline-size;
@@ -19,8 +20,9 @@ app-explorer-page {
     flex-direction: column;
     height: 100%;
     min-width: 0;
-    overflow: hidden;
-    padding: var(--explorer-padding);
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: var(--explorer-padding-block) var(--explorer-padding-inline);
   }
 
   .import-dialog header span,
@@ -80,20 +82,28 @@ app-explorer-page {
   .analysis-workspace {
     display: grid;
     flex: 1 1 auto;
-    gap: clamp(14px, 2cqw, 26px);
-    grid-template-columns: minmax(430px, 1fr) clamp(300px, 27cqw, 350px);
+    align-items: stretch;
+    column-gap: clamp(14px, 1.6cqw, 22px);
+    grid-template-columns: minmax(0, 1fr) clamp(430px, 40cqw, 640px);
     height: 100%;
     margin: 0 auto;
-    max-width: 1280px;
+    max-width: 1600px;
     min-height: 0;
     width: 100%;
   }
 
   .board-workbench {
+    --board-strip-height: 34px;
+    --board-strips-height: calc(var(--board-strip-height) + var(--board-strip-height));
+    --explorer-fit-tolerance: 2px;
     --explorer-board-size: min(
       100%,
-      820px,
-      calc(100dvh - var(--explorer-padding) - var(--explorer-padding) - 12px - 40px - 42px - 47px)
+      1024px,
+      calc(
+        100dvh - var(--explorer-padding-block) - var(--explorer-padding-block) - var(
+            --board-strips-height
+          ) - var(--explorer-fit-tolerance)
+      )
     );
 
     align-content: center;
@@ -102,11 +112,13 @@ app-explorer-page {
     grid-template-areas:
       '. heading'
       'rail board'
-      '. navigation';
+      '. engine';
     grid-template-columns: 34px minmax(0, 1fr);
     grid-template-rows: auto auto auto;
     height: 100%;
+    justify-self: end;
     min-width: 0;
+    width: min(100%, calc(var(--explorer-board-size) + 44px));
 
     &.setup-mode {
       grid-template-areas:
@@ -194,7 +206,7 @@ app-explorer-page {
     grid-area: heading;
     justify-self: center;
     max-width: var(--explorer-board-size);
-    min-height: 42px;
+    min-height: var(--board-strip-height);
     padding-bottom: 2px;
     width: var(--explorer-board-size);
 
@@ -223,6 +235,35 @@ app-explorer-page {
     width: 100%;
   }
 
+  .engine-board-strip {
+    align-items: center;
+    color: var(--mist);
+    display: grid;
+    gap: 8px;
+    grid-area: engine;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    justify-self: center;
+    min-height: var(--board-strip-height);
+    padding: 3px 2px;
+    width: var(--explorer-board-size);
+
+    span,
+    small {
+      font-family: var(--font-utility);
+      font-size: var(--type-micro);
+    }
+
+    strong {
+      color: var(--paper);
+      font-family: var(--font-utility);
+      font-size: var(--type-caption);
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
   .position-navigation {
     display: grid;
     gap: 6px;
@@ -247,7 +288,8 @@ app-explorer-page {
 
   .analysis-ledger {
     align-self: stretch;
-    background: var(--surface);
+    background: var(--surface-container);
+    border: 1px solid rgb(200 213 207 / 16%);
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -808,9 +850,27 @@ app-explorer-page {
     }
   }
 
-  @container (max-width: 1020px) {
+  @container (max-width: 900px) {
     .analysis-workspace {
-      grid-template-columns: minmax(390px, 1fr) minmax(300px, 350px);
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto;
+      height: auto;
+      row-gap: clamp(14px, 2cqw, 24px);
+    }
+
+    .explorer-page {
+      overflow-y: auto;
+    }
+
+    .board-workbench {
+      justify-self: center;
+      max-width: 1068px;
+      width: 100%;
+    }
+
+    .analysis-ledger {
+      max-height: 620px;
+      min-height: 500px;
     }
   }
 
@@ -850,12 +910,14 @@ app-explorer-page {
       gap: 6px;
       grid-template-columns: 24px minmax(0, 1fr);
       margin: auto;
-      max-width: 690px;
+      max-width: none;
     }
 
     .analysis-ledger {
       height: auto;
+      max-height: none;
       margin-top: 18px;
+      min-height: 560px;
       overflow: visible;
     }
 
