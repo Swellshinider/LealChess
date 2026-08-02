@@ -54,26 +54,32 @@ test('collapses the desktop panel, preserves the choice, and navigates between w
   await expect(page.getByRole('heading', { name: 'Learn and Improve' })).toBeVisible();
   await expect(logo).toBeVisible();
   await expect(brandCopy).toBeVisible();
+  await expect(brandCopy).toHaveText('LealChess');
+  await expect(navigation).not.toContainText('Play. Study. Improve.');
   await expect(page.getByRole('button', { name: 'Collapse navigation' })).toBeVisible();
-  await expect.poll(async () => (await navigation.boundingBox())!.width).toBeGreaterThan(200);
+  await expect.poll(async () => (await navigation.boundingBox())!.width).toBe(256);
+
+  const expandedBrand = (await navigation.locator('.brand').boundingBox())!;
+  const expandedBrandBlock = (await navigation.locator('.brand-block').boundingBox())!;
+  const collapseButton = (await page
+    .getByRole('button', { name: 'Collapse navigation' })
+    .boundingBox())!;
+  expect(rectanglesOverlap(expandedBrand, collapseButton)).toBe(false);
+  expectHandleToStraddleBrandCorner(collapseButton, expandedBrandBlock);
 
   await page.getByRole('button', { name: 'Collapse navigation' }).click();
   await expect(page.getByRole('button', { name: 'Expand navigation' })).toBeVisible();
-  await expect.poll(async () => (await navigation.boundingBox())!.width).toBeLessThan(100);
+  await expect.poll(async () => (await navigation.boundingBox())!.width).toBe(72);
   await expect(logo).toBeVisible();
   await expect(brandCopy).toBeHidden();
 
   const brandBlock = (await navigation.locator('.brand-block').boundingBox())!;
+  const collapsedLogo = (await logo.boundingBox())!;
   const expandButton = (await page
     .getByRole('button', { name: 'Expand navigation' })
     .boundingBox())!;
-  expect(expandButton.y).toBeGreaterThanOrEqual(brandBlock.y);
-  expect(expandButton.y + expandButton.height).toBeLessThanOrEqual(
-    brandBlock.y + brandBlock.height,
-  );
-  expect(
-    Math.abs(expandButton.x + expandButton.width / 2 - (brandBlock.x + brandBlock.width / 2)),
-  ).toBeLessThanOrEqual(3);
+  expect(rectanglesOverlap(collapsedLogo, expandButton)).toBe(false);
+  expectHandleToStraddleBrandCorner(expandButton, brandBlock);
 
   await playLink.hover();
   await expect
@@ -98,6 +104,7 @@ test('opens an accessible mobile drawer and restores focus after Escape', async 
   const drawer = page.getByRole('dialog', { name: 'Navigation menu' });
   await expect(drawer).toBeVisible();
   await expect(page.getByRole('link', { name: 'Settings' })).toBeVisible();
+  await expect(drawer).not.toContainText('Play. Study. Improve.');
 
   await page.keyboard.press('Escape');
 
@@ -405,6 +412,30 @@ async function elementFitsViewportHorizontally(locator: import('@playwright/test
     const bounds = element.getBoundingClientRect();
     return bounds.left >= 0 && bounds.right <= window.innerWidth;
   });
+}
+
+function rectanglesOverlap(
+  first: { x: number; y: number; width: number; height: number },
+  second: { x: number; y: number; width: number; height: number },
+) {
+  return !(
+    first.x + first.width <= second.x ||
+    second.x + second.width <= first.x ||
+    first.y + first.height <= second.y ||
+    second.y + second.height <= first.y
+  );
+}
+
+function expectHandleToStraddleBrandCorner(
+  handle: { x: number; y: number; width: number; height: number },
+  brandBlock: { x: number; y: number; width: number; height: number },
+) {
+  expect(
+    Math.abs(handle.x + handle.width / 2 - (brandBlock.x + brandBlock.width)),
+  ).toBeLessThanOrEqual(2);
+  expect(
+    Math.abs(handle.y + handle.height / 2 - (brandBlock.y + brandBlock.height)),
+  ).toBeLessThanOrEqual(2);
 }
 
 async function expectTypographyTokens(page: import('@playwright/test').Page) {
