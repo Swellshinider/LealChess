@@ -613,9 +613,19 @@ form > button {
     width: 100%;
   }
 
+  .storage-value {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .storage-help {
+    margin-left: auto;
+  }
+
   .storage-tooltip {
-    left: 0;
-    right: auto;
+    left: auto;
+    right: 0;
+    width: min(280px, calc(100vw - 40px));
   }
 
   .range-row {

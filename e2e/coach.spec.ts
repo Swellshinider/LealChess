@@ -237,6 +237,7 @@ test('analyzes locally, caches the result, and opens a concern position', async 
   await expect(page.locator('.evaluation-rail')).toHaveAttribute('aria-label', /White evaluation/);
   await expectPlayerStripsToClearEvaluationRail(page);
   await expect(page.locator('.live-analysis li')).toHaveCount(3, { timeout: 30_000 });
+  await expectReviewResponsiveness(page);
   await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(0);
   await page.evaluate(() =>
     document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true })),
@@ -612,6 +613,77 @@ async function expectReviewWorkspaceToFitViewport(page: Page): Promise<void> {
   expect(geometry.documentHeight).toBeLessThanOrEqual(geometry.clientHeight + 1);
   expect(geometry.boardBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
   expect(geometry.deskBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
+}
+
+async function expectReviewResponsiveness(page: Page): Promise<void> {
+  const viewports = [
+    { width: 320, height: 568, stacked: true },
+    { width: 820, height: 1180, stacked: true },
+    { width: 1024, height: 600, stacked: true },
+    { width: 1280, height: 720, stacked: false },
+  ];
+
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
+    const visibleControls = page.getByRole('navigation', { name: 'Replay controls' });
+    await expect(visibleControls).toHaveCount(1);
+    await expect(visibleControls).toBeVisible();
+    await expect
+      .poll(() =>
+        page.evaluate(() => {
+          const scrollingElement = document.scrollingElement!;
+          return scrollingElement.scrollWidth <= scrollingElement.clientWidth + 1;
+        }),
+      )
+      .toBe(true);
+
+    if (viewport.stacked) {
+      await expect(page.locator('.workspace-review-toolbar')).toBeVisible();
+      await expect(
+        page.locator('.board-column').getByRole('navigation', { name: 'Replay controls' }),
+      ).toBeVisible();
+      const geometry = await page.evaluate(() => {
+        const lowerPlayer = document.querySelectorAll<HTMLElement>(
+          '.board-column > .player-strip',
+        )[1]!;
+        const controls = document
+          .querySelector<HTMLElement>('.board-column > app-review-replay-controls')!
+          .getBoundingClientRect();
+        const playerBounds = lowerPlayer.getBoundingClientRect();
+        return { controlsTop: controls.top, playerBottom: playerBounds.bottom };
+      });
+      expect(Math.abs(geometry.controlsTop - geometry.playerBottom)).toBeLessThanOrEqual(1);
+      await page.locator('.review-desk').scrollIntoViewIfNeeded();
+      await expect(page.getByRole('heading', { name: 'Game review', exact: true })).toBeVisible();
+    } else {
+      await expect(page.locator('.workspace-review-toolbar')).toBeVisible();
+      await expect(
+        page.locator('.review-desk').getByRole('navigation', { name: 'Replay controls' }),
+      ).toBeVisible();
+      const geometry = await page.evaluate(() => {
+        const board = document.querySelector<HTMLElement>('.board-stage')!.getBoundingClientRect();
+        const desk = document.querySelector<HTMLElement>('.review-desk')!.getBoundingClientRect();
+        const note = document.querySelector<HTMLElement>('.coach-note')!.getBoundingClientRect();
+        const candidates = document
+          .querySelector<HTMLElement>('.live-analysis')!
+          .getBoundingClientRect();
+        const controls = document
+          .querySelector<HTMLElement>('.panel-replay-controls')!
+          .getBoundingClientRect();
+        return {
+          boardWidth: board.width,
+          candidatesTop: candidates.top,
+          controlsBottom: controls.bottom,
+          deskBottom: desk.bottom,
+          noteBottom: note.bottom,
+          viewportWidth: window.innerWidth,
+        };
+      });
+      expect(geometry.boardWidth).toBeGreaterThanOrEqual(geometry.viewportWidth * 0.4);
+      expect(geometry.candidatesTop).toBeGreaterThanOrEqual(geometry.noteBottom - 1);
+      expect(geometry.controlsBottom).toBeLessThanOrEqual(geometry.deskBottom + 1);
+    }
+  }
 }
 
 async function expectPlayerStripsToClearEvaluationRail(page: Page): Promise<void> {

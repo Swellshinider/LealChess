@@ -1,0 +1,20 @@
+<nav class="replay-controls" aria-label="Replay controls">
+  <button type="button" [disabled]="currentPly() === 0" (click)="requestPly(0)">First</button>
+  <button type="button" [disabled]="currentPly() === 0" (click)="requestPly(currentPly() - 1)">
+    Previous
+  </button>
+  <button
+    type="button"
+    [disabled]="currentPly() === totalPlies()"
+    (click)="requestPly(currentPly() + 1)"
+  >
+    Next
+  </button>
+  <button
+    type="button"
+    [disabled]="currentPly() === totalPlies()"
+    (click)="requestPly(totalPlies())"
+  >
+    Last
+  </button>
+</nav>

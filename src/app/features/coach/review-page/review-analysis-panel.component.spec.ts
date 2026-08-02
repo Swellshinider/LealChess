@@ -62,6 +62,7 @@ describe('ReviewAnalysisPanelComponent', () => {
     const footer = host.querySelector<HTMLElement>('.coach-note-footer')!;
     const action = footer.querySelector<HTMLButtonElement>('.secondary-action')!;
 
+    expect(host.querySelector('.analysis-scroll')?.contains(footer)).toBe(true);
     expect(footer.querySelector('.evaluation')).not.toBeNull();
     expect(action.textContent).toContain('Show idea on board');
 

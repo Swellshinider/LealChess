@@ -3,6 +3,10 @@ app-review-page {
   height: 100dvh;
   overflow: hidden;
 
+  app-side-navigation {
+    --navigation-expanded-width: 208px;
+  }
+
   .review-shell {
     display: flex;
     height: 100dvh;
@@ -17,14 +21,14 @@ app-review-page {
     flex: 1 1 auto;
     height: 100%;
     min-width: 0;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     padding: var(--review-padding);
   }
 
   .review-page {
     display: grid;
-    gap: 12px;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
     height: 100%;
     margin: 0 auto;
     max-width: 1280px;
@@ -38,8 +42,14 @@ app-review-page {
     display: grid;
     gap: 14px;
     grid-template-columns: auto minmax(0, 1fr);
-    min-height: 48px;
-    padding-bottom: 10px;
+    min-height: 52px;
+    padding: 7px 12px;
+  }
+
+  .workspace-review-toolbar {
+    background: var(--surface-lowest);
+    grid-column: 2;
+    grid-row: 1;
   }
 
   .back-link {
@@ -112,9 +122,10 @@ app-review-page {
 
   .review-workspace {
     align-items: stretch;
+    column-gap: clamp(14px, 1.6cqw, 22px);
     display: grid;
-    gap: clamp(14px, 2cqw, 24px);
-    grid-template-columns: minmax(0, 1fr) clamp(310px, 28cqw, 360px);
+    grid-template-columns: minmax(0, 1fr) clamp(430px, 38cqw, 560px);
+    grid-template-rows: auto minmax(0, 1fr);
     height: 100%;
     min-height: 0;
   }
@@ -125,14 +136,20 @@ app-review-page {
     align-self: center;
     display: flex;
     flex-direction: column;
+    grid-column: 1;
+    grid-row: 1 / span 2;
     margin: auto;
     max-width: 790px;
     min-width: 0;
-    width: min(100%, calc(100dvh - var(--review-padding) - var(--review-padding) - 62px - 96px));
+    width: min(100%, calc(100dvh - var(--review-padding) - var(--review-padding) - 80px));
 
     &.has-evaluation {
       --evaluation-gutter: 34px;
     }
+  }
+
+  .board-replay-controls {
+    display: none;
   }
 
   .player-strip {
@@ -352,9 +369,17 @@ app-review-page {
     border: 1px solid rgb(200 213 207 / 16%);
     display: flex;
     flex-direction: column;
+    grid-column: 2;
+    grid-row: 2;
     height: 100%;
     min-height: 0;
     overflow: hidden;
+  }
+
+  .review-desk > app-review-analysis-panel,
+  .review-desk > app-review-summary {
+    flex: 1 1 auto;
+    min-height: 0;
   }
 
   .mode-switch {
@@ -638,25 +663,6 @@ app-review-page {
     }
   }
 
-  .replay-controls {
-    display: grid;
-    gap: 5px;
-    grid-template-columns: repeat(4, 1fr);
-    padding: 8px 10px 5px;
-
-    button {
-      background: var(--surface-low);
-      border: 1px solid rgb(200 213 207 / 14%);
-      color: var(--paper);
-      min-height: 36px;
-
-      &:disabled {
-        cursor: default;
-        opacity: 0.35;
-      }
-    }
-  }
-
   .keyboard-help,
   .practice-help {
     color: var(--mist);
@@ -935,16 +941,9 @@ app-review-page {
   }
 
   @container (max-width: 900px) {
-    & {
-      height: auto;
-      min-height: 100dvh;
-      overflow: visible;
-    }
-
     .review-frame {
-      height: auto;
-      min-height: 100%;
-      overflow: visible;
+      overflow-x: hidden;
+      overflow-y: auto;
     }
 
     .review-page {
@@ -953,11 +952,14 @@ app-review-page {
 
     .review-workspace {
       grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto;
       height: auto;
+      row-gap: clamp(14px, 2cqw, 24px);
     }
 
     .board-column {
-      width: 100%;
+      grid-column: 1;
+      grid-row: 2;
 
       &.has-evaluation {
         --evaluation-gutter: 28px;
@@ -974,8 +976,24 @@ app-review-page {
     }
 
     .review-desk {
+      grid-column: 1;
+      grid-row: 3;
       max-height: 620px;
       min-height: 500px;
+    }
+
+    .workspace-review-toolbar {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .board-replay-controls {
+      display: block;
+      margin-left: var(--evaluation-gutter);
+    }
+
+    .panel-replay-controls {
+      display: none;
     }
   }
 
@@ -989,8 +1007,14 @@ app-review-page {
     }
 
     .review-frame {
+      height: auto;
       min-height: calc(100dvh - 64px);
+      overflow: visible;
       padding: 12px;
+    }
+
+    .board-column {
+      width: 100%;
     }
 
     .review-toolbar {

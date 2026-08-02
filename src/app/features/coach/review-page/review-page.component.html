@@ -11,14 +11,16 @@
       </section>
     } @else {
       <main class="review-page">
-        <header class="review-toolbar">
-          <a class="back-link" routerLink="/learn" aria-label="Back to Learn">Learn</a>
-          <div class="game-meta">
-            <span>{{ sourceLabel() }}</span>
-            <strong>{{ game()?.opening?.name ?? 'Opening not recorded' }}</strong>
-            <small>{{ game()?.opening?.eco }} · {{ game()?.speed }} · {{ game()?.result }}</small>
-          </div>
-        </header>
+        @if (game()?.parseStatus !== 'ready' || !learnerColor()) {
+          <header class="review-toolbar">
+            <a class="back-link" routerLink="/learn" aria-label="Back to Learn">Learn</a>
+            <div class="game-meta">
+              <span>{{ sourceLabel() }}</span>
+              <strong>{{ game()?.opening?.name ?? 'Opening not recorded' }}</strong>
+              <small>{{ game()?.opening?.eco }} · {{ game()?.speed }} · {{ game()?.result }}</small>
+            </div>
+          </header>
+        }
 
         @if (game()?.parseStatus !== 'ready') {
           <section class="not-found">
@@ -36,6 +38,17 @@
           </section>
         } @else {
           <section class="review-workspace" aria-label="Game review">
+            <header class="review-toolbar workspace-review-toolbar">
+              <a class="back-link" routerLink="/learn" aria-label="Back to Learn">Learn</a>
+              <div class="game-meta">
+                <span>{{ sourceLabel() }}</span>
+                <strong>{{ game()?.opening?.name ?? 'Opening not recorded' }}</strong>
+                <small
+                  >{{ game()?.opening?.eco }} · {{ game()?.speed }} · {{ game()?.result }}</small
+                >
+              </div>
+            </header>
+
             <section
               class="board-column"
               [class.has-evaluation]="mode() === 'analysis'"
@@ -196,6 +209,15 @@
                 </span>
                 <span class="turn-indicator" aria-hidden="true"></span>
               </div>
+
+              @if (mode() === 'analysis') {
+                <app-review-replay-controls
+                  class="board-replay-controls"
+                  [currentPly]="currentPly()"
+                  [totalPlies]="game()!.moves.length"
+                  (plyRequested)="goTo($event)"
+                />
+              }
             </section>
 
             <aside class="review-desk">

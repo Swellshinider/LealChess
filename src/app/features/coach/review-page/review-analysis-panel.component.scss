@@ -6,9 +6,19 @@
 
 .analysis-panel {
   display: grid;
-  grid-template-rows: auto auto auto minmax(96px, 1fr) auto auto auto;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
   height: 100%;
   min-height: 0;
+}
+
+.analysis-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.analysis-scroll app-review-move-tree {
+  overflow: visible;
 }
 
 header {
@@ -206,22 +216,6 @@ header {
 app-review-evaluation-timeline {
   border-top: 1px solid rgb(200 213 207 / 13%);
   padding: 9px 12px;
-}
-
-.replay-controls {
-  display: grid;
-  gap: 6px;
-  grid-template-columns: repeat(4, 1fr);
-  padding: 0 12px 12px;
-
-  button {
-    background: var(--surface-container-high);
-    border: 0;
-    color: var(--paper);
-    font-family: var(--font-utility);
-    font-size: var(--type-micro);
-    min-height: 36px;
-  }
 }
 
 button:disabled {

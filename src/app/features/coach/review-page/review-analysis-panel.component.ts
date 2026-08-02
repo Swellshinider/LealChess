@@ -19,10 +19,15 @@ import type {
 import type { ReviewLiveAnalysisState } from './review-live-analysis.service';
 import { turnColor } from '../../../core/game/chess-move';
 import type { MoveInput } from '../../../core/game/game.types';
+import { ReviewReplayControlsComponent } from './review-replay-controls.component';
 
 @Component({
   selector: 'app-review-analysis-panel',
-  imports: [ReviewEvaluationTimelineComponent, ReviewMoveTreeComponent],
+  imports: [
+    ReviewEvaluationTimelineComponent,
+    ReviewMoveTreeComponent,
+    ReviewReplayControlsComponent,
+  ],
   templateUrl: './review-analysis-panel.component.html',
   styleUrl: './review-analysis-panel.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -84,10 +89,6 @@ export class ReviewAnalysisPanelComponent {
     }
     const pawns = evaluation.score.value / 100;
     return `${pawns >= 0 ? '+' : ''}${pawns.toFixed(2)}`;
-  }
-
-  protected requestPly(ply: number): void {
-    this.plyRequested.emit(Math.max(0, Math.min(ply, this.game().moves.length)));
   }
 
   protected candidateEvaluationLabel(line: ReviewCandidateLine): string {
