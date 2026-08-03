@@ -348,7 +348,7 @@ test('analyzes locally, caches the result, and opens a concern position', async 
   await moveReviewPiece(page, 'c7', 'c5');
   await expect(page.locator('.score .variation-move')).toHaveCount(1);
   await expect(page.locator('.live-analysis li')).toHaveCount(3, { timeout: 30_000 });
-  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(0);
+  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(3);
   for (const [index, width] of [14, 9, 5].entries()) {
     await page.locator('.candidate-action').nth(index).hover();
     await expect
@@ -362,7 +362,7 @@ test('analyzes locally, caches the result, and opens a concern position', async 
       .toEqual([width]);
   }
   await page.locator('.candidate-heading').hover();
-  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(0);
+  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(3);
 
   await moveReviewPiece(page, 'e2', 'e4');
   await expect(page.locator('.score .variation-move')).toHaveCount(2);
