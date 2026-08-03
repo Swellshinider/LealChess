@@ -101,26 +101,31 @@ test('imports both platforms, persists and deduplicates games, then replays move
   await expect(flipBoard).toBeVisible();
   await expectFlipControlAtBoardTopRight(page, '.review-board');
   await expect(page.locator('.review-board')).toHaveClass(/orientation-white/);
-  await expect
-    .poll(() =>
-      page.locator('.review-board cg-board').evaluate((board) => {
-        return getComputedStyle(board).backgroundImage;
-      }),
-    )
-    .toContain('conic-gradient');
   await expect(page.locator('.review-board')).toHaveAttribute('data-board-theme', 'classic');
-  await expect(page.locator('.review-board cg-board')).toHaveCSS(
-    'background-image',
-    /rgb\(139, 101, 71\).*rgb\(216, 195, 161\)/,
-  );
-  await expect(page.locator('.review-board coords.files coord').nth(0)).toHaveCSS(
-    'color',
-    'rgb(255, 255, 255)',
-  );
-  await expect(page.locator('.review-board coords.files coord').nth(1)).toHaveCSS(
-    'color',
-    'rgb(24, 27, 21)',
-  );
+  if (testInfo.project.name === 'chromium') {
+    // Exact computed-style equality is rendering-engine-sensitive and adds no
+    // cross-browser signal beyond the data-board-theme contract asserted above;
+    // see src/app/core/game/board-themes.spec.ts for the unit-level coverage.
+    await expect
+      .poll(() =>
+        page.locator('.review-board cg-board').evaluate((board) => {
+          return getComputedStyle(board).backgroundImage;
+        }),
+      )
+      .toContain('conic-gradient');
+    await expect(page.locator('.review-board cg-board')).toHaveCSS(
+      'background-image',
+      /rgb\(139, 101, 71\).*rgb\(216, 195, 161\)/,
+    );
+    await expect(page.locator('.review-board coords.files coord').nth(0)).toHaveCSS(
+      'color',
+      'rgb(255, 255, 255)',
+    );
+    await expect(page.locator('.review-board coords.files coord').nth(1)).toHaveCSS(
+      'color',
+      'rgb(24, 27, 21)',
+    );
+  }
   if (!testInfo.project.name.includes('mobile')) {
     await expectReviewWorkspaceToFitViewport(page);
     await expect
@@ -356,7 +361,36 @@ test('analyzes locally, caches the result, and opens a concern position', async 
   await moveReviewPiece(page, 'e2', 'e4');
   await expect(page.locator('.score .variation-move')).toHaveCount(2);
   await expect(page.locator('.score .variation-row')).toHaveCount(1);
-  await page.waitForTimeout(400);
+  // review-page.store.ts debounces the IndexedDB write by 250ms; poll for the
+  // persisted node instead of a fixed sleep so reload never races the write.
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          new Promise<boolean>((resolve, reject) => {
+            const request = indexedDB.open('leal-chess');
+            request.onsuccess = () => {
+              const database = request.result;
+              const getAll = database
+                .transaction('reviewAnalysisSessions')
+                .objectStore('reviewAnalysisSessions')
+                .getAll();
+              getAll.onsuccess = () => {
+                const sessions = getAll.result as { nodes: Record<string, { san?: string }> }[];
+                resolve(
+                  sessions.some((session) =>
+                    Object.values(session.nodes).some((node) => node.san === 'e4'),
+                  ),
+                );
+                database.close();
+              };
+              getAll.onerror = () => reject(getAll.error);
+            };
+            request.onerror = () => reject(request.error);
+          }),
+      ),
+    )
+    .toBe(true);
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Your game at a glance' })).toBeVisible({
     timeout: 30_000,

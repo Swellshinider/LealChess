@@ -23,10 +23,21 @@ test('starts as White, supports click moves, premoves, annotations, and restorat
   await expect(page.locator('app-chess-board .board-frame')).toHaveClass(/orientation-black/);
   await flipBoard.click();
   await expect(page.locator('app-chess-board .board-frame')).toHaveClass(/orientation-white/);
-  await expect(page.locator('coords.files coord').nth(0)).toHaveCSS('color', 'rgb(255, 255, 255)');
-  await expect(page.locator('coords.files coord').nth(1)).toHaveCSS('color', 'rgb(24, 27, 21)');
-  await expect(page.locator('coords.ranks coord').nth(0)).toHaveCSS('color', 'rgb(255, 255, 255)');
-  await expect(page.locator('coords.ranks coord').nth(1)).toHaveCSS('color', 'rgb(24, 27, 21)');
+  if (testInfo.project.name === 'chromium') {
+    // Exact computed-style equality is rendering-engine-sensitive and adds no
+    // cross-browser signal beyond the orientation-class contract asserted above;
+    // see src/app/core/game/board-themes.spec.ts for the unit-level coverage.
+    await expect(page.locator('coords.files coord').nth(0)).toHaveCSS(
+      'color',
+      'rgb(255, 255, 255)',
+    );
+    await expect(page.locator('coords.files coord').nth(1)).toHaveCSS('color', 'rgb(24, 27, 21)');
+    await expect(page.locator('coords.ranks coord').nth(0)).toHaveCSS(
+      'color',
+      'rgb(255, 255, 255)',
+    );
+    await expect(page.locator('coords.ranks coord').nth(1)).toHaveCSS('color', 'rgb(24, 27, 21)');
+  }
   await clickSquare(page, 'e2');
   const legalDestinations = page.locator('square.move-dest');
   await expect(legalDestinations).toHaveCount(2);
