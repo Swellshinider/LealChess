@@ -281,11 +281,25 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
   await expect(page.getByText('LealChess storage used', { exact: true })).toBeVisible();
   await expect(page.getByTestId('storage-usage-value')).toHaveText(/\d+(?:\.\d+)? (?:B|KB|MB|GB)/);
-  await page.evaluate(() => {
-    localStorage.setItem(
-      'lealchess.stockfish.downloads',
-      JSON.stringify(['stockfish-18-single@18.0.8']),
-    );
+  await page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('leal-chess');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const transaction = database.transaction('engineAssets', 'readwrite');
+    transaction.objectStore('engineAssets').put({
+      id: 'stockfish-18-full',
+      script: new ArrayBuffer(1),
+      wasm: new ArrayBuffer(1),
+      installedAt: new Date().toISOString(),
+      bytes: 113_013_789,
+    });
+    await new Promise<void>((resolve, reject) => {
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+    database.close();
   });
   await page.reload();
   await expect(page.getByTestId('storage-usage-value')).toContainText('107.8 MB');

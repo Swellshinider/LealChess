@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { markStockfishEngineDownloaded } from './stockfish-assets';
+import type { AnalysisEngineId } from './analysis-profiles';
 import type {
   AnalysisEnginePort,
   PositionAnalysisRequest,
@@ -8,6 +8,7 @@ import type {
 } from './analysis-engine.types';
 import { parseBestMove } from './uci-parser';
 import { parseAnalysisInfo, type UciAnalysisInfo } from './uci-analysis-parser';
+import type { EngineWorkerLease } from './engine-asset-manager.service';
 import { STOCKFISH_ANALYSIS_WORKER_FACTORY } from './stockfish-worker';
 
 type Waiter = {
@@ -21,6 +22,8 @@ type Waiter = {
 export class StockfishAnalysisEngineService implements AnalysisEnginePort {
   private readonly createStockfishWorker = inject(STOCKFISH_ANALYSIS_WORKER_FACTORY);
   private worker: Worker | null = null;
+  private workerLease: EngineWorkerLease | null = null;
+  private engineId: AnalysisEngineId | null = null;
   private waiters: Waiter[] = [];
   private initialized = false;
   private initializing: Promise<void> | null = null;
@@ -43,7 +46,7 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
     | undefined;
 
   async analyze(request: PositionAnalysisRequest): Promise<PositionAnalysisResult> {
-    await this.initialize();
+    await this.initialize(request.engineId ?? this.engineId ?? 'stockfish-18-full');
     if (request.signal?.aborted) throw abortError();
     if (this.active?.cancelled) await this.waitForIdle(request.signal);
     if (request.signal?.aborted) throw abortError();
@@ -87,8 +90,10 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
     this.disposeWorker(new Error('Stockfish analysis was stopped.'));
   }
 
-  initialize(): Promise<void> {
-    if (this.initialized && this.worker) return Promise.resolve();
+  initialize(engineId: AnalysisEngineId = 'stockfish-18-full'): Promise<void> {
+    if (this.initialized && this.worker && this.engineId === engineId) return Promise.resolve();
+    if (this.worker && this.engineId !== engineId) this.destroy();
+    this.engineId = engineId;
     const lifecycle = this.lifecycle;
     this.initializing ??= this.initializeWithRetry(lifecycle).finally(() => {
       this.initializing = null;
@@ -113,7 +118,15 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
   }
 
   private async createWorker(lifecycle: number): Promise<void> {
-    const worker = this.createStockfishWorker();
+    if (!this.engineId) throw new Error('No Stockfish analysis engine was selected.');
+    const created = await this.createStockfishWorker(this.engineId);
+    const worker = 'worker' in created ? created.worker : created;
+    const lease = 'worker' in created ? created : { worker, release: () => worker.terminate() };
+    if (lifecycle !== this.lifecycle) {
+      lease.release();
+      throw new Error('Stockfish analysis was stopped.');
+    }
+    this.workerLease = lease;
     this.worker = worker;
     worker.addEventListener('message', (event: MessageEvent<unknown>) => {
       if (worker === this.worker && typeof event.data === 'string') this.handleLine(event.data);
@@ -133,7 +146,6 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
       throw new Error('Stockfish analysis was stopped.');
     }
     this.initialized = true;
-    markStockfishEngineDownloaded('analysis');
   }
 
   private handleLine(line: string): void {
@@ -283,7 +295,8 @@ export class StockfishAnalysisEngineService implements AnalysisEnginePort {
       waiter.reject(error);
     }
     this.finishActive(undefined, error);
-    this.worker?.terminate();
+    this.workerLease?.release();
+    this.workerLease = null;
     this.worker = null;
   }
 }

@@ -21,6 +21,7 @@ export interface ExplorerMoveAssessment {
   classification: ReviewMoveClassification;
   depth: number;
   provisional: boolean;
+  profileFingerprint?: string;
   bestMove: string;
   bestMoveSan: string;
   bestEvaluation: EngineEvaluation;
@@ -31,6 +32,7 @@ export interface ExplorerMoveNode {
   id: string;
   parentId: string | null;
   fen: string;
+  profileFingerprint?: string;
   ply: number;
   children: string[];
   move?: MoveInput;
@@ -54,6 +56,7 @@ export interface ExplorerSession {
   id: 'active';
   schemaVersion: typeof EXPLORER_SESSION_SCHEMA_VERSION;
   analysisVersion: string;
+  profileFingerprint?: string;
   source: ExplorerSource;
   rootFen: string;
   rootId: string;

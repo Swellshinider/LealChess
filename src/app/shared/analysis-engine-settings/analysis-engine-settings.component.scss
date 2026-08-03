@@ -1,0 +1,254 @@
+:host {
+  display: block;
+}
+
+.machine-plate {
+  align-items: center;
+  background: #071b23;
+  border: 1px solid rgb(200 213 207 / 28%);
+  border-left: 4px solid var(--amber);
+  color: var(--paper);
+  display: inline-grid;
+  font-family: var(--font-utility);
+  gap: 9px;
+  grid-template-columns: auto 1fr auto;
+  min-height: 40px;
+  padding: 5px 8px 5px 6px;
+  text-align: left;
+
+  &.expanded {
+    width: 100%;
+  }
+
+  strong,
+  small {
+    display: block;
+  }
+
+  strong {
+    font-size: var(--type-small);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  small {
+    color: var(--mist);
+    font-size: 0.68rem;
+    margin-top: 1px;
+  }
+}
+
+.machine-mark {
+  background: var(--amber);
+  color: #071b23;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  padding: 5px 4px;
+}
+
+.gear {
+  color: var(--amber);
+  font-size: 1rem;
+}
+
+.engine-backdrop {
+  align-items: center;
+  background: rgb(1 16 23 / 84%);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 18px;
+  position: fixed;
+  z-index: 120;
+}
+
+.engine-dialog {
+  background: var(--surface-container);
+  border: 1px solid rgb(200 213 207 / 24%);
+  box-shadow: 0 24px 90px rgb(0 0 0 / 55%);
+  max-height: calc(100dvh - 36px);
+  max-width: 720px;
+  overflow: auto;
+  padding: clamp(18px, 4vw, 30px);
+  width: 100%;
+
+  > header {
+    align-items: start;
+    border-bottom: 1px solid rgb(200 213 207 / 16%);
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+
+    p {
+      color: var(--primary);
+      font-family: var(--font-utility);
+      font-size: var(--type-caption);
+      letter-spacing: 0.06em;
+      margin: 0;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      margin: 3px 0 0;
+    }
+  }
+}
+
+.close {
+  background: transparent;
+  border: 1px solid rgb(200 213 207 / 28%);
+  color: var(--paper);
+  font-size: 1.35rem;
+  height: 40px;
+  width: 40px;
+}
+
+.run-notice,
+.privacy-note {
+  color: var(--mist);
+  font-size: var(--type-small);
+}
+
+.run-notice {
+  border-left: 3px solid var(--amber);
+  margin: 0 0 16px;
+  padding: 8px 12px;
+}
+
+.engine-cards {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.engine-card {
+  background: var(--surface-lowest);
+  border: 1px solid rgb(200 213 207 / 18%);
+  padding: 12px;
+
+  &.selected {
+    border-color: var(--amber);
+    box-shadow: inset 0 0 0 1px var(--amber);
+  }
+
+  > button {
+    background: transparent;
+    border: 0;
+    color: var(--paper);
+    min-height: 104px;
+    padding: 0;
+    text-align: left;
+    width: 100%;
+  }
+
+  strong,
+  small {
+    display: block;
+  }
+
+  small {
+    color: var(--mist);
+    line-height: 1.4;
+    margin-top: 7px;
+  }
+
+  footer {
+    align-items: center;
+    border-top: 1px solid rgb(200 213 207 / 12%);
+    color: var(--mist);
+    display: flex;
+    font-family: var(--font-utility);
+    font-size: var(--type-caption);
+    justify-content: space-between;
+    margin-top: 10px;
+    padding-top: 10px;
+
+    button {
+      background: transparent;
+      border: 1px solid rgb(200 213 207 / 28%);
+      color: var(--paper);
+      min-height: 34px;
+    }
+  }
+
+  progress {
+    accent-color: var(--amber);
+    margin-top: 10px;
+    width: 100%;
+  }
+}
+
+.engine-code {
+  color: var(--amber);
+  display: block;
+  font-family: var(--font-utility);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  margin-bottom: 5px;
+}
+
+.engine-error {
+  color: #f2b0aa;
+  font-size: var(--type-small);
+  margin: 8px 0 0;
+}
+
+.profile-controls {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(2, 1fr);
+  margin-top: 22px;
+
+  label > span {
+    display: flex;
+    font-family: var(--font-utility);
+    justify-content: space-between;
+    text-transform: uppercase;
+  }
+
+  output {
+    color: var(--amber);
+    font-variant-numeric: tabular-nums;
+  }
+
+  input {
+    accent-color: var(--amber);
+    margin-top: 10px;
+    width: 100%;
+  }
+}
+
+.privacy-note {
+  margin: 20px 0 0;
+}
+
+.sr-update {
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  position: absolute;
+  width: 1px;
+}
+
+@media (max-width: 600px) {
+  .engine-backdrop {
+    align-items: end;
+    padding: 0;
+  }
+
+  .engine-dialog {
+    border-bottom: 0;
+    border-left: 0;
+    border-right: 0;
+    max-height: 88dvh;
+  }
+
+  .engine-cards,
+  .profile-controls {
+    grid-template-columns: 1fr;
+  }
+}

@@ -27,6 +27,7 @@ export interface ReviewMoveNode {
   importedPly?: number;
   candidates: ReviewCandidateLine[];
   candidateDepth?: number;
+  profileFingerprint?: string;
   analysisError?: string;
 }
 

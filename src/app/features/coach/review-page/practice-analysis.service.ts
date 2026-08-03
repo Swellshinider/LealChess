@@ -13,6 +13,11 @@ import type {
   PracticeAnalysisResult,
   PracticeAnalysisState,
 } from './practice.types';
+import { AnalysisSettingsService } from '../../../core/engine/analysis-settings.service';
+import {
+  analysisProfileFingerprint,
+  type AnalysisProfile,
+} from '../../../core/engine/analysis-profiles';
 
 export const PRACTICE_ANALYSIS_ENGINE_PORT = new InjectionToken<AnalysisEnginePort>(
   'PRACTICE_ANALYSIS_ENGINE_PORT',
@@ -21,6 +26,7 @@ export const PRACTICE_ANALYSIS_ENGINE_PORT = new InjectionToken<AnalysisEnginePo
 @Injectable()
 export class PracticeAnalysisService {
   private readonly engine = inject(PRACTICE_ANALYSIS_ENGINE_PORT);
+  private readonly settings = inject(AnalysisSettingsService);
   private readonly mutableState = signal<PracticeAnalysisState>({ phase: 'idle' });
   private readonly positionCache = new Map<string, PositionAnalysisResult>();
   private abortController: AbortController | null = null;
@@ -61,14 +67,25 @@ export class PracticeAnalysisService {
   ): Promise<void> {
     let quickResult: PracticeAnalysisResult | undefined;
     try {
-      quickResult = await this.analyzeAtDepth(request, 10, abortController.signal);
+      const profile = await this.settings.profile('practice');
+      await this.engine.initialize(profile.engineId);
+      quickResult = await this.analyzeAtDepth(request, 10, abortController.signal, profile);
       if (!this.isCurrent(requestId)) return;
+      if (profile.depth === 10) {
+        this.mutableState.set({ phase: 'complete', nodeId: request.nodeId, result: quickResult });
+        return;
+      }
       this.mutableState.set({
         phase: 'refining',
         nodeId: request.nodeId,
         result: quickResult,
       });
-      const refined = await this.analyzeAtDepth(request, 14, abortController.signal);
+      const refined = await this.analyzeAtDepth(
+        request,
+        profile.depth,
+        abortController.signal,
+        profile,
+      );
       if (!this.isCurrent(requestId)) return;
       this.mutableState.set({
         phase: 'complete',
@@ -93,13 +110,15 @@ export class PracticeAnalysisService {
     request: PracticeAnalysisRequest,
     depth: number,
     signal: AbortSignal,
+    profile: AnalysisProfile,
   ): Promise<PracticeAnalysisResult> {
-    const best = await this.positionAnalysis(request.fenBefore, depth, signal);
+    const best = await this.positionAnalysis(request.fenBefore, depth, signal, profile);
     const played =
       best.bestMove && moveToUci(best.bestMove) === moveToUci(request.move)
         ? best
         : await this.engine.analyze({
             fen: request.fenBefore,
+            engineId: profile.engineId,
             depth,
             searchMove: moveToUci(request.move),
             signal,
@@ -124,16 +143,17 @@ export class PracticeAnalysisService {
       ? []
       : candidateLines(
           request.fenAfter,
-          await this.positionAnalysis(request.fenAfter, depth, signal),
+          await this.positionAnalysis(request.fenAfter, depth, signal, profile),
           6,
         );
     return {
       assessment: {
         classification,
         depth,
-        provisional: depth < 14,
+        provisional: depth < profile.depth,
       },
       candidates,
+      profileFingerprint: analysisProfileFingerprint(profile),
     };
   }
 
@@ -141,11 +161,18 @@ export class PracticeAnalysisService {
     fen: string,
     depth: number,
     signal: AbortSignal,
+    profile: AnalysisProfile,
   ): Promise<PositionAnalysisResult> {
-    const key = `${depth}:${fen}`;
+    const key = `${analysisProfileFingerprint(profile)}:${depth}:${fen}`;
     const cached = this.positionCache.get(key);
     if (cached) return cached;
-    const result = await this.engine.analyze({ fen, depth, multiPv: 3, signal });
+    const result = await this.engine.analyze({
+      fen,
+      engineId: profile.engineId,
+      depth,
+      multiPv: profile.lines,
+      signal,
+    });
     this.positionCache.set(key, result);
     return result;
   }

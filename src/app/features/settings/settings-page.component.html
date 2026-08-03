@@ -86,6 +86,26 @@
       </div>
     </section>
 
+    <section aria-labelledby="engine-heading">
+      <div class="section-heading">
+        <div>
+          <p class="folio">Analysis engine</p>
+          <h2 id="engine-heading">Set up each study desk</h2>
+        </div>
+        <span>Saved locally</span>
+      </div>
+      <p class="keyboard-intro">
+        Each workflow keeps its own engine, depth, and line count. Engine files are shared so they
+        only use storage once.
+      </p>
+      <div class="platform-statuses">
+        <app-analysis-engine-settings workflow="game-review" [compact]="false" />
+        <app-analysis-engine-settings workflow="practice" [compact]="false" />
+        <app-analysis-engine-settings workflow="live-analysis" [compact]="false" />
+        <app-analysis-engine-settings workflow="explorer" [compact]="false" />
+      </div>
+    </section>
+
     <section aria-labelledby="board-heading">
       <div class="section-heading">
         <div>

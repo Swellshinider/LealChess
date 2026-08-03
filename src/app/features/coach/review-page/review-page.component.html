@@ -95,6 +95,32 @@
                 }
 
                 <div class="board-stage">
+                  <div class="board-engine-plate">
+                    <app-analysis-engine-settings
+                      [workflow]="
+                        mode() === 'practice'
+                          ? 'practice'
+                          : mode() === 'analysis'
+                            ? 'live-analysis'
+                            : 'game-review'
+                      "
+                      [active]="mode() === 'analysis' && liveAnalysis.state().phase === 'analyzing'"
+                    />
+                    @if (mode() === 'analysis' && liveAnalysisStale()) {
+                      <button type="button" class="stale-analysis" (click)="retryLiveAnalysis()">
+                        Previous profile · reanalyze
+                      </button>
+                    }
+                    @if (mode() === 'practice' && practiceAnalysisStale()) {
+                      <button
+                        type="button"
+                        class="stale-analysis"
+                        (click)="retryPracticeAnalysis()"
+                      >
+                        Previous profile · reanalyze
+                      </button>
+                    }
+                  </div>
                   <app-chessground-board
                     class="review-board"
                     [initialConfig]="boardConfig()"
@@ -244,6 +270,7 @@
                     [completed]="coachAnalysis.state().completed"
                     [total]="coachAnalysis.state().total"
                     [error]="coachAnalysis.state().error"
+                    [stale]="coachAnalysis.state().stale ?? false"
                     (analysisRequested)="analyze()"
                     (cancelRequested)="cancelAnalysis()"
                     (reanalysisRequested)="reanalyze()"

@@ -24,6 +24,7 @@ export interface PracticeMoveAssessment {
 export interface PracticeAnalysisResult {
   assessment: PracticeMoveAssessment;
   candidates: PracticeCandidateLine[];
+  profileFingerprint?: string;
 }
 
 export interface PracticeAnalysisRequest {
@@ -54,6 +55,7 @@ export interface PracticeVariationNode {
   assessment?: PracticeMoveAssessment;
   candidates: PracticeCandidateLine[];
   candidateDepth?: number;
+  profileFingerprint?: string;
   analysisError?: string;
 }
 

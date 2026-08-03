@@ -14,6 +14,8 @@ import type { Config } from '@lichess-org/chessground/config';
 import type { DrawShape } from '@lichess-org/chessground/draw';
 import type { Key } from '@lichess-org/chessground/types';
 import { StockfishAnalysisEngineService } from '../../core/engine/stockfish-analysis-engine.service';
+import { AnalysisSettingsService } from '../../core/engine/analysis-settings.service';
+import { analysisProfileFingerprint } from '../../core/engine/analysis-profiles';
 import { OnboardingAnchorDirective } from '../../core/onboarding/onboarding-anchor.directive';
 import { legalDestinations } from '../../core/game/chess-move';
 import { STARTING_FEN, type MoveInput, type PromotionPiece } from '../../core/game/game.types';
@@ -28,6 +30,7 @@ import { ChessgroundBoardComponent } from '../../shared/chess/chessground-board/
 import { ModalFocusDirective } from '../../shared/a11y/modal-focus.directive';
 import { ConfirmationDialogComponent } from '../../shared/a11y/confirmation-dialog/confirmation-dialog.component';
 import { SideNavigationComponent } from '../../shared/layout/side-navigation/side-navigation.component';
+import { AnalysisEngineSettingsComponent } from '../../shared/analysis-engine-settings/analysis-engine-settings.component';
 import {
   EMPTY_MOVE_TREE_NAVIGATION,
   jumpToEndNodeId,
@@ -81,6 +84,7 @@ interface PendingSessionReplacement {
 @Component({
   selector: 'app-explorer-page',
   imports: [
+    AnalysisEngineSettingsComponent,
     BoardFlipButtonComponent,
     ChessgroundBoardComponent,
     ConfirmationDialogComponent,
@@ -106,6 +110,7 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
   private readonly board = viewChild(ChessgroundBoardComponent);
   private readonly store = inject(ExplorerPageStore);
   private readonly analysis = inject(ExplorerAnalysisService);
+  private readonly analysisSettings = inject(AnalysisSettingsService);
 
   protected readonly session = this.store.session;
   protected readonly mode = signal<ExplorerMode>('analysis');
@@ -139,6 +144,17 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
     this.currentFen().split(' ')[1] === 'b' ? 'black' : 'white',
   );
   protected readonly selectedCandidates = computed(() => this.selectedNode().candidates);
+  protected readonly analysisStale = computed(() => {
+    const profile = this.analysisSettings.settings().profiles.explorer;
+    const selected = this.selectedNode();
+    const stored = selected.profileFingerprint ?? selected.assessment?.profileFingerprint;
+    if (stored) return stored !== analysisProfileFingerprint(profile);
+    const hasAnalysis = Boolean(selected.assessment || selected.candidateDepth);
+    return (
+      hasAnalysis &&
+      !(profile.engineId === 'stockfish-18-full' && profile.depth === 14 && profile.lines === 3)
+    );
+  });
   protected readonly setupFen = computed(() => setupStateToFen(this.setup()));
   protected readonly enPassantSquares = computed(() =>
     compatibleEnPassantSquares(this.setup().turn),
@@ -644,12 +660,27 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
     void this.runInteractiveAnalysis(nodeId, ticket, controller);
   }
 
+  protected reanalyzeWithCurrentProfile(): void {
+    const nodeId = this.session().selectedNodeId;
+    this.session.update((session) =>
+      updateExplorerNode(session, nodeId, {
+        assessment: undefined,
+        candidates: [],
+        candidateDepth: undefined,
+        profileFingerprint: undefined,
+        analysisError: undefined,
+      }),
+    );
+    this.requestInteractiveAnalysis();
+  }
+
   private async runInteractiveAnalysis(
     nodeId: string,
     ticket: number,
     controller: AbortController,
   ): Promise<void> {
     try {
+      const profile = await this.analysisSettings.profile('explorer');
       const node = this.session().nodes[nodeId];
       if (!node) return;
       if (node.move && (!node.assessment || node.assessment.provisional)) {
@@ -659,17 +690,38 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
         const request = this.analysisRequest(node);
         if (request) {
           if (!node.assessment) {
-            const quick = await this.analysis.assessMove(request, 10, controller.signal);
+            const quick = await this.analysis.assessMove(request, 10, controller.signal, profile);
             if (!this.isCurrent(ticket)) return;
             this.session.update((session) =>
-              updateExplorerNode(session, nodeId, { assessment: quick, analysisError: undefined }),
+              stampProfile(
+                updateExplorerNode(session, nodeId, {
+                  assessment: quick,
+                  profileFingerprint: analysisProfileFingerprint(profile),
+                  analysisError: undefined,
+                }),
+                profile,
+              ),
             );
           }
-          const refined = await this.analysis.assessMove(request, 14, controller.signal);
-          if (!this.isCurrent(ticket)) return;
-          this.session.update((session) =>
-            updateExplorerNode(session, nodeId, { assessment: refined, analysisError: undefined }),
-          );
+          if (profile.depth > 10) {
+            const refined = await this.analysis.assessMove(
+              request,
+              profile.depth,
+              controller.signal,
+              profile,
+            );
+            if (!this.isCurrent(ticket)) return;
+            this.session.update((session) =>
+              stampProfile(
+                updateExplorerNode(session, nodeId, {
+                  assessment: refined,
+                  profileFingerprint: analysisProfileFingerprint(profile),
+                  analysisError: undefined,
+                }),
+                profile,
+              ),
+            );
+          }
         }
       }
 
@@ -679,25 +731,46 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
       this.analysisKind.set('position');
       this.analysisMessage.set('Calculating three best lines');
       if ((current.candidateDepth ?? 0) < 10) {
-        const quickLines = await this.analysis.candidates(current.fen, 10, controller.signal);
+        const quickLines = await this.analysis.candidates(
+          current.fen,
+          10,
+          controller.signal,
+          profile,
+        );
         if (!this.isCurrent(ticket)) return;
         this.session.update((session) =>
-          updateExplorerNode(session, nodeId, {
-            candidates: quickLines,
-            candidateDepth: 10,
-            analysisError: undefined,
-          }),
+          stampProfile(
+            updateExplorerNode(session, nodeId, {
+              candidates: quickLines,
+              candidateDepth: 10,
+              profileFingerprint: analysisProfileFingerprint(profile),
+              analysisError: undefined,
+            }),
+            profile,
+          ),
         );
       }
-      if ((this.session().nodes[nodeId]?.candidateDepth ?? 0) < 14) {
-        const refinedLines = await this.analysis.candidates(current.fen, 14, controller.signal);
+      if (
+        profile.depth > 10 &&
+        (this.session().nodes[nodeId]?.candidateDepth ?? 0) < profile.depth
+      ) {
+        const refinedLines = await this.analysis.candidates(
+          current.fen,
+          profile.depth,
+          controller.signal,
+          profile,
+        );
         if (!this.isCurrent(ticket)) return;
         this.session.update((session) =>
-          updateExplorerNode(session, nodeId, {
-            candidates: refinedLines,
-            candidateDepth: 14,
-            analysisError: undefined,
-          }),
+          stampProfile(
+            updateExplorerNode(session, nodeId, {
+              candidates: refinedLines,
+              candidateDepth: profile.depth,
+              profileFingerprint: analysisProfileFingerprint(profile),
+              analysisError: undefined,
+            }),
+            profile,
+          ),
         );
       }
     } catch (error) {
@@ -754,6 +827,7 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
     controller: AbortController,
   ): Promise<void> {
     try {
+      const profile = await this.analysisSettings.profile('explorer');
       for (const queuedNode of nodes) {
         if (!this.isCurrent(ticket) || this.session().batch.status !== 'running') return;
         const node = this.session().nodes[queuedNode.id];
@@ -763,13 +837,22 @@ export class ExplorerPageComponent implements OnInit, OnDestroy {
         );
         const request = this.analysisRequest(node);
         if (!request) continue;
-        const assessment = await this.analysis.assessMove(request, 14, controller.signal);
+        const assessment = await this.analysis.assessMove(
+          request,
+          profile.depth,
+          controller.signal,
+          profile,
+        );
         if (!this.isCurrent(ticket)) return;
         this.session.update((session) => {
-          const updated = updateExplorerNode(session, node.id, {
-            assessment,
-            analysisError: undefined,
-          });
+          const updated = stampProfile(
+            updateExplorerNode(session, node.id, {
+              assessment,
+              profileFingerprint: analysisProfileFingerprint(profile),
+              analysisError: undefined,
+            }),
+            profile,
+          );
           const completed = importedExplorerNodes(updated).filter(
             (candidate) => candidate.assessment && !candidate.assessment.provisional,
           ).length;
@@ -893,6 +976,13 @@ function candidateShapes(lines: ExplorerCandidateLine[]): DrawShape[] {
     brush: 'green',
     modifiers: { lineWidth: widths[index] ?? 5 },
   }));
+}
+
+function stampProfile(
+  session: ExplorerSession,
+  profile: Parameters<typeof analysisProfileFingerprint>[0],
+): ExplorerSession {
+  return { ...session, profileFingerprint: analysisProfileFingerprint(profile) };
 }
 
 function squareAtPoint(

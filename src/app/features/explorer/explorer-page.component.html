@@ -51,6 +51,23 @@
           }
 
           <div class="board-stage">
+            @if (mode() === 'analysis') {
+              <div class="board-engine-plate">
+                <app-analysis-engine-settings
+                  workflow="explorer"
+                  [active]="analysisKind() !== 'idle'"
+                />
+                @if (analysisStale()) {
+                  <button
+                    type="button"
+                    class="stale-analysis"
+                    (click)="reanalyzeWithCurrentProfile()"
+                  >
+                    Previous profile · reanalyze
+                  </button>
+                }
+              </div>
+            }
             <div class="explorer-board-frame" [attr.data-board-theme]="boardTheme()">
               <app-chessground-board
                 class="explorer-board"

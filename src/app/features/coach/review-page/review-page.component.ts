@@ -89,11 +89,15 @@ import {
   REVIEW_LIVE_ANALYSIS_ENGINE_PORT,
   ReviewLiveAnalysisService,
 } from './review-live-analysis.service';
+import { AnalysisEngineSettingsComponent } from '../../../shared/analysis-engine-settings/analysis-engine-settings.component';
+import { AnalysisSettingsService } from '../../../core/engine/analysis-settings.service';
+import { analysisProfileFingerprint } from '../../../core/engine/analysis-profiles';
 import type { ReviewCandidateLine } from './review-analysis-session.types';
 
 @Component({
   selector: 'app-review-page',
   imports: [
+    AnalysisEngineSettingsComponent,
     BoardFlipButtonComponent,
     ModalFocusDirective,
     ConfirmationDialogComponent,
@@ -124,6 +128,7 @@ import type { ReviewCandidateLine } from './review-analysis-session.types';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReviewPageComponent implements OnInit, OnDestroy {
+  private readonly analysisSettings = inject(AnalysisSettingsService);
   private readonly board = viewChild(ChessgroundBoardComponent);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly store = inject(ReviewPageStore);
@@ -159,6 +164,34 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   protected readonly ideaVisible = signal(false);
   protected readonly previewedAnalysisCandidate = signal<ReviewCandidateLine | null>(null);
   protected readonly liveAnalysis = inject(ReviewLiveAnalysisService);
+  protected readonly liveAnalysisStale = computed(() => {
+    const node = this.selectedReviewNode();
+    if (!node?.candidates.length) return false;
+    const profile = this.analysisSettings.settings().profiles['live-analysis'];
+    return (
+      node.profileFingerprint !== analysisProfileFingerprint(profile) &&
+      !(
+        node.profileFingerprint === undefined &&
+        profile.engineId === 'stockfish-18-full' &&
+        profile.depth === 16 &&
+        profile.lines === 3
+      )
+    );
+  });
+  protected readonly practiceAnalysisStale = computed(() => {
+    const node = this.selectedPracticeNode();
+    if (!node?.assessment) return false;
+    const profile = this.analysisSettings.settings().profiles.practice;
+    return (
+      node.profileFingerprint !== analysisProfileFingerprint(profile) &&
+      !(
+        node.profileFingerprint === undefined &&
+        profile.engineId === 'stockfish-18-full' &&
+        profile.depth === 14 &&
+        profile.lines === 3
+      )
+    );
+  });
   protected readonly currentAnalysis = computed<MoveAnalysis | undefined>(() =>
     this.selectedReviewNode()?.source === 'imported'
       ? moveAnalysisForPly(this.coachAnalysis.analysis(), this.currentPly())
@@ -279,6 +312,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
                   assessment: state.result.assessment,
                   candidates: state.result.candidates,
                   candidateDepth: state.result.assessment.depth,
+                  profileFingerprint: state.result.profileFingerprint,
                 }
               : {}),
             analysisError: state.error,
@@ -296,6 +330,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
           updateReviewNode(session, state.nodeId!, {
             candidates: state.candidates,
             candidateDepth: state.depth,
+            profileFingerprint: state.profileFingerprint,
             analysisError: state.error,
           }),
         );
@@ -695,7 +730,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   }
 
   protected retryLiveAnalysis(): void {
-    this.analyzeSelectedReviewNode();
+    this.analyzeSelectedReviewNode(true);
   }
 
   protected playAnalysisCandidate(move: MoveInput): void {
@@ -753,10 +788,28 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     if (node) this.selectAnalysisNode(node.id, false);
   }
 
-  private analyzeSelectedReviewNode(): void {
+  private analyzeSelectedReviewNode(force = false): void {
     const node = this.selectedReviewNode();
     if (!node) return;
-    if (node.candidateDepth === 16 && !node.analysisError) {
+    const profile = this.analysisSettings.settings().profiles['live-analysis'];
+    const fingerprint = analysisProfileFingerprint(profile);
+    const current =
+      node.profileFingerprint === fingerprint ||
+      (node.profileFingerprint === undefined &&
+        profile.engineId === 'stockfish-18-full' &&
+        profile.depth === 16 &&
+        profile.lines === 3);
+    if (!force && node.candidates.length && !current) {
+      this.liveAnalysis.state.set({
+        phase: 'complete',
+        nodeId: node.id,
+        depth: node.candidateDepth,
+        candidates: node.candidates,
+        profileFingerprint: node.profileFingerprint,
+      });
+      return;
+    }
+    if (node.candidateDepth === profile.depth && current && !node.analysisError) {
       this.liveAnalysis.state.set({
         phase: 'complete',
         nodeId: node.id,

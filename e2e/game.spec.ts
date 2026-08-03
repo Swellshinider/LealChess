@@ -149,6 +149,20 @@ test('keeps dialogs keyboard-contained and restores focus', async ({ page }) => 
 
 test('shows Stockfish startup failure and recovers on retry', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'Worker startup recovery smoke test');
+  await page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('leal-chess');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const transaction = database.transaction('engineAssets', 'readwrite');
+    transaction.objectStore('engineAssets').clear();
+    await new Promise<void>((resolve, reject) => {
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+    database.close();
+  });
   await page.route('**/stockfish-18-lite-single.js', (route) => route.abort());
   await page.reload();
 

@@ -1,13 +1,20 @@
 import { InjectionToken } from '@angular/core';
+import { inject } from '@angular/core';
+import type { AnalysisEngineId } from './analysis-profiles';
+import { EngineAssetManagerService, type EngineWorkerLease } from './engine-asset-manager.service';
 
-export type StockfishWorkerFactory = () => Worker;
+export type StockfishWorkerFactory = (
+  engineId?: AnalysisEngineId,
+) => Worker | EngineWorkerLease | Promise<Worker | EngineWorkerLease>;
 
 export const STOCKFISH_PLAY_WORKER_FACTORY = new InjectionToken<StockfishWorkerFactory>(
   'STOCKFISH_PLAY_WORKER_FACTORY',
   {
     providedIn: 'root',
-    factory: () => () =>
-      new Worker(new URL('assets/stockfish/stockfish-18-lite-single.js', document.baseURI)),
+    factory: () => {
+      const assets = inject(EngineAssetManagerService);
+      return () => assets.acquireWorker('stockfish-18-lite');
+    },
   },
 );
 
@@ -15,7 +22,9 @@ export const STOCKFISH_ANALYSIS_WORKER_FACTORY = new InjectionToken<StockfishWor
   'STOCKFISH_ANALYSIS_WORKER_FACTORY',
   {
     providedIn: 'root',
-    factory: () => () =>
-      new Worker(new URL('assets/stockfish/stockfish-18-single.js', document.baseURI)),
+    factory: () => {
+      const assets = inject(EngineAssetManagerService);
+      return (engineId = 'stockfish-18-full') => assets.acquireWorker(engineId);
+    },
   },
 );

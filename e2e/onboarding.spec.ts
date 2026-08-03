@@ -22,6 +22,7 @@ test('walks through the real workspaces and can replay from Settings', async ({ 
     page.getByRole('dialog', { name: 'Bring your games to the study desk' }),
   ).toBeVisible();
   await page.getByLabel('Chess.com username').fill('Learner');
+  await expect.poll(() => storedChessComUsername(page)).toBe('Learner');
 
   await page
     .getByRole('dialog', { name: 'Bring your games to the study desk' })
@@ -76,6 +77,26 @@ test('walks through the real workspaces and can replay from Settings', async ({ 
     page.getByRole('dialog', { name: 'Set the board, then make the first plan' }),
   ).toHaveCount(0);
 });
+
+async function storedChessComUsername(page: import('@playwright/test').Page): Promise<string> {
+  return page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('leal-chess');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const transaction = database.transaction('state', 'readonly');
+    const request = transaction.objectStore('state').get('import-preferences');
+    const record = await new Promise<{ value?: { chessComUsername?: string } } | undefined>(
+      (resolve, reject) => {
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      },
+    );
+    database.close();
+    return record?.value?.chessComUsername ?? '';
+  });
+}
 
 test('does not interrupt a first-time direct link', async ({ page }) => {
   await page.goto('/learn');

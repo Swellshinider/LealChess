@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { botMoveTimeMs, type BotRating } from './bot-rating';
 import type { EngineMove, EnginePort, EngineSearchRequest } from './engine.types';
-import { markStockfishEngineDownloaded } from './stockfish-assets';
+import type { EngineWorkerLease } from './engine-asset-manager.service';
 import { STOCKFISH_PLAY_WORKER_FACTORY } from './stockfish-worker';
 import { parseBestMove } from './uci-parser';
 
@@ -16,6 +16,7 @@ type Waiter = {
 export class StockfishEngineService implements EnginePort {
   private readonly createWorker = inject(STOCKFISH_PLAY_WORKER_FACTORY);
   private worker: Worker | null = null;
+  private workerLease: EngineWorkerLease | null = null;
   private waiters: Waiter[] = [];
   private activeSearch: {
     request: EngineSearchRequest;
@@ -86,7 +87,14 @@ export class StockfishEngineService implements EnginePort {
   }
 
   private async createAndInitializeWorker(lifecycle: number): Promise<void> {
-    const worker = this.createWorker();
+    const created = await this.createWorker('stockfish-18-lite');
+    const worker = 'worker' in created ? created.worker : created;
+    const lease = 'worker' in created ? created : { worker, release: () => worker.terminate() };
+    if (lifecycle !== this.lifecycle) {
+      lease.release();
+      throw new Error('Stockfish was stopped.');
+    }
+    this.workerLease = lease;
     this.worker = worker;
 
     worker.addEventListener('message', (event: MessageEvent<unknown>) => {
@@ -111,7 +119,6 @@ export class StockfishEngineService implements EnginePort {
       throw new Error('Stockfish was stopped.');
     }
     this.initialized = true;
-    markStockfishEngineDownloaded('play');
   }
 
   private handleLine(line: string): void {
@@ -202,7 +209,8 @@ export class StockfishEngineService implements EnginePort {
   private disposeWorker(error: Error): void {
     this.initialized = false;
     this.rejectPending(error);
-    this.worker?.terminate();
+    this.workerLease?.release();
+    this.workerLease = null;
     this.worker = null;
   }
 
