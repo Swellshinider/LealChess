@@ -6,7 +6,10 @@ const isCI = !!process.env.CI;
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
-  workers: isCI ? 2 : undefined,
+  // Measured on the actual GitHub-hosted runner: workers: 2 added browser-process
+  // contention without a real parallel gain (webkit test time went 124s -> 139s),
+  // so CI stays single-worker. fullyParallel still helps local runs on more cores.
+  workers: isCI ? 1 : undefined,
   retries: isCI ? 1 : 0,
   timeout: 30_000,
   expect: { timeout: 8_000 },
