@@ -124,15 +124,15 @@ jobs:
           version="$(pnpm exec playwright --version | awk '{print $2}')"
           echo "version=$version" >> "$GITHUB_OUTPUT"
       - name: Cache Playwright browsers
-        id: playwright-cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: ms-playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}-${{ matrix.browser }}
-      - if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
-        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
-      - if: ${{ steps.playwright-cache.outputs.cache-hit == 'true' }}
-        run: pnpm exec playwright install-deps ${{ matrix.browser }}
+      # Always --with-deps: Playwright skips the download when the cached browser
+      # is already present, so this stays cheap on a cache hit. A separate
+      # `playwright install-deps`-only fallback was tried here and hung
+      # indefinitely on the runner (apt lock contention), so this stays simple.
+      - run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
       - name: Cache Angular build cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
