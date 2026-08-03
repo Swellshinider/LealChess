@@ -67,6 +67,7 @@ import type {
   PracticeCandidateLine,
   PracticeSession,
 } from './practice.types';
+import { analysisCandidateArrows } from './review-analysis-arrows';
 import { ReviewAnalysisPanelComponent } from './review-analysis-panel.component';
 import { ReviewReplayControlsComponent } from './review-replay-controls.component';
 import {
@@ -826,7 +827,11 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     const board = this.board();
     if (!node || !board) return;
     const color = turnColor(node.fen);
-    const candidatePreview = this.previewedAnalysisCandidate();
+    const candidateArrows = analysisCandidateArrows(
+      node,
+      this.previewedAnalysisCandidate(),
+      this.liveAnalysis.state(),
+    );
     board.set({
       fen: node.fen,
       orientation: this.orientation(),
@@ -840,8 +845,8 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       drawable: {
         enabled: true,
         shapes: this.shapes,
-        autoShapes: candidatePreview
-          ? [this.engineCandidateShape(candidatePreview)]
+        autoShapes: candidateArrows.length
+          ? this.engineCandidateShapes(candidateArrows)
           : this.ideaShapes(),
       },
     });
