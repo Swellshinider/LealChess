@@ -1,0 +1,114 @@
+:host {
+  display: block;
+  margin-bottom: 18px;
+}
+
+.batch-analysis-panel {
+  background: var(--surface-container);
+  border: 1px solid rgb(200 213 207 / 15%);
+  display: grid;
+  gap: 10px;
+  padding: clamp(14px, 2.4vw, 20px);
+}
+
+form {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+
+  label {
+    color: var(--mist);
+    display: grid;
+    font-family: var(--font-utility);
+    font-size: var(--type-small);
+    gap: 7px;
+    text-transform: uppercase;
+  }
+
+  input {
+    background: var(--night);
+    border: 1px solid rgb(200 213 207 / 22%);
+    color: var(--paper);
+    min-height: 44px;
+    padding: 8px 11px;
+    width: 90px;
+  }
+
+  button {
+    background: var(--primary);
+    border: 0;
+    color: var(--on-primary);
+    font-weight: 700;
+    min-height: 44px;
+    padding: 8px 18px;
+
+    &:disabled {
+      background: var(--surface-container-highest);
+      color: var(--mist);
+    }
+  }
+}
+
+.form-help {
+  color: var(--mist);
+  font-size: var(--type-small);
+  margin: 0;
+}
+
+.progress-copy {
+  align-items: center;
+  color: var(--mist);
+  display: flex;
+  font-family: var(--font-utility);
+  font-size: var(--type-caption);
+  justify-content: space-between;
+
+  strong {
+    color: var(--paper);
+  }
+}
+
+.progress-track {
+  background: var(--surface-container-highest);
+  height: 6px;
+  overflow: hidden;
+
+  span {
+    background: var(--primary);
+    display: block;
+    height: 100%;
+    transition: width 160ms ease-out;
+  }
+}
+
+.batch-summary {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+
+  p {
+    color: var(--mist);
+    margin: 0;
+  }
+}
+
+.analysis-error {
+  color: #f2b0aa !important;
+}
+
+.text-action {
+  background: transparent;
+  border: 1px solid rgb(200 213 207 / 28%);
+  color: var(--paper);
+  justify-self: start;
+  min-height: 38px;
+  padding: 6px 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-track span {
+    transition: none;
+  }
+}

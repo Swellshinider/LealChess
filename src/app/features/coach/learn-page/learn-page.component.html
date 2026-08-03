@@ -108,6 +108,9 @@
           </span>
         }
       </div>
+      @if (coach.games().length) {
+        <app-batch-analysis-panel />
+      }
       @if (!coach.games().length) {
         @if (coach.hasFailures()) {
           <div class="empty-state failed-import">
