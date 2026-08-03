@@ -41,6 +41,9 @@ export class AnalysisEngineSettingsComponent {
   protected readonly label = computed(() => ANALYSIS_WORKFLOW_LABELS[this.workflow()]);
   protected readonly profile = computed(() => this.settings.settings().profiles[this.workflow()]);
   protected readonly engine = computed(() => engineCatalogEntry(this.profile().engineId));
+  protected readonly summary = computed(
+    () => `${this.engine().name} · D${this.profile().depth} · ${this.profile().lines} lines`,
+  );
 
   constructor() {
     void this.settings.load();

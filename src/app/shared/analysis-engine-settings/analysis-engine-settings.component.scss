@@ -2,23 +2,41 @@
   display: block;
 }
 
-.machine-plate {
+.engine-config {
   align-items: center;
-  background: #071b23;
-  border: 1px solid rgb(200 213 207 / 28%);
-  border-left: 4px solid var(--amber);
-  color: var(--paper);
-  display: inline-grid;
-  font-family: var(--font-utility);
-  gap: 9px;
-  grid-template-columns: auto 1fr auto;
-  min-height: 40px;
-  padding: 5px 8px 5px 6px;
-  text-align: left;
+  background: transparent;
+  border: 0;
+  color: var(--mist);
+  display: flex;
+  height: 20px;
+  justify-content: center;
+  padding: 0;
+  width: 20px;
 
-  &.expanded {
-    width: 100%;
+  &:hover,
+  &:focus-visible {
+    color: var(--primary);
   }
+
+  svg {
+    fill: none;
+    height: 20px;
+    stroke: currentcolor;
+    stroke-linecap: square;
+    stroke-linejoin: miter;
+    stroke-width: 1.8;
+    width: 20px;
+  }
+}
+
+.engine-row {
+  align-items: center;
+  border-bottom: 1px solid rgb(200 213 207 / 12%);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  min-height: 70px;
+  padding: 10px 2px;
 
   strong,
   small {
@@ -26,35 +44,27 @@
   }
 
   strong {
-    font-size: var(--type-small);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    color: var(--paper);
   }
 
   small {
     color: var(--mist);
-    font-size: 0.68rem;
-    margin-top: 1px;
+    margin-top: 4px;
   }
-}
 
-.machine-mark {
-  background: var(--amber);
-  color: #071b23;
-  font-size: 0.64rem;
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  padding: 5px 4px;
-}
-
-.gear {
-  color: var(--amber);
-  font-size: 1rem;
+  .configure {
+    background: transparent;
+    border: 1px solid rgb(200 213 207 / 28%);
+    color: var(--paper);
+    flex: 0 0 auto;
+    min-height: 42px;
+    padding-inline: 16px;
+  }
 }
 
 .engine-backdrop {
   align-items: center;
-  background: rgb(1 16 23 / 84%);
+  background: rgb(12 14 11 / 84%);
   display: flex;
   inset: 0;
   justify-content: center;
@@ -131,8 +141,7 @@
   padding: 12px;
 
   &.selected {
-    border-color: var(--amber);
-    box-shadow: inset 0 0 0 1px var(--amber);
+    border-color: var(--primary);
   }
 
   > button {
@@ -176,14 +185,14 @@
   }
 
   progress {
-    accent-color: var(--amber);
+    accent-color: var(--primary);
     margin-top: 10px;
     width: 100%;
   }
 }
 
 .engine-code {
-  color: var(--amber);
+  color: var(--mist);
   display: block;
   font-family: var(--font-utility);
   font-size: 0.66rem;
@@ -192,7 +201,7 @@
 }
 
 .engine-error {
-  color: #f2b0aa;
+  color: var(--danger);
   font-size: var(--type-small);
   margin: 8px 0 0;
 }
@@ -211,12 +220,12 @@
   }
 
   output {
-    color: var(--amber);
+    color: var(--paper);
     font-variant-numeric: tabular-nums;
   }
 
   input {
-    accent-color: var(--amber);
+    accent-color: var(--primary);
     margin-top: 10px;
     width: 100%;
   }

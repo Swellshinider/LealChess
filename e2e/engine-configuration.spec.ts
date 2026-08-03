@@ -20,7 +20,7 @@ test('persists the Lite game-review profile and keeps the board selector synchro
   await page.getByRole('button', { name: 'Close engine settings' }).click();
 
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Configure Game review engine' })).toContainText(
+  await expect(page.getByRole('group', { name: 'Game review' })).toContainText(
     'Lite · D18 · 4 lines',
   );
 });

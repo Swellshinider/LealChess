@@ -248,6 +248,12 @@ form > button {
   display: grid;
 }
 
+.engine-list {
+  border-top: 1px solid rgb(200 213 207 / 12%);
+  display: grid;
+  margin-top: 18px;
+}
+
 .switch-row,
 .select-row,
 .range-row {

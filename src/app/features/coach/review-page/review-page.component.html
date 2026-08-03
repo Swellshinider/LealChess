@@ -63,6 +63,16 @@
                   <small>{{ opponentSide() }} · {{ opponentPlayer()?.rating ?? 'Unrated' }}</small>
                 </span>
                 <span class="turn-indicator" aria-hidden="true"></span>
+                <app-analysis-engine-settings
+                  [workflow]="
+                    mode() === 'practice'
+                      ? 'practice'
+                      : mode() === 'analysis'
+                        ? 'live-analysis'
+                        : 'game-review'
+                  "
+                  [active]="mode() === 'analysis' && liveAnalysis.state().phase === 'analyzing'"
+                />
                 <app-board-flip-button (flipRequested)="flipBoard()" />
               </div>
 
@@ -96,16 +106,6 @@
 
                 <div class="board-stage">
                   <div class="board-engine-plate">
-                    <app-analysis-engine-settings
-                      [workflow]="
-                        mode() === 'practice'
-                          ? 'practice'
-                          : mode() === 'analysis'
-                            ? 'live-analysis'
-                            : 'game-review'
-                      "
-                      [active]="mode() === 'analysis' && liveAnalysis.state().phase === 'analyzing'"
-                    />
                     @if (mode() === 'analysis' && liveAnalysisStale()) {
                       <button type="button" class="stale-analysis" (click)="retryLiveAnalysis()">
                         Previous profile · reanalyze

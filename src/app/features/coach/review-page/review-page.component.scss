@@ -5,17 +5,15 @@
 .board-engine-plate {
   left: 0;
   position: absolute;
-  top: -48px;
+  top: -34px;
   z-index: 4;
 
   .stale-analysis {
     background: var(--amber);
     border: 0;
     color: var(--night);
-    display: block;
     font-family: var(--font-utility);
     font-size: var(--type-caption);
-    margin-top: 4px;
     min-height: 30px;
     padding: 4px 8px;
   }
