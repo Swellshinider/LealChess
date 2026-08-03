@@ -2,7 +2,6 @@ import { TestBed } from '@angular/core/testing';
 import type { InjectionToken } from '@angular/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { StockfishAnalysisEngineService } from './stockfish-analysis-engine.service';
-import { downloadedStockfishEngineBytes } from './stockfish-assets';
 import { StockfishEngineService } from './stockfish-engine.service';
 import {
   STOCKFISH_ANALYSIS_WORKER_FACTORY,
@@ -109,7 +108,6 @@ describe('StockfishEngineService', () => {
     expect(workers[0]?.messages).toContain('setoption name UCI_LimitStrength value true');
     expect(workers[0]?.messages).toContain('setoption name UCI_Elo value 1500');
     expect(workers[0]?.messages).toContain('go movetime 235');
-    expect(downloadedStockfishEngineBytes()).toBe(7_316_840);
   });
 
   it('replaces a failed startup worker once', async () => {
@@ -188,7 +186,6 @@ describe('StockfishAnalysisEngineService', () => {
     expect(workers).toHaveLength(2);
     expect(result.bestMove).toEqual({ from: 'e2', to: 'e4' });
     expect(result.evaluation.score).toEqual({ kind: 'centipawn', value: 24 });
-    expect(downloadedStockfishEngineBytes()).toBe(113_013_789);
   });
 
   it('rejects active analysis when its worker fails and starts cleanly afterward', async () => {

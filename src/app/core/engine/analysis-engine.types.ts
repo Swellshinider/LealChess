@@ -1,8 +1,11 @@
 import { InjectionToken } from '@angular/core';
 import type { MoveInput } from '../game/game.types';
 import type { EngineEvaluation } from '../../features/coach/domain/coach.types';
+import type { AnalysisEngineId } from './analysis-profiles';
 
 export interface PositionAnalysisRequest {
+  /** Optional only for restored/test callers; workflows should always snapshot and provide it. */
+  engineId?: AnalysisEngineId;
   fen: string;
   depth: number;
   searchMove?: string;
@@ -33,7 +36,7 @@ export interface PositionAnalysisSnapshot {
 }
 
 export interface AnalysisEnginePort {
-  initialize(): Promise<void>;
+  initialize(engineId?: AnalysisEngineId): Promise<void>;
   analyze(request: PositionAnalysisRequest): Promise<PositionAnalysisResult>;
   destroy(): void;
 }

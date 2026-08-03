@@ -7,6 +7,8 @@ import type {
 } from '../../../core/engine/analysis-engine.types';
 import { candidateLines } from '../../../core/game/chess-move';
 import type { ReviewCandidateLine } from './review-analysis-session.types';
+import { AnalysisSettingsService } from '../../../core/engine/analysis-settings.service';
+import { analysisProfileFingerprint } from '../../../core/engine/analysis-profiles';
 
 export const REVIEW_LIVE_ANALYSIS_ENGINE_PORT = new InjectionToken<AnalysisEnginePort>(
   'REVIEW_LIVE_ANALYSIS_ENGINE_PORT',
@@ -18,11 +20,13 @@ export interface ReviewLiveAnalysisState {
   depth?: number;
   candidates: ReviewCandidateLine[];
   error?: string;
+  profileFingerprint?: string;
 }
 
 @Injectable()
 export class ReviewLiveAnalysisService {
   private readonly engine = inject(REVIEW_LIVE_ANALYSIS_ENGINE_PORT);
+  private readonly settings = inject(AnalysisSettingsService);
   private controller: AbortController | null = null;
   private generation = 0;
   readonly state = signal<ReviewLiveAnalysisState>({ phase: 'idle', candidates: [] });
@@ -37,34 +41,44 @@ export class ReviewLiveAnalysisService {
     const controller = new AbortController();
     this.controller = controller;
     this.state.set({ phase: 'analyzing', nodeId, candidates: [] });
-    void this.engine
-      .analyze({
+    void this.runAnalysis(generation, nodeId, fen, controller);
+  }
+
+  private async runAnalysis(
+    generation: number,
+    nodeId: string,
+    fen: string,
+    controller: AbortController,
+  ): Promise<void> {
+    try {
+      const profile = await this.settings.profile('live-analysis');
+      await this.engine.initialize(profile.engineId);
+      const result = await this.engine.analyze({
         fen,
-        depth: 16,
-        multiPv: 3,
+        engineId: profile.engineId,
+        depth: profile.depth,
+        multiPv: profile.lines,
         signal: controller.signal,
         onProgress: (snapshot) => this.handleProgress(generation, nodeId, fen, snapshot),
-      })
-      .then((result) => {
-        if (generation !== this.generation || controller.signal.aborted) return;
-        const candidates = candidateLines(fen, result, 8);
-        this.state.set({
-          phase: 'complete',
-          nodeId,
-          depth: result.evaluation.depth,
-          candidates,
-        });
-      })
-      .catch((error: unknown) => {
-        if (generation !== this.generation || isAbort(error)) return;
-        this.state.set({
-          phase: 'error',
-          nodeId,
-          candidates: this.state().nodeId === nodeId ? this.state().candidates : [],
-          depth: this.state().nodeId === nodeId ? this.state().depth : undefined,
-          error: error instanceof Error ? error.message : 'Stockfish analysis failed.',
-        });
       });
+      if (generation !== this.generation || controller.signal.aborted) return;
+      this.state.set({
+        phase: 'complete',
+        nodeId,
+        depth: result.evaluation.depth,
+        candidates: candidateLines(fen, result, 8),
+        profileFingerprint: analysisProfileFingerprint(profile),
+      });
+    } catch (error) {
+      if (generation !== this.generation || isAbort(error)) return;
+      this.state.set({
+        phase: 'error',
+        nodeId,
+        candidates: this.state().nodeId === nodeId ? this.state().candidates : [],
+        depth: this.state().nodeId === nodeId ? this.state().depth : undefined,
+        error: error instanceof Error ? error.message : 'Stockfish analysis failed.',
+      });
+    }
   }
 
   cancel(): void {

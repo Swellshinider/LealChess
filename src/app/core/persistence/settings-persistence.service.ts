@@ -1,9 +1,5 @@
 import { Injectable, inject } from '@angular/core';
 import type { ImportedProfile } from '../../features/coach/domain/coach.types';
-import {
-  clearStockfishEngineDownloads,
-  downloadedStockfishEngineBytes,
-} from '../engine/stockfish-assets';
 import { clearOnboardingCompletion } from '../onboarding/onboarding.service';
 import { DEFAULT_IMPORT_PREFERENCES, type ImportPreferences } from './persistence.types';
 import { LealChessDatabaseService } from './leal-chess-database.service';
@@ -29,11 +25,12 @@ export class SettingsPersistenceService {
         database.getAll('explorerSessions'),
         database.getAll('reviewAnalysisSessions'),
       ]);
+      const engineAssets = await database.getAll('engineAssets');
       const encoder = new TextEncoder();
       const records = recordsByStore
         .flat()
         .reduce((total, record) => total + encoder.encode(JSON.stringify(record)).byteLength, 0);
-      const engines = downloadedStockfishEngineBytes();
+      const engines = engineAssets.reduce((total, asset) => total + asset.bytes, 0);
       return { records, engines, total: records + engines };
     } catch {
       return null;
@@ -74,11 +71,12 @@ export class SettingsPersistenceService {
       'gameAnalyses',
       'explorerSessions',
       'reviewAnalysisSessions',
+      'engineAssets',
     ] as const;
     const transaction = database.transaction(stores, 'readwrite');
     await Promise.all(stores.map((store) => transaction.objectStore(store).clear()));
     await transaction.done;
-    clearStockfishEngineDownloads();
+    localStorage.removeItem('lealchess.stockfish.downloads');
     clearOnboardingCompletion();
   }
 }

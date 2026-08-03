@@ -9,18 +9,20 @@ import type { GamePreferences } from '../game/game.types';
 import type { ImportPreferences, PersistedGame } from './persistence.types';
 import type { ExplorerSession } from '../../features/explorer/explorer.types';
 import type { ReviewAnalysisSession } from '../../features/coach/review-page/review-analysis-session.types';
+import type { AnalysisEngineId, AnalysisSettings } from '../engine/analysis-profiles';
 
 export const LEAL_CHESS_DATABASE_NAME = 'leal-chess';
-export const LEAL_CHESS_DATABASE_VERSION = 5;
+export const LEAL_CHESS_DATABASE_VERSION = 6;
 export const PROFILE_KEYS_INDEX = 'by-profile-key';
 
 export interface LealChessDatabase extends DBSchema {
   state: {
-    key: 'active-game' | 'preferences' | 'import-preferences';
+    key: 'active-game' | 'preferences' | 'import-preferences' | 'analysis-settings';
     value:
       | { key: 'active-game'; value: PersistedGame }
       | { key: 'preferences'; value: GamePreferences }
-      | { key: 'import-preferences'; value: ImportPreferences };
+      | { key: 'import-preferences'; value: ImportPreferences }
+      | { key: 'analysis-settings'; value: AnalysisSettings };
   };
   coachProfiles: {
     key: ImportedProfile['platform'];
@@ -42,6 +44,16 @@ export interface LealChessDatabase extends DBSchema {
   reviewAnalysisSessions: {
     key: ReviewAnalysisSession['importedGameKey'];
     value: ReviewAnalysisSession;
+  };
+  engineAssets: {
+    key: AnalysisEngineId;
+    value: {
+      id: AnalysisEngineId;
+      script: Blob | ArrayBuffer;
+      wasm: Blob | ArrayBuffer;
+      installedAt: string;
+      bytes: number;
+    };
   };
 }
 
@@ -73,6 +85,9 @@ export class LealChessDatabaseService {
           }
           if (!database.objectStoreNames.contains('reviewAnalysisSessions')) {
             database.createObjectStore('reviewAnalysisSessions', { keyPath: 'importedGameKey' });
+          }
+          if (!database.objectStoreNames.contains('engineAssets')) {
+            database.createObjectStore('engineAssets', { keyPath: 'id' });
           }
         },
       },
