@@ -97,13 +97,13 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
     ]);
     this.preferences.set(restored.preferences);
     this.importForm.setValue(importPreferences, { emitEvent: false });
-    this.importForm.enable({ emitEvent: false });
-    this.storageUsage.set(await this.settingsPersistence.calculateStorageUsage());
     this.importPreferencesSubscription = this.importForm.valueChanges.subscribe(() => {
       if (this.importForm.valid) {
         void this.settingsPersistence.saveImportPreferences(this.importForm.getRawValue());
       }
     });
+    this.importForm.enable({ emitEvent: false });
+    this.storageUsage.set(await this.settingsPersistence.calculateStorageUsage());
   }
 
   ngOnDestroy(): void {
