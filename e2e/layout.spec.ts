@@ -375,6 +375,7 @@ test('previews and persists board preferences, then clears LealChess data', asyn
 async function clickSettingsSquare(page: import('@playwright/test').Page, square: string) {
   const boardLocator = page.locator('.preview-board cg-board');
   await boardLocator.scrollIntoViewIfNeeded();
+  await expect(boardLocator).toBeVisible();
   const board = await boardLocator.boundingBox();
   if (!board) {
     throw new Error('Settings preview board is not visible.');
