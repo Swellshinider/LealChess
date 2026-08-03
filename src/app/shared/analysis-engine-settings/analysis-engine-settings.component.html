@@ -1,0 +1,119 @@
+<button
+  type="button"
+  class="machine-plate"
+  [class.expanded]="!compact()"
+  [attr.aria-label]="'Configure ' + label() + ' engine'"
+  [attr.aria-expanded]="open()"
+  (click)="show()"
+>
+  <span class="machine-mark" aria-hidden="true">SF</span>
+  <span>
+    <strong>{{ label() }}</strong>
+    <small
+      >{{ engine().name.replace('Stockfish 18 ', '') }} · D{{ profile().depth }} ·
+      {{ profile().lines }} lines</small
+    >
+  </span>
+  <span class="gear" aria-hidden="true">⚙</span>
+</button>
+
+@if (open()) {
+  <div class="engine-backdrop" (mousedown)="close()">
+    <section
+      appModalFocus
+      class="engine-dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="'engine-title-' + workflow()"
+      (mousedown)="$event.stopPropagation()"
+    >
+      <header>
+        <div>
+          <p>Local analysis profile</p>
+          <h2 [id]="'engine-title-' + workflow()">{{ label() }}</h2>
+        </div>
+        <button type="button" class="close" aria-label="Close engine settings" (click)="close()">
+          ×
+        </button>
+      </header>
+
+      @if (active()) {
+        <p class="run-notice">
+          The current analysis keeps its starting settings. Changes apply next time.
+        </p>
+      }
+
+      <div class="engine-cards" role="radiogroup" aria-label="Analysis engine">
+        @for (item of engines; track item.id) {
+          <article class="engine-card" [class.selected]="profile().engineId === item.id">
+            <button
+              type="button"
+              role="radio"
+              [attr.aria-checked]="profile().engineId === item.id"
+              (click)="selectEngine(item.id)"
+            >
+              <span class="engine-code">{{
+                item.id === 'stockfish-18-full' ? 'FULL' : 'LITE'
+              }}</span>
+              <strong>{{ item.name }}</strong>
+              <small>{{ item.description }}</small>
+            </button>
+            <footer>
+              <span>{{ size(item.approximateBytes) }}</span>
+              @if (assets.state(item.id).downloading) {
+                <button type="button" disabled>{{ progress(item.id) }}%</button>
+              } @else if (assets.state(item.id).installed) {
+                <button
+                  type="button"
+                  [disabled]="assets.state(item.id).activeLeases > 0"
+                  (click)="remove(item.id)"
+                >
+                  Remove
+                </button>
+              } @else {
+                <button type="button" (click)="install(item.id)">Download</button>
+              }
+            </footer>
+            @if (assets.state(item.id).downloading) {
+              <progress [value]="progress(item.id)" max="100">{{ progress(item.id) }}%</progress>
+              <span class="sr-update" aria-live="polite"
+                >{{ item.name }} download {{ progress(item.id) }} percent</span
+              >
+            }
+            @if (assets.state(item.id).error; as error) {
+              <p class="engine-error" role="alert">{{ error }}</p>
+            }
+          </article>
+        }
+      </div>
+
+      <div class="profile-controls">
+        <label>
+          <span
+            >Depth <output>{{ profile().depth }}</output></span
+          >
+          <input
+            type="range"
+            [min]="depthRange.min"
+            [max]="depthRange.max"
+            [value]="profile().depth"
+            (input)="updateDepth($event)"
+          />
+        </label>
+        <label>
+          <span
+            >Lines <output>{{ profile().lines }}</output></span
+          >
+          <input
+            type="range"
+            [min]="linesRange.min"
+            [max]="linesRange.max"
+            [value]="profile().lines"
+            (input)="updateLines($event)"
+          />
+        </label>
+      </div>
+      <p class="privacy-note">Engine files and analysis remain on this device.</p>
+    </section>
+  </div>
+}

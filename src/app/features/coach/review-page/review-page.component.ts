@@ -68,6 +68,7 @@ import type {
   PracticeSession,
 } from './practice.types';
 import { ReviewAnalysisPanelComponent } from './review-analysis-panel.component';
+import { ReviewReplayControlsComponent } from './review-replay-controls.component';
 import {
   createGameReviewSummary,
   createMoveExplanation,
@@ -88,16 +89,21 @@ import {
   REVIEW_LIVE_ANALYSIS_ENGINE_PORT,
   ReviewLiveAnalysisService,
 } from './review-live-analysis.service';
+import { AnalysisEngineSettingsComponent } from '../../../shared/analysis-engine-settings/analysis-engine-settings.component';
+import { AnalysisSettingsService } from '../../../core/engine/analysis-settings.service';
+import { analysisProfileFingerprint } from '../../../core/engine/analysis-profiles';
 import type { ReviewCandidateLine } from './review-analysis-session.types';
 
 @Component({
   selector: 'app-review-page',
   imports: [
+    AnalysisEngineSettingsComponent,
     BoardFlipButtonComponent,
     ModalFocusDirective,
     ConfirmationDialogComponent,
     PracticeMoveTreeComponent,
     ReviewAnalysisPanelComponent,
+    ReviewReplayControlsComponent,
     ReviewSummaryComponent,
     ChessgroundBoardComponent,
     RouterLink,
@@ -122,6 +128,7 @@ import type { ReviewCandidateLine } from './review-analysis-session.types';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReviewPageComponent implements OnInit, OnDestroy {
+  private readonly analysisSettings = inject(AnalysisSettingsService);
   private readonly board = viewChild(ChessgroundBoardComponent);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly store = inject(ReviewPageStore);
@@ -151,8 +158,40 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   protected readonly practiceInputLocked = this.store.practiceInputLocked;
   protected readonly reviewSession = this.store.reviewSession;
   protected readonly selectedReviewNode = this.store.selectedReviewNode;
+  protected readonly confirmVariationRemovalPreference = this.store.confirmVariationRemoval;
   protected readonly pendingVariationRemoval = signal<string | null>(null);
+  protected readonly skipVariationRemovalConfirmation = signal(false);
+  protected readonly ideaVisible = signal(false);
+  protected readonly previewedAnalysisCandidate = signal<ReviewCandidateLine | null>(null);
   protected readonly liveAnalysis = inject(ReviewLiveAnalysisService);
+  protected readonly liveAnalysisStale = computed(() => {
+    const node = this.selectedReviewNode();
+    if (!node?.candidates.length) return false;
+    const profile = this.analysisSettings.settings().profiles['live-analysis'];
+    return (
+      node.profileFingerprint !== analysisProfileFingerprint(profile) &&
+      !(
+        node.profileFingerprint === undefined &&
+        profile.engineId === 'stockfish-18-full' &&
+        profile.depth === 16 &&
+        profile.lines === 3
+      )
+    );
+  });
+  protected readonly practiceAnalysisStale = computed(() => {
+    const node = this.selectedPracticeNode();
+    if (!node?.assessment) return false;
+    const profile = this.analysisSettings.settings().profiles.practice;
+    return (
+      node.profileFingerprint !== analysisProfileFingerprint(profile) &&
+      !(
+        node.profileFingerprint === undefined &&
+        profile.engineId === 'stockfish-18-full' &&
+        profile.depth === 14 &&
+        profile.lines === 3
+      )
+    );
+  });
   protected readonly currentAnalysis = computed<MoveAnalysis | undefined>(() =>
     this.selectedReviewNode()?.source === 'imported'
       ? moveAnalysisForPly(this.coachAnalysis.analysis(), this.currentPly())
@@ -168,6 +207,11 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       ? createMoveExplanation(game, this.coachAnalysis.analysis(), this.currentPly())
       : null;
   });
+  private readonly ideaShapes = computed<DrawShape[]>(() =>
+    this.ideaVisible()
+      ? (this.moveExplanation()?.arrows ?? []).map((arrow) => this.ideaArrowShape(arrow))
+      : [],
+  );
   private readonly whiteEvaluationValue = computed(() => {
     if (this.mode() !== 'analysis') return null;
     const selected = this.selectedReviewNode();
@@ -237,7 +281,6 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   });
   private replayTimers: ReturnType<typeof setTimeout>[] = [];
   private shapes: DrawShape[] = [];
-  private readonly ideaShapes = signal<DrawShape[]>([]);
   private navigationState: MoveTreeNavigationState = EMPTY_MOVE_TREE_NAVIGATION;
 
   constructor() {
@@ -255,6 +298,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       this.reviewSession();
       this.liveAnalysis.state();
       this.ideaShapes();
+      this.previewedAnalysisCandidate();
       this.syncBoard();
     });
     effect(() => {
@@ -268,6 +312,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
                   assessment: state.result.assessment,
                   candidates: state.result.candidates,
                   candidateDepth: state.result.assessment.depth,
+                  profileFingerprint: state.result.profileFingerprint,
                 }
               : {}),
             analysisError: state.error,
@@ -285,6 +330,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
           updateReviewNode(session, state.nodeId!, {
             candidates: state.candidates,
             candidateDepth: state.depth,
+            profileFingerprint: state.profileFingerprint,
             analysisError: state.error,
           }),
         );
@@ -341,6 +387,15 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.sound.unlock();
   }
 
+  @HostListener('document:click', ['$event'])
+  protected releasePointerActivatedAnalysisButton(event: MouseEvent): void {
+    if (this.mode() !== 'analysis' || event.detail === 0) return;
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const button = target.closest('.review-workspace button');
+    if (button instanceof HTMLElement) button.blur();
+  }
+
   protected async analyze(): Promise<void> {
     const game = this.game();
     const color = this.learnerColor();
@@ -368,7 +423,6 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       ? Object.values(session.nodes).find((candidate) => candidate.importedPly === nextPly)
       : undefined;
     if (nextPly === previousPly && importedNode?.id === session?.selectedNodeId) return;
-    this.ideaShapes.set([]);
     this.currentPly.set(nextPly);
     if (importedNode) this.selectAnalysisNode(importedNode.id, false);
     const traversedMove = this.game()?.moves[Math.max(previousPly, nextPly) - 1];
@@ -379,7 +433,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
 
   protected startAnalysis(): void {
     if (this.coachAnalysis.state().phase !== 'complete') return;
-    this.ideaShapes.set([]);
+    this.ideaVisible.set(false);
     this.mode.set('analysis');
     this.goToImportedPly(this.game()?.moves.length ? 1 : 0);
   }
@@ -390,18 +444,16 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.pendingPromotion.set(null);
     this.practiceReplayFen.set(null);
     this.practiceReplaying.set(false);
-    this.ideaShapes.set([]);
+    this.ideaVisible.set(false);
+    this.previewedAnalysisCandidate.set(null);
     this.currentPly.set(0);
     this.mode.set('summary');
     this.liveAnalysis.cancel();
     this.navigationState = EMPTY_MOVE_TREE_NAVIGATION;
   }
 
-  protected showMoveIdea(): void {
-    const explanation = this.moveExplanation();
-    if (!explanation) return;
-    const arrows = explanation.arrows.map((arrow) => this.ideaArrowShape(arrow));
-    this.ideaShapes.set(arrows);
+  protected toggleMoveIdea(): void {
+    this.ideaVisible.update((visible) => !visible);
   }
 
   protected enterPractice(index = 0): void {
@@ -410,7 +462,8 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.puzzleStatus.set('ready');
     this.shapes = [];
     this.pendingPromotion.set(null);
-    this.ideaShapes.set([]);
+    this.ideaVisible.set(false);
+    this.previewedAnalysisCandidate.set(null);
     this.ensureActiveSession();
     this.mode.set('practice');
     this.replayOpponentMove();
@@ -423,6 +476,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.practiceReplayFen.set(null);
     this.practiceReplaying.set(false);
     this.shapes = [];
+    this.previewedAnalysisCandidate.set(null);
     const position = this.activePosition();
     if (position) this.currentPly.set(position.ply);
     this.mode.set('analysis');
@@ -668,37 +722,55 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     this.navigationState = rememberMoveTreeSelection(session, nodeId, this.navigationState);
     this.liveAnalysis.cancel();
     this.pendingPromotion.set(null);
-    this.ideaShapes.set([]);
+    this.previewedAnalysisCandidate.set(null);
     this.reviewSession.set(selectReviewNode(session, nodeId));
-    if (node.source === 'imported') this.currentPly.set(node.importedPly ?? node.ply);
+    if (node.importedPly !== undefined) this.currentPly.set(node.importedPly);
     if (playSound && node.move) this.sound.play('move');
     this.analyzeSelectedReviewNode();
   }
 
   protected retryLiveAnalysis(): void {
-    this.analyzeSelectedReviewNode();
+    this.analyzeSelectedReviewNode(true);
   }
 
   protected playAnalysisCandidate(move: MoveInput): void {
+    this.previewedAnalysisCandidate.set(null);
     this.commitAnalysisMove(move);
+  }
+
+  protected previewAnalysisCandidate(line: ReviewCandidateLine | null): void {
+    this.previewedAnalysisCandidate.set(line);
   }
 
   protected removeAnalysisVariation(nodeId: string): void {
     const session = this.reviewSession();
     const node = session?.nodes[nodeId];
     if (!session || node?.source !== 'manual') return;
-    this.pendingVariationRemoval.set(nodeId);
+    if (this.confirmVariationRemovalPreference()) {
+      this.pendingVariationRemoval.set(nodeId);
+      return;
+    }
+    this.performVariationRemoval(nodeId);
   }
 
   protected closeVariationRemoval(): void {
     this.pendingVariationRemoval.set(null);
+    this.skipVariationRemovalConfirmation.set(false);
   }
 
   protected confirmVariationRemoval(): void {
     const nodeId = this.pendingVariationRemoval();
-    const session = this.reviewSession();
-    const node = nodeId ? session?.nodes[nodeId] : undefined;
     this.pendingVariationRemoval.set(null);
+    if (this.skipVariationRemovalConfirmation()) {
+      this.store.setConfirmVariationRemoval(false);
+    }
+    this.skipVariationRemovalConfirmation.set(false);
+    if (nodeId) this.performVariationRemoval(nodeId);
+  }
+
+  private performVariationRemoval(nodeId: string): void {
+    const session = this.reviewSession();
+    const node = session?.nodes[nodeId];
     if (!session || !nodeId || node?.source !== 'manual') return;
     this.liveAnalysis.cancel();
     const next = removeReviewVariation(session, nodeId);
@@ -716,10 +788,28 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     if (node) this.selectAnalysisNode(node.id, false);
   }
 
-  private analyzeSelectedReviewNode(): void {
+  private analyzeSelectedReviewNode(force = false): void {
     const node = this.selectedReviewNode();
     if (!node) return;
-    if (node.candidateDepth === 16 && !node.analysisError) {
+    const profile = this.analysisSettings.settings().profiles['live-analysis'];
+    const fingerprint = analysisProfileFingerprint(profile);
+    const current =
+      node.profileFingerprint === fingerprint ||
+      (node.profileFingerprint === undefined &&
+        profile.engineId === 'stockfish-18-full' &&
+        profile.depth === 16 &&
+        profile.lines === 3);
+    if (!force && node.candidates.length && !current) {
+      this.liveAnalysis.state.set({
+        phase: 'complete',
+        nodeId: node.id,
+        depth: node.candidateDepth,
+        candidates: node.candidates,
+        profileFingerprint: node.profileFingerprint,
+      });
+      return;
+    }
+    if (node.candidateDepth === profile.depth && current && !node.analysisError) {
       this.liveAnalysis.state.set({
         phase: 'complete',
         nodeId: node.id,
@@ -736,10 +826,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
     const board = this.board();
     if (!node || !board) return;
     const color = turnColor(node.fen);
-    const candidates =
-      this.liveAnalysis.state().nodeId === node.id
-        ? this.liveAnalysis.state().candidates
-        : node.candidates;
+    const candidatePreview = this.previewedAnalysisCandidate();
     board.set({
       fen: node.fen,
       orientation: this.orientation(),
@@ -753,11 +840,9 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       drawable: {
         enabled: true,
         shapes: this.shapes,
-        autoShapes: this.ideaShapes().length
-          ? this.ideaShapes()
-          : node.source === 'manual'
-            ? this.engineCandidateShapes(candidates)
-            : [],
+        autoShapes: candidatePreview
+          ? [this.engineCandidateShape(candidatePreview)]
+          : this.ideaShapes(),
       },
     });
   }
@@ -797,7 +882,6 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
       if (committed.node.source === 'imported') {
         this.currentPly.set(committed.node.importedPly ?? committed.node.ply);
       }
-      this.ideaShapes.set([]);
       this.sound.play('move');
       this.analyzeSelectedReviewNode();
     } catch {
@@ -807,7 +891,7 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
 
   private runKeybindingAction(action: KeybindingAction): void {
     if (action === 'showIdea') {
-      this.showMoveIdea();
+      this.toggleMoveIdea();
       return;
     }
     const session = this.reviewSession();
@@ -969,13 +1053,16 @@ export class ReviewPageComponent implements OnInit, OnDestroy {
   private engineCandidateShapes(
     lines: Array<PracticeCandidateLine | ReviewCandidateLine>,
   ): DrawShape[] {
-    const widths = [14, 9, 5];
-    return lines.map((line, index) => ({
+    return lines.map((line) => this.engineCandidateShape(line));
+  }
+
+  private engineCandidateShape(line: PracticeCandidateLine | ReviewCandidateLine): DrawShape {
+    return {
       orig: line.firstMove.from as Key,
       dest: line.firstMove.to as Key,
       brush: 'green',
-      modifiers: { lineWidth: widths[index] ?? 6 },
-    }));
+      modifiers: { lineWidth: { 1: 14, 2: 9, 3: 5 }[line.rank] ?? 6 },
+    };
   }
 
   private ensureActiveSession(): void {

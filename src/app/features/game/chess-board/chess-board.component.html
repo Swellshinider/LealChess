@@ -1,11 +1,12 @@
-<div class="board-frame" [attr.data-board-theme]="state().preferences.boardTheme">
-  <div
-    #boardHost
-    class="chessground-host"
+<div class="board-stage">
+  <app-chessground-board
+    class="board-frame"
+    [initialConfig]="boardConfig()"
     role="img"
     aria-label="Chessboard"
     aria-describedby="play-board-description"
-  ></div>
+    [attr.data-board-theme]="state().preferences.boardTheme"
+  />
   <p id="play-board-description" class="sr-only">
     {{ state().orientation }} orientation. {{ state().turn }} to move.
     {{ state().announcement }} Use a pointer or touch to move pieces. Game actions and move history

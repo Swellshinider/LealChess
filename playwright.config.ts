@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const baseURL = 'http://127.0.0.1:4200';
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
@@ -7,7 +9,16 @@ export default defineConfig({
   expect: { timeout: 8_000 },
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: 'http://127.0.0.1:4200',
+    baseURL,
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: baseURL,
+          localStorage: [{ name: 'lealchess.onboarding.completed', value: '2' }],
+        },
+      ],
+    },
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
@@ -19,7 +30,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'ng serve --host 127.0.0.1 --port 4200',
-    url: 'http://127.0.0.1:4200',
+    url: baseURL,
     reuseExistingServer: true,
     timeout: 60_000,
   },

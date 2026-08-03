@@ -26,7 +26,7 @@
   > span {
     color: var(--danger);
     font-family: var(--font-utility);
-    font-size: 0.6rem;
+    font-size: var(--type-caption);
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -42,9 +42,24 @@
 
   p {
     color: var(--mist);
-    font-size: 0.82rem;
+    font-size: var(--type-small);
     line-height: 1.45;
     margin: 0;
+  }
+
+  .confirmation-option {
+    align-items: center;
+    display: flex;
+    font-size: var(--type-small);
+    gap: 9px;
+    margin-top: 16px;
+
+    input {
+      accent-color: var(--danger);
+      height: 18px;
+      margin: 0;
+      width: 18px;
+    }
   }
 
   footer {

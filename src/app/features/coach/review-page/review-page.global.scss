@@ -3,6 +3,10 @@ app-review-page {
   height: 100dvh;
   overflow: hidden;
 
+  app-side-navigation {
+    --navigation-expanded-width: 208px;
+  }
+
   .review-shell {
     display: flex;
     height: 100dvh;
@@ -11,23 +15,24 @@ app-review-page {
   }
 
   .review-frame {
-    --review-padding: clamp(12px, 1.8vw, 24px);
+    --review-padding-block: clamp(8px, 1.2dvh, 12px);
+    --review-padding-inline: clamp(12px, 1.8vw, 24px);
 
     container-type: inline-size;
     flex: 1 1 auto;
     height: 100%;
     min-width: 0;
-    overflow: hidden;
-    padding: var(--review-padding);
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: var(--review-padding-block) var(--review-padding-inline);
   }
 
   .review-page {
     display: grid;
-    gap: 12px;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
     height: 100%;
     margin: 0 auto;
-    max-width: 1280px;
+    max-width: 1600px;
     min-height: 0;
     width: 100%;
   }
@@ -38,14 +43,20 @@ app-review-page {
     display: grid;
     gap: 14px;
     grid-template-columns: auto minmax(0, 1fr);
-    min-height: 48px;
-    padding-bottom: 10px;
+    min-height: 52px;
+    padding: 7px 12px;
+  }
+
+  .workspace-review-toolbar {
+    background: var(--surface-lowest);
+    grid-column: 2;
+    grid-row: 1;
   }
 
   .back-link {
     color: var(--primary);
     font-family: var(--font-utility);
-    font-size: 0.68rem;
+    font-size: var(--type-caption);
     text-decoration: none;
     text-transform: uppercase;
   }
@@ -65,7 +76,7 @@ app-review-page {
     span {
       color: var(--primary);
       font-family: var(--font-utility);
-      font-size: 0.57rem;
+      font-size: var(--type-micro);
       letter-spacing: 0.06em;
       text-transform: uppercase;
     }
@@ -81,7 +92,7 @@ app-review-page {
     small {
       color: var(--mist);
       font-family: var(--font-utility);
-      font-size: 0.57rem;
+      font-size: var(--type-micro);
       margin-top: 3px;
       text-transform: capitalize;
     }
@@ -112,27 +123,46 @@ app-review-page {
 
   .review-workspace {
     align-items: stretch;
+    column-gap: clamp(14px, 1.6cqw, 22px);
     display: grid;
-    gap: clamp(14px, 2cqw, 24px);
-    grid-template-columns: minmax(0, 1fr) clamp(310px, 28cqw, 360px);
+    grid-template-columns: minmax(0, 1fr) clamp(430px, 40cqw, 640px);
+    grid-template-rows: auto minmax(0, 1fr);
     height: 100%;
     min-height: 0;
   }
 
   .board-column {
     --evaluation-gutter: 0px;
+    --player-strip-height: 34px;
+    --player-strips-height: calc(var(--player-strip-height) + var(--player-strip-height));
+    --review-fit-tolerance: 2px;
 
     align-self: center;
     display: flex;
     flex-direction: column;
-    margin: auto;
-    max-width: 790px;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    justify-self: end;
+    margin: auto 0;
+    max-width: 1024px;
     min-width: 0;
-    width: min(100%, calc(100dvh - var(--review-padding) - var(--review-padding) - 62px - 80px));
+    width: min(
+      100%,
+      calc(
+        100dvh - var(--review-padding-block) - var(--review-padding-block) - var(
+            --player-strips-height
+          ) - var(--review-fit-tolerance) +
+          var(--evaluation-gutter)
+      )
+    );
 
     &.has-evaluation {
       --evaluation-gutter: 34px;
     }
+  }
+
+  .board-replay-controls {
+    display: none;
   }
 
   .player-strip {
@@ -141,24 +171,25 @@ app-review-page {
     display: flex;
     gap: 9px;
     margin-left: var(--evaluation-gutter);
-    min-height: 40px;
-    padding: 4px 2px;
+    min-height: var(--player-strip-height);
+    padding: 2px;
 
     strong,
     small {
       display: block;
+      line-height: 1.1;
     }
 
     strong {
       font-family: var(--font-utility);
-      font-size: 0.8rem;
+      font-size: var(--type-small);
       font-weight: 500;
     }
 
     small {
       color: var(--mist);
       font-family: var(--font-utility);
-      font-size: 0.62rem;
+      font-size: var(--type-caption);
       text-transform: capitalize;
     }
   }
@@ -170,11 +201,11 @@ app-review-page {
     border-radius: 4px 0 4px 0;
     color: var(--primary);
     display: flex;
-    flex: 0 0 30px;
+    flex: 0 0 28px;
     font-family: var(--font-display);
-    font-size: 0.72rem;
+    font-size: var(--type-small);
     font-weight: 700;
-    height: 30px;
+    height: 28px;
     justify-content: center;
   }
 
@@ -252,7 +283,7 @@ app-review-page {
   .evaluation-score {
     color: var(--paper);
     font-family: var(--font-utility);
-    font-size: 0.58rem;
+    font-size: var(--type-caption);
     font-weight: 700;
     left: 50%;
     position: absolute;
@@ -323,7 +354,7 @@ app-review-page {
     border-radius: 4px;
     color: var(--paper);
     font-family: var(--font-utility);
-    font-size: clamp(0.48rem, 1.1vw, 0.68rem);
+    font-size: clamp(var(--type-micro), 1.1vw, var(--type-caption));
     font-weight: 700;
     padding: 3px 6px;
     pointer-events: none;
@@ -352,9 +383,17 @@ app-review-page {
     border: 1px solid rgb(200 213 207 / 16%);
     display: flex;
     flex-direction: column;
+    grid-column: 2;
+    grid-row: 2;
     height: 100%;
     min-height: 0;
     overflow: hidden;
+  }
+
+  .review-desk > app-review-analysis-panel,
+  .review-desk > app-review-summary {
+    flex: 1 1 auto;
+    min-height: 0;
   }
 
   .mode-switch {
@@ -369,7 +408,7 @@ app-review-page {
       border-bottom: 2px solid transparent;
       color: var(--mist);
       font-family: var(--font-utility);
-      font-size: 0.63rem;
+      font-size: var(--type-caption);
       min-height: 42px;
       text-transform: uppercase;
 
@@ -409,7 +448,7 @@ app-review-page {
     span {
       color: var(--primary);
       font-family: var(--font-utility);
-      font-size: 0.55rem;
+      font-size: var(--type-micro);
       letter-spacing: 0.06em;
       text-transform: uppercase;
     }
@@ -426,7 +465,7 @@ app-review-page {
   .analysis-count {
     color: var(--mist);
     font-family: var(--font-utility);
-    font-size: 0.6rem;
+    font-size: var(--type-caption);
     padding-top: 3px;
   }
 
@@ -452,7 +491,7 @@ app-review-page {
     color: var(--mist);
     display: flex;
     font-family: var(--font-utility);
-    font-size: 0.58rem;
+    font-size: var(--type-caption);
     gap: 10px;
     grid-column: 1 / -1;
   }
@@ -483,7 +522,7 @@ app-review-page {
 
   .analysis-error {
     color: #f2b0aa;
-    font-size: 0.72rem;
+    font-size: var(--type-small);
     grid-column: 1 / -1;
     margin: 0;
   }
@@ -503,12 +542,12 @@ app-review-page {
     span {
       color: var(--mist);
       font-family: var(--font-utility);
-      font-size: 0.58rem;
+      font-size: var(--type-caption);
     }
 
     strong {
       color: var(--paper);
-      font-size: 0.82rem;
+      font-size: var(--type-small);
     }
   }
 
@@ -532,7 +571,7 @@ app-review-page {
     > li > span {
       color: var(--mist);
       font-family: var(--font-utility);
-      font-size: 0.55rem;
+      font-size: var(--type-micro);
       text-align: right;
     }
 
@@ -554,7 +593,7 @@ app-review-page {
         color: var(--mist);
         float: right;
         font-family: var(--font-utility);
-        font-size: 0.52rem;
+        font-size: var(--type-micro);
         font-style: normal;
       }
     }
@@ -574,7 +613,7 @@ app-review-page {
       color: var(--primary);
       cursor: pointer;
       font-family: var(--font-utility);
-      font-size: 0.57rem;
+      font-size: var(--type-micro);
     }
 
     dl {
@@ -591,13 +630,13 @@ app-review-page {
 
     dt {
       font-family: var(--font-utility);
-      font-size: 0.52rem;
+      font-size: var(--type-micro);
       text-transform: uppercase;
     }
 
     dd {
       color: var(--paper);
-      font-size: 0.72rem;
+      font-size: var(--type-small);
       margin: 2px 0 0;
     }
 
@@ -621,7 +660,7 @@ app-review-page {
     strong {
       color: var(--amber);
       font-family: var(--font-utility);
-      font-size: 0.52rem;
+      font-size: var(--type-micro);
       text-transform: uppercase;
     }
   }
@@ -629,7 +668,7 @@ app-review-page {
   .move-comparison {
     display: flex;
     font-family: var(--font-utility);
-    font-size: 0.57rem;
+    font-size: var(--type-micro);
     gap: 14px;
     margin-top: 5px;
 
@@ -638,30 +677,11 @@ app-review-page {
     }
   }
 
-  .replay-controls {
-    display: grid;
-    gap: 5px;
-    grid-template-columns: repeat(4, 1fr);
-    padding: 8px 10px 5px;
-
-    button {
-      background: var(--surface-low);
-      border: 1px solid rgb(200 213 207 / 14%);
-      color: var(--paper);
-      min-height: 36px;
-
-      &:disabled {
-        cursor: default;
-        opacity: 0.35;
-      }
-    }
-  }
-
   .keyboard-help,
   .practice-help {
     color: var(--mist);
     font-family: var(--font-utility);
-    font-size: 0.54rem;
+    font-size: var(--type-micro);
     margin: 0;
   }
 
@@ -690,7 +710,7 @@ app-review-page {
   .folio {
     color: var(--amber);
     font-family: var(--font-utility);
-    font-size: 0.58rem;
+    font-size: var(--type-caption);
     margin: 0;
     text-transform: uppercase;
   }
@@ -709,7 +729,7 @@ app-review-page {
     color: var(--primary);
     display: block;
     font-family: var(--font-utility);
-    font-size: 0.54rem;
+    font-size: var(--type-micro);
     margin-top: 6px;
   }
 
@@ -739,7 +759,7 @@ app-review-page {
 
     small {
       font-family: var(--font-utility);
-      font-size: 0.55rem;
+      font-size: var(--type-micro);
     }
 
     .practice-analysis-error {
@@ -774,7 +794,7 @@ app-review-page {
       > span:last-child {
         color: var(--mist);
         font-family: var(--font-utility);
-        font-size: 0.55rem;
+        font-size: var(--type-micro);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -783,7 +803,7 @@ app-review-page {
       strong {
         color: var(--paper);
         font-family: var(--font-utility);
-        font-size: 0.58rem;
+        font-size: var(--type-caption);
       }
     }
   }
@@ -798,7 +818,7 @@ app-review-page {
     small {
       color: var(--mist);
       font-family: var(--font-utility);
-      font-size: 0.5rem;
+      font-size: var(--type-micro);
     }
 
     span {
@@ -822,7 +842,7 @@ app-review-page {
   .candidate-rank {
     color: var(--amber);
     font-family: var(--font-utility);
-    font-size: 0.55rem;
+    font-size: var(--type-micro);
     text-align: center;
   }
 
@@ -836,7 +856,7 @@ app-review-page {
   .terminal-position {
     border-bottom: 1px solid rgb(200 213 207 / 14%);
     color: var(--mist);
-    font-size: 0.72rem;
+    font-size: var(--type-small);
     margin: 0;
     padding-bottom: 12px;
   }
@@ -935,16 +955,9 @@ app-review-page {
   }
 
   @container (max-width: 900px) {
-    & {
-      height: auto;
-      min-height: 100dvh;
-      overflow: visible;
-    }
-
     .review-frame {
-      height: auto;
-      min-height: 100%;
-      overflow: visible;
+      overflow-x: hidden;
+      overflow-y: auto;
     }
 
     .review-page {
@@ -953,11 +966,14 @@ app-review-page {
 
     .review-workspace {
       grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto;
       height: auto;
+      row-gap: clamp(14px, 2cqw, 24px);
     }
 
     .board-column {
-      width: 100%;
+      grid-column: 1;
+      grid-row: 2;
 
       &.has-evaluation {
         --evaluation-gutter: 28px;
@@ -974,8 +990,24 @@ app-review-page {
     }
 
     .review-desk {
+      grid-column: 1;
+      grid-row: 3;
       max-height: 620px;
       min-height: 500px;
+    }
+
+    .workspace-review-toolbar {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .board-replay-controls {
+      display: block;
+      margin-left: var(--evaluation-gutter);
+    }
+
+    .panel-replay-controls {
+      display: none;
     }
   }
 
@@ -989,8 +1021,14 @@ app-review-page {
     }
 
     .review-frame {
+      height: auto;
       min-height: calc(100dvh - 64px);
+      overflow: visible;
       padding: 12px;
+    }
+
+    .board-column {
+      width: 100%;
     }
 
     .review-toolbar {
@@ -1017,7 +1055,7 @@ app-review-page {
     border: 1px solid rgb(200 213 207 / 22%);
     color: var(--paper);
     font-family: var(--font-utility);
-    font-size: 0.56rem;
+    font-size: var(--type-micro);
     min-height: 34px;
     padding: 6px 9px;
   }

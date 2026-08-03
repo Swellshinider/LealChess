@@ -31,7 +31,7 @@
   span {
     color: rgb(200 213 207 / 25%);
     font-family: var(--font-utility);
-    font-size: 0.62rem;
+    font-size: var(--type-caption);
     position: absolute;
   }
 }
@@ -101,7 +101,7 @@
 
 .kicker {
   color: var(--amber);
-  font-size: 0.64rem;
+  font-size: var(--type-caption);
   margin: 18px 0 0;
 }
 
@@ -152,7 +152,7 @@ nav {
   small {
     color: var(--mist);
     font-family: var(--font-utility);
-    font-size: 0.6rem;
+    font-size: var(--type-caption);
   }
 
   .primary-action {
@@ -168,7 +168,7 @@ nav {
 .privacy-note {
   bottom: 20px;
   color: rgb(200 213 207 / 58%);
-  font-size: 0.55rem;
+  font-size: var(--type-micro);
   margin: 0;
   position: absolute;
 

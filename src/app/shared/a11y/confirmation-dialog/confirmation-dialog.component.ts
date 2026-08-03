@@ -16,9 +16,16 @@ export class ConfirmationDialogComponent {
   readonly description = input.required<string>();
   readonly cancelLabel = input('Cancel');
   readonly confirmLabel = input.required<string>();
+  readonly checkboxLabel = input<string | null>(null);
+  readonly checkboxChecked = input(false);
   readonly cancelled = output<void>();
   readonly confirmed = output<void>();
+  readonly checkboxChanged = output<boolean>();
 
   protected readonly titleId = `confirmation-dialog-title-${nextConfirmationDialogId}`;
   protected readonly descriptionId = `confirmation-dialog-description-${nextConfirmationDialogId++}`;
+
+  protected updateCheckbox(event: Event): void {
+    this.checkboxChanged.emit((event.target as HTMLInputElement).checked);
+  }
 }

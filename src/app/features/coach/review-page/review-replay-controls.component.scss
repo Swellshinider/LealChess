@@ -1,0 +1,24 @@
+:host {
+  display: block;
+}
+
+.replay-controls {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 0 12px 12px;
+}
+
+button {
+  background: var(--surface-container-high);
+  border: 0;
+  color: var(--paper);
+  font-family: var(--font-utility);
+  font-size: var(--type-micro);
+  min-height: 44px;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.38;
+  }
+}

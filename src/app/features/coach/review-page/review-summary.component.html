@@ -25,6 +25,15 @@
     <span class="result">{{ game().result }}</span>
   </header>
 
+  @if (stale()) {
+    <section class="analysis-progress" aria-label="Saved analysis uses different engine settings">
+      <p>This saved review uses your previous engine profile. Its results remain available.</p>
+      <button type="button" class="primary-action" (click)="reanalysisRequested.emit()">
+        Reanalyze with current settings
+      </button>
+    </section>
+  }
+
   @if (phase() !== 'complete') {
     <section class="analysis-progress" aria-live="polite">
       <div class="progress-copy">
@@ -101,7 +110,6 @@
 
   <footer>
     @if (phase() === 'complete') {
-      <small>Stockfish depth {{ depth() }}</small>
       <button
         type="button"
         class="text-action reanalyze-action"

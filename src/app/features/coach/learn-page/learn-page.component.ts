@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import type { ElementRef, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { OnboardingAnchorDirective } from '../../../core/onboarding/onboarding-anchor.directive';
 import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
 import { SideNavigationComponent } from '../../../shared/layout/side-navigation/side-navigation.component';
 import { CoachImportService } from '../data/coach-import.service';
@@ -27,7 +28,13 @@ import { RatingTrendComponent } from './rating-trend/rating-trend.component';
 
 @Component({
   selector: 'app-learn-page',
-  imports: [ModalFocusDirective, RatingTrendComponent, RouterLink, SideNavigationComponent],
+  imports: [
+    ModalFocusDirective,
+    OnboardingAnchorDirective,
+    RatingTrendComponent,
+    RouterLink,
+    SideNavigationComponent,
+  ],
   templateUrl: './learn-page.component.html',
   styleUrl: './learn-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

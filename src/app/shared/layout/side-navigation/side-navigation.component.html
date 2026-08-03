@@ -4,7 +4,6 @@
       <img class="brand-logo" src="/favicon.svg" alt="" />
       <span class="brand-copy nav-copy">
         <strong>LealChess</strong>
-        <span>Play. Study. Improve.</span>
       </span>
     </a>
     <button
@@ -76,6 +75,11 @@
       <span class="nav-copy">About</span>
     </a>
   </div>
+
+  <p class="version-label" [attr.aria-label]="'LealChess version ' + version">
+    <span class="version-prefix">Version&nbsp;</span>
+    <span>{{ version }}</span>
+  </p>
 </nav>
 
 <header class="mobile-header">
@@ -113,7 +117,6 @@
     <div class="drawer-heading">
       <a routerLink="/" (click)="navigation.closeMobile()">
         <strong>LealChess</strong>
-        <span>Play. Study. Improve.</span>
       </a>
       <button
         type="button"
@@ -141,5 +144,6 @@
         About
       </a>
     </nav>
+    <p class="drawer-version">Version {{ version }}</p>
   </section>
 }

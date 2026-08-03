@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { AboutPageComponent } from './about-page.component';
 
 describe('AboutPageComponent', () => {
-  it('presents project, contribution, issue, and security metadata', async () => {
+  it('presents the mission, open-source project, and contribution paths', async () => {
     vi.stubGlobal(
       'matchMedia',
       vi.fn(() => ({
@@ -20,13 +20,19 @@ describe('AboutPageComponent', () => {
     const fixture = TestBed.createComponent(AboutPageComponent);
     fixture.detectChanges();
     const host = fixture.nativeElement as HTMLElement;
-    const links = [...host.querySelectorAll<HTMLAnchorElement>('.project-record a')].map(
-      (link) => link.href,
-    );
+    const headings = [...host.querySelectorAll('h2')].map((heading) => heading.textContent?.trim());
+    const links = [...host.querySelectorAll<HTMLAnchorElement>('a')].map((link) => link.href);
 
-    expect(host.querySelector('h1')?.textContent).toContain('About');
-    expect(host.textContent).toContain('GPL-3.0-only');
+    expect(host.querySelector('h1')?.textContent).toContain('About LealChess');
+    expect(headings).toEqual([
+      'Why LealChess',
+      'Our Mission',
+      'We Are Open Source',
+      'Issues and Contributions',
+    ]);
     expect(links).toContain('https://github.com/Swellshinider/LealChess');
+    expect(links).toContain('https://github.com/Swellshinider/LealChess/issues');
     expect(links).toContain('https://github.com/Swellshinider/LealChess/security/advisories/new');
+    expect(host.querySelector('a[href*="LICENSE"]')).toBeNull();
   });
 });

@@ -58,7 +58,7 @@
   p {
     color: var(--primary);
     font-family: var(--font-utility);
-    font-size: 0.65rem;
+    font-size: var(--type-caption);
     letter-spacing: 0.04em;
     margin: 0 0 4px;
     text-transform: uppercase;
@@ -90,7 +90,7 @@
   > span {
     color: var(--mist);
     font-family: var(--font-utility);
-    font-size: 0.62rem;
+    font-size: var(--type-caption);
     text-transform: uppercase;
   }
 }
@@ -120,7 +120,7 @@
   dt {
     color: var(--mist);
     font-family: var(--font-utility);
-    font-size: 0.65rem;
+    font-size: var(--type-caption);
     text-transform: uppercase;
   }
 
@@ -141,7 +141,7 @@
     color: var(--primary);
     cursor: pointer;
     font-family: var(--font-utility);
-    font-size: 0.66rem;
+    font-size: var(--type-caption);
     font-weight: 500;
     text-transform: uppercase;
   }
@@ -149,7 +149,7 @@
   h3 {
     color: var(--mist);
     font-family: var(--font-utility);
-    font-size: 0.64rem;
+    font-size: var(--type-caption);
     margin: 18px 0 8px;
     text-transform: uppercase;
   }
@@ -184,7 +184,7 @@
     border-top: 1px solid rgb(200 213 207 / 10%);
     color: var(--mist);
     display: flex;
-    font-size: 0.82rem;
+    font-size: var(--type-small);
     gap: 12px;
     justify-content: space-between;
     padding: 8px 0;
@@ -220,7 +220,7 @@
     > strong {
       color: var(--amber);
       font-family: var(--font-utility);
-      font-size: 0.58rem;
+      font-size: var(--type-caption);
       grid-column: 2;
       line-height: 1.5;
       text-transform: uppercase;
@@ -236,7 +236,7 @@
 
   p {
     color: var(--mist);
-    font-size: 0.86rem;
+    font-size: var(--type-body);
     margin: 0;
   }
 }
@@ -247,7 +247,7 @@
   color: var(--primary);
   display: flex;
   font-family: var(--font-utility);
-  font-size: 0.68rem;
+  font-size: var(--type-caption);
   height: 26px;
   justify-content: center;
   width: 26px;
@@ -281,7 +281,7 @@
   label > span {
     color: var(--mist);
     font-family: var(--font-utility);
-    font-size: 0.58rem;
+    font-size: var(--type-caption);
     letter-spacing: 0.04em;
     text-transform: uppercase;
   }
@@ -392,7 +392,7 @@
   span {
     color: var(--mist);
     font-family: var(--font-utility);
-    font-size: 0.6rem;
+    font-size: var(--type-caption);
     text-transform: uppercase;
   }
 }
@@ -400,7 +400,7 @@
 .metadata {
   color: var(--mist);
   font-family: var(--font-utility);
-  font-size: 0.62rem;
+  font-size: var(--type-caption);
 
   p {
     margin: 3px 0;
@@ -421,7 +421,7 @@
   color: var(--mist);
   display: block;
   font-family: var(--font-utility);
-  font-size: 0.56rem;
+  font-size: var(--type-micro);
   margin-bottom: 4px;
   text-transform: uppercase;
 
@@ -432,7 +432,7 @@
 
 .unavailable-game {
   color: var(--mist);
-  font-size: 0.76rem;
+  font-size: var(--type-small);
   text-align: left;
 
   > strong {

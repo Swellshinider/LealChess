@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import {
   DEFAULT_PREFERENCES,
   type BoardTheme,
+  type GamePreferences,
   type MoveInput,
 } from '../../../core/game/game.types';
 import type { PromotionPiece } from '../../../core/game/game.types';
@@ -33,6 +34,7 @@ export class ReviewPageStore {
   readonly practiceAnalysis = inject(PracticeAnalysisService);
   readonly coachAnalysis = inject(CoachAnalysisService);
   private readonly reviewRepository = inject(ReviewAnalysisRepositoryService, { optional: true });
+  private preferences: GamePreferences = { ...DEFAULT_PREFERENCES };
   private reviewSaveTimer: ReturnType<typeof setTimeout> | null = null;
   private reviewRestored = false;
 
@@ -43,6 +45,7 @@ export class ReviewPageStore {
   readonly learnerColor = signal<ChessColor | null>(null);
   readonly boardTheme = signal<BoardTheme>('tournament');
   readonly keybindings = signal<KeybindingPreferences>(DEFAULT_PREFERENCES.keybindings);
+  readonly confirmVariationRemoval = signal(DEFAULT_PREFERENCES.confirmVariationRemoval);
   readonly mode = signal<ReviewMode>('summary');
   readonly trainingIndex = signal(0);
   readonly puzzleStatus = signal<PuzzleStatus>('ready');
@@ -92,10 +95,12 @@ export class ReviewPageStore {
 
   async initialize(): Promise<void> {
     const restored = await this.persistence.restore();
+    this.preferences = restored.preferences;
     this.sound.setEnabled(restored.preferences.soundEnabled);
     this.sound.setVolume(restored.preferences.soundVolume);
     this.boardTheme.set(restored.preferences.boardTheme);
     this.keybindings.set(restored.preferences.keybindings);
+    this.confirmVariationRemoval.set(restored.preferences.confirmVariationRemoval);
     const platform = this.route.snapshot.paramMap.get('platform') as GameSource | null;
     const gameId = this.route.snapshot.paramMap.get('gameId');
     if ((platform === 'chess-com' || platform === 'lichess' || platform === 'local') && gameId) {
@@ -121,6 +126,13 @@ export class ReviewPageStore {
       }
     }
     this.loading.set(false);
+  }
+
+  setConfirmVariationRemoval(value: boolean): void {
+    const preferences = { ...this.preferences, confirmVariationRemoval: value };
+    this.preferences = preferences;
+    this.confirmVariationRemoval.set(value);
+    void this.persistence.savePreferences(preferences);
   }
 
   async destroy(): Promise<void> {

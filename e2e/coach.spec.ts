@@ -1,4 +1,4 @@
-import { expect, test, type Page, type Route } from '@playwright/test';
+import { expect, test, type Locator, type Page, type Route } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 const pgn = `[Event "Imported game"]
@@ -228,7 +228,9 @@ test('analyzes locally, caches the result, and opens a concern position', async 
   await expect(page.getByRole('heading', { name: 'Game review', exact: true })).toBeVisible();
   await expect(page.getByText('Guided analysis', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Next move', exact: true })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Show idea on board' })).toBeVisible();
+  const ideaToggle = page.locator('.secondary-action');
+  await expect(ideaToggle).toHaveAccessibleName('Show idea on board');
+  await expect(ideaToggle).toHaveAttribute('aria-pressed', 'false');
   await expect(page.getByText('Advantage graph', { exact: true })).toBeVisible();
   await expect(page.locator('.advantage-label, .equal-label')).toHaveCount(0);
   await expect(page.locator('.zero-line')).toHaveCSS('stroke', 'rgb(137, 139, 131)');
@@ -237,11 +239,79 @@ test('analyzes locally, caches the result, and opens a concern position', async 
   await expect(page.locator('.evaluation-rail')).toHaveAttribute('aria-label', /White evaluation/);
   await expectPlayerStripsToClearEvaluationRail(page);
   await expect(page.locator('.live-analysis li')).toHaveCount(3, { timeout: 30_000 });
-  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(0);
-  await page.evaluate(() =>
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true })),
-  );
-  await expect(page.locator('.review-board svg.cg-shapes line')).not.toHaveCount(0);
+  const previewMove = page.locator('.score .move').first();
+  await previewMove.hover();
+  await expect(page.locator('.move-preview')).toBeVisible();
+  await expect(page.locator('.move-preview')).toContainText('Position preview');
+
+  const candidateArrow = page.locator('.review-board svg.cg-shapes line');
+  await page.locator('.candidate-action').first().hover();
+  await expect(page.locator('.move-preview')).toHaveCount(0);
+  await expect(candidateArrow).toHaveCount(1);
+  await page.locator('.candidate-heading').hover();
+  await expect(candidateArrow).toHaveCount(0);
+  await expectReviewResponsiveness(page);
+  const ideaArrows = page.locator('.review-board svg.cg-shapes line');
+  const nextReplayButton = page
+    .getByRole('navigation', { name: 'Replay controls' })
+    .getByRole('button', { name: 'Next', exact: true });
+  const previousReplayButton = page
+    .getByRole('navigation', { name: 'Replay controls' })
+    .getByRole('button', { name: 'Previous', exact: true });
+  const lastReplayButton = page
+    .getByRole('navigation', { name: 'Replay controls' })
+    .getByRole('button', { name: 'Last', exact: true });
+
+  await expect(ideaArrows).toHaveCount(0);
+  await nextReplayButton.click();
+  await expect(nextReplayButton).not.toBeFocused();
+  const moveAfterNext = page.locator('.score .move.current');
+  const moveAfterNextLabel = await moveAfterNext.getAttribute('aria-label');
+  await ideaToggle.click();
+  await expect(ideaArrows).not.toHaveCount(0);
+  await expect(ideaToggle).toHaveAccessibleName('Hide idea on board');
+  await expect(ideaToggle).toHaveAttribute('aria-pressed', 'true');
+  await expect(moveAfterNext).toHaveAttribute('aria-label', moveAfterNextLabel!);
+
+  const scoreMove = page.locator('.score .move').first();
+  await scoreMove.click();
+  await expect(scoreMove).not.toBeFocused();
+  await expect(scoreMove).toHaveClass(/current/);
+  await expect(ideaArrows).not.toHaveCount(0);
+  await expect(ideaToggle).toHaveAccessibleName('Hide idea on board');
+  await ideaToggle.click();
+  await expect(ideaArrows).toHaveCount(0);
+  await expect(ideaToggle).toHaveAccessibleName('Show idea on board');
+  await page.keyboard.press('Space');
+  await expect(ideaArrows).not.toHaveCount(0);
+  await expect(ideaToggle).toHaveAccessibleName('Hide idea on board');
+  await page.keyboard.press('Space');
+  await expect(ideaArrows).toHaveCount(0);
+  await expect(ideaToggle).toHaveAccessibleName('Show idea on board');
+  await expect(scoreMove).toHaveClass(/current/);
+
+  await nextReplayButton.focus();
+  await page.keyboard.press('Space');
+  await expect(nextReplayButton).toBeFocused();
+  await expect(scoreMove).not.toHaveClass(/current/);
+  await scoreMove.click();
+  await expect(scoreMove).toHaveClass(/current/);
+
+  await page.keyboard.press('Control+ArrowRight');
+  await expect(nextReplayButton).toBeDisabled();
+  await expect(lastReplayButton).toBeDisabled();
+  await previousReplayButton.click();
+  await expect(nextReplayButton).toBeEnabled();
+  await expect(lastReplayButton).toBeEnabled();
+  await page.keyboard.press('Control+ArrowRight');
+  await expect(nextReplayButton).toBeDisabled();
+  await expect(lastReplayButton).toBeDisabled();
+  await page.keyboard.press('Control+ArrowLeft');
+  await expect(previousReplayButton).toBeDisabled();
+  await expect(nextReplayButton).toBeEnabled();
+  await expect(lastReplayButton).toBeEnabled();
+  await scoreMove.click();
+  await expect(scoreMove).toHaveClass(/current/);
 
   const alternateCandidate = page
     .locator('.live-analysis .candidate-action:not([aria-label$=": e5"])')
@@ -253,27 +323,35 @@ test('analyzes locally, caches the result, and opens a concern position', async 
   await page.getByRole('button', { name: 'Remove this variation and all continuations' }).click();
   const removalDialog = page.getByRole('alertdialog', { name: 'Remove this variation?' });
   await expect(removalDialog).toBeVisible();
+  await removalDialog.getByRole('checkbox', { name: "Don't ask me again" }).check();
   await removalDialog.getByRole('button', { name: 'Keep variation' }).click();
   await expect(page.locator('.score .variation-move')).toHaveCount(1);
   await page.getByRole('button', { name: 'Remove this variation and all continuations' }).click();
+  await expect(
+    removalDialog.getByRole('checkbox', { name: "Don't ask me again" }),
+  ).not.toBeChecked();
+  await removalDialog.getByRole('checkbox', { name: "Don't ask me again" }).check();
   await removalDialog.getByRole('button', { name: 'Remove variation' }).click();
   await expect(page.locator('.score .variation-move')).toHaveCount(0);
 
   await moveReviewPiece(page, 'c7', 'c5');
   await expect(page.locator('.score .variation-move')).toHaveCount(1);
   await expect(page.locator('.live-analysis li')).toHaveCount(3, { timeout: 30_000 });
-  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(3);
-  await expect
-    .poll(() =>
-      page
-        .locator('.review-board svg.cg-shapes line')
-        .evaluateAll((lines) =>
-          lines
-            .map((line) => Number(line.getAttribute('stroke-width')) * 64)
-            .sort((left, right) => right - left),
-        ),
-    )
-    .toEqual([14, 9, 5]);
+  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(0);
+  for (const [index, width] of [14, 9, 5].entries()) {
+    await page.locator('.candidate-action').nth(index).hover();
+    await expect
+      .poll(() =>
+        page
+          .locator('.review-board svg.cg-shapes line')
+          .evaluateAll((lines) =>
+            lines.map((line) => Math.round(Number(line.getAttribute('stroke-width')) * 64)),
+          ),
+      )
+      .toEqual([width]);
+  }
+  await page.locator('.candidate-heading').hover();
+  await expect(page.locator('.review-board svg.cg-shapes line')).toHaveCount(0);
 
   await moveReviewPiece(page, 'e2', 'e4');
   await expect(page.locator('.score .variation-move')).toHaveCount(2);
@@ -287,10 +365,7 @@ test('analyzes locally, caches the result, and opens a concern position', async 
   await expect(page.locator('.score .variation-move')).toHaveCount(2);
   await page.locator('.score .variation-move .move').last().click();
   await page.getByRole('button', { name: 'Remove this variation and all continuations' }).click();
-  await page
-    .getByRole('alertdialog', { name: 'Remove this variation?' })
-    .getByRole('button', { name: 'Remove variation' })
-    .click();
+  await expect(page.getByRole('alertdialog', { name: 'Remove this variation?' })).toHaveCount(0);
   await expect(page.locator('.score .variation-move')).toHaveCount(1);
 
   await page.getByRole('button', { name: 'f3' }).click();
@@ -538,8 +613,7 @@ function json(route: Route, body: unknown) {
 async function drawReviewArrow(page: Page, from: string, to: string): Promise<void> {
   const reviewBoard = page.locator('.review-board');
   await reviewBoard.scrollIntoViewIfNeeded();
-  const board = await reviewBoard.locator('cg-board').boundingBox();
-  if (!board) throw new Error('Review board is not visible.');
+  const board = await visibleBounds(reviewBoard.locator('cg-board'));
   const point = (square: string) => ({
     x: board.x + ((square.charCodeAt(0) - 97 + 0.5) * board.width) / 8,
     y: board.y + ((8 - Number(square[1]) + 0.5) * board.height) / 8,
@@ -555,20 +629,17 @@ async function drawReviewArrow(page: Page, from: string, to: string): Promise<vo
 }
 
 async function expectFlipControlAtBoardTopRight(page: Page, boardSelector: string): Promise<void> {
-  const control = await page.getByRole('button', { name: 'Flip board' }).boundingBox();
-  const board = await page.locator(boardSelector).boundingBox();
-  expect(control).not.toBeNull();
-  expect(board).not.toBeNull();
-  expect(Math.abs(control!.x + control!.width - (board!.x + board!.width))).toBeLessThanOrEqual(2);
-  expect(control!.y + control!.height).toBeLessThanOrEqual(board!.y + 1);
+  const control = await visibleBounds(page.getByRole('button', { name: 'Flip board' }));
+  const board = await visibleBounds(page.locator(boardSelector));
+  expect(Math.abs(control.x + control.width - (board.x + board.width))).toBeLessThanOrEqual(3);
+  expect(control.y + control.height).toBeLessThanOrEqual(board.y + 1);
 }
 
 async function moveReviewPiece(page: Page, from: string, to: string): Promise<void> {
   const reviewBoard = page.locator('.review-board');
   await expect(reviewBoard.locator('cg-board')).toBeVisible();
   await reviewBoard.scrollIntoViewIfNeeded();
-  const board = await reviewBoard.boundingBox();
-  if (!board) throw new Error('Review board is not visible.');
+  const board = await visibleBounds(reviewBoard);
   const point = (square: string) => ({
     x: board.x + ((square.charCodeAt(0) - 97 + 0.5) * board.width) / 8,
     y: board.y + ((8 - Number(square[1]) + 0.5) * board.height) / 8,
@@ -577,6 +648,14 @@ async function moveReviewPiece(page: Page, from: string, to: string): Promise<vo
   const destination = point(to);
   await page.mouse.click(origin.x, origin.y);
   await page.mouse.click(destination.x, destination.y);
+}
+
+async function visibleBounds(locator: Locator) {
+  await expect(locator).toBeVisible();
+  return locator.evaluate((element) => {
+    const rectangle = element.getBoundingClientRect();
+    return { x: rectangle.x, y: rectangle.y, width: rectangle.width, height: rectangle.height };
+  });
 }
 
 async function expectBoardOverlayWithinBounds(page: Page, selector: string): Promise<void> {
@@ -612,6 +691,96 @@ async function expectReviewWorkspaceToFitViewport(page: Page): Promise<void> {
   expect(geometry.documentHeight).toBeLessThanOrEqual(geometry.clientHeight + 1);
   expect(geometry.boardBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
   expect(geometry.deskBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
+}
+
+async function expectReviewResponsiveness(page: Page): Promise<void> {
+  const viewports = [
+    { width: 320, height: 568, stacked: true },
+    { width: 820, height: 1180, stacked: true },
+    { width: 1024, height: 600, stacked: true },
+    { width: 1280, height: 720, stacked: false },
+    { width: 1648, height: 828, stacked: false, minimumDeskWidth: 520 },
+    { width: 2048, height: 941, stacked: false, minimumDeskWidth: 620 },
+  ];
+
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
+    const visibleControls = page.getByRole('navigation', { name: 'Replay controls' });
+    await expect(visibleControls).toHaveCount(1);
+    await expect(visibleControls).toBeVisible();
+    await expect
+      .poll(() =>
+        page.evaluate(() => {
+          const scrollingElement = document.scrollingElement!;
+          return scrollingElement.scrollWidth <= scrollingElement.clientWidth + 1;
+        }),
+      )
+      .toBe(true);
+
+    if (viewport.stacked) {
+      await expect(page.locator('.workspace-review-toolbar')).toBeVisible();
+      await expect(
+        page.locator('.board-column').getByRole('navigation', { name: 'Replay controls' }),
+      ).toBeVisible();
+      const geometry = await page.evaluate(() => {
+        const lowerPlayer = document.querySelectorAll<HTMLElement>(
+          '.board-column > .player-strip',
+        )[1]!;
+        const controls = document
+          .querySelector<HTMLElement>('.board-column > app-review-replay-controls')!
+          .getBoundingClientRect();
+        const playerBounds = lowerPlayer.getBoundingClientRect();
+        return { controlsTop: controls.top, playerBottom: playerBounds.bottom };
+      });
+      expect(Math.abs(geometry.controlsTop - geometry.playerBottom)).toBeLessThanOrEqual(1);
+      await page.locator('.review-desk').scrollIntoViewIfNeeded();
+      await expect(page.getByRole('heading', { name: 'Game review', exact: true })).toBeVisible();
+    } else {
+      await expect(page.locator('.workspace-review-toolbar')).toBeVisible();
+      await expect(
+        page.locator('.review-desk').getByRole('navigation', { name: 'Replay controls' }),
+      ).toBeVisible();
+      const geometry = await page.evaluate(() => {
+        const board = document.querySelector<HTMLElement>('.board-stage')!.getBoundingClientRect();
+        const desk = document.querySelector<HTMLElement>('.review-desk')!.getBoundingClientRect();
+        const frame = document.querySelector<HTMLElement>('.review-frame')!;
+        const note = document.querySelector<HTMLElement>('.coach-note')!.getBoundingClientRect();
+        const candidates = document
+          .querySelector<HTMLElement>('.live-analysis')!
+          .getBoundingClientRect();
+        const controls = document
+          .querySelector<HTMLElement>('.panel-replay-controls')!
+          .getBoundingClientRect();
+        return {
+          boardHeight: board.height,
+          boardRight: board.right,
+          boardWidth: board.width,
+          candidatesTop: candidates.top,
+          controlsBottom: controls.bottom,
+          deskBottom: desk.bottom,
+          deskLeft: desk.left,
+          deskWidth: desk.width,
+          frameClientHeight: frame.clientHeight,
+          frameScrollHeight: frame.scrollHeight,
+          noteBottom: note.bottom,
+          viewportWidth: window.innerWidth,
+        };
+      });
+      expect(geometry.boardWidth).toBeGreaterThanOrEqual(geometry.viewportWidth * 0.4);
+      expect(geometry.candidatesTop).toBeGreaterThanOrEqual(geometry.noteBottom - 1);
+      expect(geometry.controlsBottom).toBeLessThanOrEqual(geometry.deskBottom + 1);
+      expect(geometry.frameScrollHeight).toBeLessThanOrEqual(geometry.frameClientHeight + 1);
+
+      if (viewport.minimumDeskWidth) {
+        expect(Math.abs(geometry.boardWidth - geometry.boardHeight)).toBeLessThanOrEqual(1);
+        expect(geometry.boardHeight).toBeGreaterThanOrEqual(viewport.height * 0.86);
+        expect(geometry.deskWidth).toBeGreaterThanOrEqual(viewport.minimumDeskWidth);
+        expect(geometry.deskWidth).toBeLessThanOrEqual(641);
+        expect(geometry.deskLeft - geometry.boardRight).toBeGreaterThanOrEqual(13);
+        expect(geometry.deskLeft - geometry.boardRight).toBeLessThanOrEqual(23);
+      }
+    }
+  }
 }
 
 async function expectPlayerStripsToClearEvaluationRail(page: Page): Promise<void> {

@@ -148,6 +148,7 @@ export interface GameAnalysis {
   sourceFingerprint: string;
   engineVersion: string;
   depth: number;
+  profileFingerprint?: string;
   learnerColor: ChessColor;
   status: AnalysisStatus;
   totalUserMoves: number;

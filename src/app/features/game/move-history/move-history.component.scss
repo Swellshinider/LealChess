@@ -24,7 +24,7 @@ li {
   border-radius: 2px;
   display: grid;
   font-family: var(--font-utility);
-  font-size: 0.8rem;
+  font-size: var(--type-small);
   grid-template-columns: 38px 1fr 1fr;
   min-height: 34px;
   padding: 0 8px;
@@ -58,7 +58,7 @@ li {
   text-align: center;
 
   p {
-    font-size: 0.76rem;
+    font-size: var(--type-small);
     margin: 0;
     opacity: 0.72;
   }

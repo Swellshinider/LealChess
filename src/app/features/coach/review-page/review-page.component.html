@@ -11,14 +11,16 @@
       </section>
     } @else {
       <main class="review-page">
-        <header class="review-toolbar">
-          <a class="back-link" routerLink="/learn" aria-label="Back to Learn">Learn</a>
-          <div class="game-meta">
-            <span>{{ sourceLabel() }}</span>
-            <strong>{{ game()?.opening?.name ?? 'Opening not recorded' }}</strong>
-            <small>{{ game()?.opening?.eco }} · {{ game()?.speed }} · {{ game()?.result }}</small>
-          </div>
-        </header>
+        @if (game()?.parseStatus !== 'ready' || !learnerColor()) {
+          <header class="review-toolbar">
+            <a class="back-link" routerLink="/learn" aria-label="Back to Learn">Learn</a>
+            <div class="game-meta">
+              <span>{{ sourceLabel() }}</span>
+              <strong>{{ game()?.opening?.name ?? 'Opening not recorded' }}</strong>
+              <small>{{ game()?.opening?.eco }} · {{ game()?.speed }} · {{ game()?.result }}</small>
+            </div>
+          </header>
+        }
 
         @if (game()?.parseStatus !== 'ready') {
           <section class="not-found">
@@ -36,6 +38,17 @@
           </section>
         } @else {
           <section class="review-workspace" aria-label="Game review">
+            <header class="review-toolbar workspace-review-toolbar">
+              <a class="back-link" routerLink="/learn" aria-label="Back to Learn">Learn</a>
+              <div class="game-meta">
+                <span>{{ sourceLabel() }}</span>
+                <strong>{{ game()?.opening?.name ?? 'Opening not recorded' }}</strong>
+                <small
+                  >{{ game()?.opening?.eco }} · {{ game()?.speed }} · {{ game()?.result }}</small
+                >
+              </div>
+            </header>
+
             <section
               class="board-column"
               [class.has-evaluation]="mode() === 'analysis'"
@@ -82,6 +95,32 @@
                 }
 
                 <div class="board-stage">
+                  <div class="board-engine-plate">
+                    <app-analysis-engine-settings
+                      [workflow]="
+                        mode() === 'practice'
+                          ? 'practice'
+                          : mode() === 'analysis'
+                            ? 'live-analysis'
+                            : 'game-review'
+                      "
+                      [active]="mode() === 'analysis' && liveAnalysis.state().phase === 'analyzing'"
+                    />
+                    @if (mode() === 'analysis' && liveAnalysisStale()) {
+                      <button type="button" class="stale-analysis" (click)="retryLiveAnalysis()">
+                        Previous profile · reanalyze
+                      </button>
+                    }
+                    @if (mode() === 'practice' && practiceAnalysisStale()) {
+                      <button
+                        type="button"
+                        class="stale-analysis"
+                        (click)="retryPracticeAnalysis()"
+                      >
+                        Previous profile · reanalyze
+                      </button>
+                    }
+                  </div>
                   <app-chessground-board
                     class="review-board"
                     [initialConfig]="boardConfig()"
@@ -196,6 +235,15 @@
                 </span>
                 <span class="turn-indicator" aria-hidden="true"></span>
               </div>
+
+              @if (mode() === 'analysis') {
+                <app-review-replay-controls
+                  class="board-replay-controls"
+                  [currentPly]="currentPly()"
+                  [totalPlies]="game()!.moves.length"
+                  (plyRequested)="goTo($event)"
+                />
+              }
             </section>
 
             <aside class="review-desk">
@@ -222,7 +270,7 @@
                     [completed]="coachAnalysis.state().completed"
                     [total]="coachAnalysis.state().total"
                     [error]="coachAnalysis.state().error"
-                    [depth]="coachAnalysis.analysis()?.depth"
+                    [stale]="coachAnalysis.state().stale ?? false"
                     (analysisRequested)="analyze()"
                     (cancelRequested)="cancelAnalysis()"
                     (reanalysisRequested)="reanalyze()"
@@ -242,7 +290,10 @@
                           [liveState]="liveAnalysis.state()"
                           [currentPly]="currentPly()"
                           [learnerColor]="learnerColor()!"
+                          [orientation]="orientation()"
+                          [boardTheme]="boardTheme()"
                           [explanation]="moveExplanation()"
+                          [ideaVisible]="ideaVisible()"
                           [evaluations]="summary.evaluations"
                           (summaryRequested)="showSummary()"
                           (plyRequested)="goTo($event)"
@@ -250,7 +301,8 @@
                           (removeVariationRequested)="removeAnalysisVariation($event)"
                           (retryRequested)="retryLiveAnalysis()"
                           (candidateRequested)="playAnalysisCandidate($event)"
-                          (ideaRequested)="showMoveIdea()"
+                          (candidatePreviewed)="previewAnalysisCandidate($event)"
+                          (ideaToggled)="toggleMoveIdea()"
                           (practiceRequested)="enterPractice(practiceIndexForPly($event))"
                         />
                       }
@@ -411,7 +463,10 @@
     description="This move and every continuation after it will be removed from your analysis."
     cancelLabel="Keep variation"
     confirmLabel="Remove variation"
+    checkboxLabel="Don't ask me again"
+    [checkboxChecked]="skipVariationRemovalConfirmation()"
     (cancelled)="closeVariationRemoval()"
     (confirmed)="confirmVariationRemoval()"
+    (checkboxChanged)="skipVariationRemovalConfirmation.set($event)"
   />
 }

@@ -141,6 +141,10 @@ export class IndexedDbPersistenceService implements PersistencePort {
         typeof record['premovesEnabled'] === 'boolean'
           ? record['premovesEnabled']
           : DEFAULT_PREFERENCES.premovesEnabled,
+      confirmVariationRemoval:
+        typeof record['confirmVariationRemoval'] === 'boolean'
+          ? record['confirmVariationRemoval']
+          : DEFAULT_PREFERENCES.confirmVariationRemoval,
       boardTheme: this.isBoardTheme(record['boardTheme'])
         ? record['boardTheme']
         : DEFAULT_PREFERENCES.boardTheme,

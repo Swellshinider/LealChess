@@ -31,8 +31,11 @@ import {
   SettingsPersistenceService,
   type LealChessStorageUsage,
 } from '../../core/persistence/settings-persistence.service';
+import { OnboardingAnchorDirective } from '../../core/onboarding/onboarding-anchor.directive';
+import { OnboardingService } from '../../core/onboarding/onboarding.service';
 import { ModalFocusDirective } from '../../shared/a11y/modal-focus.directive';
 import { SideNavigationComponent } from '../../shared/layout/side-navigation/side-navigation.component';
+import { AnalysisEngineSettingsComponent } from '../../shared/analysis-engine-settings/analysis-engine-settings.component';
 import { CoachImportService } from '../coach/data/coach-import.service';
 import type { ChessPlatform, SpeedFilter } from '../coach/domain/coach.types';
 import { SettingsPreviewBoardComponent } from './settings-preview-board/settings-preview-board.component';
@@ -41,7 +44,9 @@ import type { Subscription } from 'rxjs';
 @Component({
   selector: 'app-settings-page',
   imports: [
+    AnalysisEngineSettingsComponent,
     ModalFocusDirective,
+    OnboardingAnchorDirective,
     ReactiveFormsModule,
     SettingsPreviewBoardComponent,
     SideNavigationComponent,
@@ -53,6 +58,7 @@ import type { Subscription } from 'rxjs';
 export class SettingsPageComponent implements OnInit, OnDestroy {
   private readonly persistence = inject(PERSISTENCE_PORT);
   private readonly settingsPersistence = inject(SettingsPersistenceService);
+  protected readonly onboarding = inject(OnboardingService);
   protected readonly coach = inject(CoachImportService);
   protected readonly themes = BOARD_THEMES;
   protected readonly preferences = signal<GamePreferences>({ ...DEFAULT_PREFERENCES });
@@ -91,13 +97,13 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
     ]);
     this.preferences.set(restored.preferences);
     this.importForm.setValue(importPreferences, { emitEvent: false });
-    this.importForm.enable({ emitEvent: false });
-    this.storageUsage.set(await this.settingsPersistence.calculateStorageUsage());
     this.importPreferencesSubscription = this.importForm.valueChanges.subscribe(() => {
       if (this.importForm.valid) {
         void this.settingsPersistence.saveImportPreferences(this.importForm.getRawValue());
       }
     });
+    this.importForm.enable({ emitEvent: false });
+    this.storageUsage.set(await this.settingsPersistence.calculateStorageUsage());
   }
 
   ngOnDestroy(): void {
@@ -127,7 +133,10 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
     await this.refreshStorageUsage();
   }
 
-  protected updateBoolean(key: 'showLegalMoves' | 'premovesEnabled', event: Event): void {
+  protected updateBoolean(
+    key: 'showLegalMoves' | 'premovesEnabled' | 'confirmVariationRemoval',
+    event: Event,
+  ): void {
     this.savePreferences({ [key]: (event.target as HTMLInputElement).checked });
   }
 

@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { TestBed } from '@angular/core/testing';
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { markStockfishEngineDownloaded } from '../engine/stockfish-assets';
+import { ONBOARDING_COMPLETION_KEY } from '../onboarding/onboarding.service';
 import { LealChessDatabaseService } from './leal-chess-database.service';
 import { SettingsPersistenceService } from './settings-persistence.service';
 
@@ -36,7 +36,13 @@ describe('SettingsPersistenceService', () => {
     };
     await database.put('coachProfiles', profile);
     await database.put('state', preferences);
-    markStockfishEngineDownloaded('play');
+    await database.put('engineAssets', {
+      id: 'stockfish-18-lite',
+      script: new Blob(),
+      wasm: new Blob(),
+      installedAt: '2026-08-02T12:00:00.000Z',
+      bytes: 7_316_840,
+    });
 
     const records =
       new TextEncoder().encode(JSON.stringify(profile)).byteLength +
@@ -84,7 +90,14 @@ describe('SettingsPersistenceService', () => {
       key: 'import-preferences',
       value: { chessComUsername: '', lichessUsername: 'player', maxGames: 20, speed: 'any' },
     });
-    markStockfishEngineDownloaded('analysis');
+    await database.put('engineAssets', {
+      id: 'stockfish-18-full',
+      script: new Blob(),
+      wasm: new Blob(),
+      installedAt: '2026-08-02T12:00:00.000Z',
+      bytes: 113_013_789,
+    });
+    localStorage.setItem(ONBOARDING_COMPLETION_KEY, '1');
 
     await TestBed.inject(SettingsPersistenceService).clearAll();
 
@@ -94,6 +107,7 @@ describe('SettingsPersistenceService', () => {
     await expect(database.getAll('gameAnalyses')).resolves.toEqual([]);
     await expect(database.getAll('explorerSessions')).resolves.toEqual([]);
     await expect(database.getAll('reviewAnalysisSessions')).resolves.toEqual([]);
+    await expect(database.getAll('engineAssets')).resolves.toEqual([]);
     await expect(
       TestBed.inject(SettingsPersistenceService).calculateStorageUsage(),
     ).resolves.toEqual({
@@ -101,5 +115,6 @@ describe('SettingsPersistenceService', () => {
       engines: 0,
       total: 0,
     });
+    expect(localStorage.getItem(ONBOARDING_COMPLETION_KEY)).toBeNull();
   });
 });

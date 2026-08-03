@@ -1,7 +1,21 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  HostListener,
+  computed,
+  input,
+  output,
+  signal,
+} from '@angular/core';
+import type { BoardTheme } from '../../../core/game/game.types';
+import type { ChessColor } from '../../../shared/chess/chess.types';
 import type { GameAnalysis, ReviewMoveClassification } from '../domain/coach.types';
 import type { ReviewAnalysisSession, ReviewMoveNode } from './review-analysis-session.types';
 import { reviewAncestorIds } from './review-analysis-session';
+import {
+  ReviewMovePreviewComponent,
+  type ReviewMovePreviewPosition,
+} from './review-move-preview.component';
 
 interface MainlineScoreEntry {
   kind: 'mainline';
@@ -19,6 +33,7 @@ type ScoreEntry = MainlineScoreEntry | VariationScoreEntry;
 
 @Component({
   selector: 'app-review-move-tree',
+  imports: [ReviewMovePreviewComponent],
   templateUrl: './review-move-tree.component.html',
   styleUrl: './review-move-tree.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,11 +41,60 @@ type ScoreEntry = MainlineScoreEntry | VariationScoreEntry;
 export class ReviewMoveTreeComponent {
   readonly session = input.required<ReviewAnalysisSession>();
   readonly analysis = input<GameAnalysis | null>(null);
+  readonly orientation = input.required<ChessColor>();
+  readonly boardTheme = input.required<BoardTheme>();
   readonly nodeSelected = output<string>();
   readonly removeRequested = output<string>();
 
   protected readonly entries = computed(() => flattenScore(this.session()));
   protected readonly path = computed(() => reviewAncestorIds(this.session()));
+  protected readonly movePreview = signal<{
+    node: ReviewMoveNode;
+    position: ReviewMovePreviewPosition;
+  } | null>(null);
+
+  @HostListener('window:resize')
+  @HostListener('document:wheel')
+  protected clearMovePreview(): void {
+    this.movePreview.set(null);
+  }
+
+  protected showMovePreview(node: ReviewMoveNode, event: Event): void {
+    if (
+      event.type.startsWith('pointer') &&
+      typeof matchMedia === 'function' &&
+      !matchMedia('(hover: hover)').matches
+    ) {
+      return;
+    }
+    const anchor = event.currentTarget;
+    if (!(anchor instanceof HTMLElement) || typeof window === 'undefined') return;
+    const bounds = anchor.getBoundingClientRect();
+    const width = 224;
+    const height = 264;
+    const gap = 12;
+    const viewportPadding = 12;
+    let left = bounds.left - width - gap;
+    if (left < viewportPadding) left = bounds.right + gap;
+    left = Math.max(viewportPadding, Math.min(left, window.innerWidth - width - viewportPadding));
+    const top = Math.max(
+      viewportPadding,
+      Math.min(
+        bounds.top + bounds.height / 2 - height / 2,
+        window.innerHeight - height - viewportPadding,
+      ),
+    );
+    this.movePreview.set({ node, position: { left, top } });
+  }
+
+  protected hideMovePreview(nodeId: string): void {
+    if (this.movePreview()?.node.id === nodeId) this.clearMovePreview();
+  }
+
+  protected selectNode(nodeId: string): void {
+    this.clearMovePreview();
+    this.nodeSelected.emit(nodeId);
+  }
 
   protected classification(node: ReviewMoveNode): ReviewMoveClassification | undefined {
     if (node.source !== 'imported' || !node.importedPly) return undefined;

@@ -16,14 +16,11 @@ describe('ReviewSummaryComponent', () => {
     fixture.componentRef.setInput('game', game);
     fixture.componentRef.setInput('summary', summary);
     fixture.componentRef.setInput('phase', 'complete');
-    fixture.componentRef.setInput('depth', 16);
     fixture.detectChanges();
 
     const host = fixture.nativeElement as HTMLElement;
-    const button = [...host.querySelectorAll<HTMLButtonElement>('button')].find((candidate) =>
-      candidate.textContent?.includes('Reanalyze game'),
-    );
-    expect(button).toBeDefined();
+    const button = host.querySelector<HTMLButtonElement>('.reanalyze-action');
+    expect(button).not.toBeNull();
 
     button!.click();
 
@@ -40,7 +37,8 @@ describe('ReviewSummaryComponent', () => {
     fixture.componentRef.setInput('total', 2);
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).not.toContain('Reanalyze game');
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('.reanalyze-action')).toBeNull();
   });
 });
 

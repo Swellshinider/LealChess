@@ -45,7 +45,7 @@ section {
 .kicker {
   color: var(--primary);
   font-family: var(--font-utility);
-  font-size: 0.65rem;
+  font-size: var(--type-caption);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -67,7 +67,7 @@ h2 {
 
 .next-step {
   color: var(--mist);
-  font-size: 0.82rem;
+  font-size: var(--type-small);
   line-height: 1.5;
   margin: 6px auto 0;
   max-width: 38ch;
@@ -77,7 +77,7 @@ h2 {
   background: rgb(231 104 97 / 10%);
   border-left: 3px solid var(--danger);
   color: #ffb4ab;
-  font-size: 0.78rem;
+  font-size: var(--type-small);
   margin: 18px 0 0;
   padding: 10px 12px;
 }
@@ -97,7 +97,7 @@ button {
 .primary-action {
   border-radius: 3px 0 3px 0;
   font-family: var(--font-utility);
-  font-size: 0.72rem;
+  font-size: var(--type-small);
   font-weight: 700;
   padding: 8px 12px;
 }

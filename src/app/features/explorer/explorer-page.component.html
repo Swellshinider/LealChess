@@ -3,23 +3,13 @@
 
   <main class="explorer-page">
     <h1 class="sr-only">Explorer</h1>
-    <div class="workspace-toolbar">
-      <div class="workspace-actions" aria-label="Explorer actions">
-        <button type="button" (click)="openImport()">Import FEN or PGN</button>
-        @if (mode() === 'analysis') {
-          <button type="button" (click)="enterSetup()">Set up position</button>
-        }
-        <button type="button" class="quiet-action" (click)="newAnalysis()">New analysis</button>
-      </div>
-    </div>
-
     @if (loading()) {
       <section class="loading-workspace" aria-live="polite">
         <span class="engine-pulse" aria-hidden="true"></span>
         Restoring your analysis…
       </section>
     } @else {
-      <section class="analysis-workspace">
+      <section appOnboardingAnchor="explorer-workspace" class="analysis-workspace">
         <div class="board-workbench" [class.setup-mode]="mode() === 'setup'">
           <div class="board-heading">
             @if (mode() === 'analysis') {
@@ -61,6 +51,23 @@
           }
 
           <div class="board-stage">
+            @if (mode() === 'analysis') {
+              <div class="board-engine-plate">
+                <app-analysis-engine-settings
+                  workflow="explorer"
+                  [active]="analysisKind() !== 'idle'"
+                />
+                @if (analysisStale()) {
+                  <button
+                    type="button"
+                    class="stale-analysis"
+                    (click)="reanalyzeWithCurrentProfile()"
+                  >
+                    Previous profile · reanalyze
+                  </button>
+                }
+              </div>
+            }
             <div class="explorer-board-frame" [attr.data-board-theme]="boardTheme()">
               <app-chessground-board
                 class="explorer-board"
@@ -86,32 +93,11 @@
           </div>
 
           @if (mode() === 'analysis') {
-            <nav class="position-navigation" aria-label="Move navigation">
-              <button
-                type="button"
-                aria-label="Starting position"
-                [disabled]="selectedNode().id === session().rootId"
-                (click)="selectNode(session().rootId)"
-              >
-                |←
-              </button>
-              <button
-                type="button"
-                aria-label="Previous move"
-                [disabled]="!selectedNode().parentId"
-                (click)="selectParent()"
-              >
-                ←
-              </button>
-              <button
-                type="button"
-                aria-label="Next move"
-                [disabled]="!selectedNode().children.length"
-                (click)="selectPrimaryChild()"
-              >
-                →
-              </button>
-            </nav>
+            <div class="engine-board-strip" aria-hidden="true">
+              <span>Stockfish 18</span>
+              <strong>{{ analysisMessage() }}</strong>
+              <small>Depth {{ selectedNode().candidateDepth ?? '—' }}</small>
+            </div>
           }
         </div>
 
@@ -243,130 +229,27 @@
               </div>
             </section>
           } @else {
-            <section class="engine-status" aria-live="polite">
-              <div>
-                <span
-                  class="engine-pulse"
-                  [class.active]="analysisKind() !== 'idle'"
-                  aria-hidden="true"
-                ></span>
-                <div>
-                  <small>Stockfish 18</small>
-                  <strong>{{ analysisMessage() }}</strong>
-                </div>
-              </div>
-              <span>Depth {{ selectedNode().candidateDepth ?? '—' }}</span>
-            </section>
-
-            @if (session().batch.total) {
-              <section class="batch-progress" aria-labelledby="batch-heading">
-                <div>
-                  <span id="batch-heading">PGN move review</span>
-                  <strong>{{ session().batch.completed }} / {{ session().batch.total }}</strong>
-                </div>
-                <div
-                  class="progress-track"
-                  role="progressbar"
-                  aria-label="PGN analysis progress"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                  [attr.aria-valuenow]="batchProgress()"
-                >
-                  <i [style.width.%]="batchProgress()"></i>
-                </div>
-                @if (session().batch.status === 'running') {
-                  <button type="button" (click)="pauseBatch()">Pause PGN analysis</button>
-                } @else if (
-                  session().batch.status === 'paused' || session().batch.status === 'error'
-                ) {
-                  <button type="button" (click)="resumeBatch()">Resume PGN analysis</button>
-                }
-                @if (session().batch.error; as error) {
-                  <p role="alert">{{ error }}</p>
-                }
-              </section>
-            }
-
-            <section class="candidate-lines" aria-labelledby="candidate-heading">
-              <div class="ledger-heading">
-                <h2 id="candidate-heading">Lines</h2>
-                <small>White evaluation</small>
-              </div>
-              @if (selectedCandidates().length) {
-                <ol>
-                  @for (line of selectedCandidates(); track line.rank) {
-                    <li>
-                      <span class="candidate-rank">{{ line.rank }}</span>
-                      <strong>{{ candidateEvaluation(line) }}</strong>
-                      <span>{{ line.san.join(' ') }}</span>
-                    </li>
-                  }
-                </ol>
-              } @else if (gameOverLabel(); as result) {
-                <p class="terminal-position">{{ result }}. This line has ended.</p>
-              } @else {
-                <div class="line-skeleton" aria-hidden="true"><i></i><i></i><i></i></div>
-              }
-            </section>
-
-            <section class="variation-tree" aria-labelledby="variations-heading">
-              <div class="ledger-heading">
-                <h2 id="variations-heading">Moves</h2>
-                <small>{{ treeRows().length }} moves</small>
-              </div>
-              <div class="move-tree" role="tree" aria-label="Explorer variations">
-                <button
-                  type="button"
-                  role="treeitem"
-                  class="root-node"
-                  [class.current]="selectedNode().id === session().rootId"
-                  [attr.aria-current]="selectedNode().id === session().rootId ? 'step' : null"
-                  (click)="selectNode(session().rootId)"
-                >
-                  Start
-                </button>
-                @for (row of treeRows(); track row.node.id) {
-                  <button
-                    type="button"
-                    role="treeitem"
-                    class="move-node"
-                    [class.current]="selectedNode().id === row.node.id"
-                    [class.selected-line]="row.onSelectedLine"
-                    [attr.data-classification]="row.node.assessment?.classification ?? null"
-                    [attr.aria-current]="selectedNode().id === row.node.id ? 'step' : null"
-                    [attr.aria-label]="
-                      moveNumber(row.node) +
-                      ' ' +
-                      row.node.san +
-                      ', ' +
-                      classificationLabel(row.node.assessment?.classification)
-                    "
-                    [style.--branch-depth]="row.depth"
-                    (click)="selectNode(row.node.id)"
-                  >
-                    <span class="branch-rule" aria-hidden="true"></span>
-                    <small>{{ moveNumber(row.node) }}</small>
-                    <strong>{{ row.node.san }}</strong>
-                    <span
-                      class="move-badge"
-                      [attr.data-classification]="row.node.assessment?.classification ?? null"
-                    >
-                      {{ classificationLabel(row.node.assessment?.classification) }}
-                    </span>
-                    @if (row.node.assessment?.provisional) {
-                      <i>depth {{ row.node.assessment?.depth }}</i>
-                    }
-                  </button>
-                }
-              </div>
-            </section>
-
-            @if (selectedNode().analysisError; as error) {
-              <section class="analysis-error" role="alert">
-                <p>{{ error }}</p>
-                <button type="button" (click)="retrySelected()">Retry position</button>
-              </section>
-            }
+            <app-explorer-analysis-panel
+              [session]="session()"
+              [turn]="turn()"
+              [boardTheme]="boardTheme()"
+              [analysisActive]="analysisKind() !== 'idle'"
+              [analysisMessage]="analysisMessage()"
+              [gameOverLabel]="gameOverLabel()"
+              (importRequested)="openImport()"
+              (setupRequested)="enterSetup()"
+              (newAnalysisRequested)="newAnalysis()"
+              (candidatePreviewed)="previewCandidate($event)"
+              (candidateRequested)="playCandidate($event)"
+              (nodeRequested)="selectNode($event)"
+              (pauseRequested)="pauseBatch()"
+              (resumeRequested)="resumeBatch()"
+              (retryRequested)="retrySelected()"
+              (firstRequested)="selectFirst()"
+              (previousRequested)="selectParent()"
+              (nextRequested)="selectPrimaryChild()"
+              (lastRequested)="selectLast()"
+            />
           }
         </aside>
       </section>

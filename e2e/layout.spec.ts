@@ -1,5 +1,46 @@
 import { expect, test } from '@playwright/test';
 
+const responsivenessViewports = [
+  { width: 320, height: 568 },
+  { width: 820, height: 1180 },
+  { width: 1024, height: 600 },
+  { width: 1280, height: 720 },
+] as const;
+
+const publicWorkspaceRoutes = [
+  '/',
+  '/play',
+  '/settings',
+  '/learn',
+  '/explorer',
+  '/about',
+  '/not-a-route',
+] as const;
+
+test('keeps every route shell within the supported viewport widths', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'Responsive route-shell regression suite');
+
+  for (const viewport of responsivenessViewports) {
+    await page.setViewportSize(viewport);
+
+    for (const route of publicWorkspaceRoutes) {
+      await page.goto(route);
+      await expectDocumentNotToOverflowHorizontally(page);
+    }
+
+    await page.goto('/about');
+    const finalAboutLink = page.getByRole('link', { name: 'Report a security issue privately' });
+    await finalAboutLink.scrollIntoViewIfNeeded();
+    await expect(finalAboutLink).toBeVisible();
+
+    await page.goto('/settings');
+    await page.getByRole('button', { name: 'How storage usage is calculated' }).focus();
+    const tooltip = page.getByRole('tooltip');
+    await expect(tooltip).toBeVisible();
+    await expect.poll(() => elementFitsViewportHorizontally(tooltip)).toBe(true);
+  }
+});
+
 test('collapses the desktop panel, preserves the choice, and navigates between workspaces', async ({
   page,
 }, testInfo) => {
@@ -13,26 +54,31 @@ test('collapses the desktop panel, preserves the choice, and navigates between w
   await expect(page.getByRole('heading', { name: 'Learn and Improve' })).toBeVisible();
   await expect(logo).toBeVisible();
   await expect(brandCopy).toBeVisible();
+  await expect(brandCopy).toHaveText('LealChess');
   await expect(page.getByRole('button', { name: 'Collapse navigation' })).toBeVisible();
-  await expect.poll(async () => (await navigation.boundingBox())!.width).toBeGreaterThan(200);
+  await expect.poll(async () => (await navigation.boundingBox())!.width).toBe(256);
+
+  const expandedBrand = (await navigation.locator('.brand').boundingBox())!;
+  const expandedBrandBlock = (await navigation.locator('.brand-block').boundingBox())!;
+  const collapseButton = (await page
+    .getByRole('button', { name: 'Collapse navigation' })
+    .boundingBox())!;
+  expect(rectanglesOverlap(expandedBrand, collapseButton)).toBe(false);
+  expectHandleToStraddleBrandCorner(collapseButton, expandedBrandBlock);
 
   await page.getByRole('button', { name: 'Collapse navigation' }).click();
   await expect(page.getByRole('button', { name: 'Expand navigation' })).toBeVisible();
-  await expect.poll(async () => (await navigation.boundingBox())!.width).toBeLessThan(100);
+  await expect.poll(async () => (await navigation.boundingBox())!.width).toBe(72);
   await expect(logo).toBeVisible();
   await expect(brandCopy).toBeHidden();
 
   const brandBlock = (await navigation.locator('.brand-block').boundingBox())!;
+  const collapsedLogo = (await logo.boundingBox())!;
   const expandButton = (await page
     .getByRole('button', { name: 'Expand navigation' })
     .boundingBox())!;
-  expect(expandButton.y).toBeGreaterThanOrEqual(brandBlock.y);
-  expect(expandButton.y + expandButton.height).toBeLessThanOrEqual(
-    brandBlock.y + brandBlock.height,
-  );
-  expect(
-    Math.abs(expandButton.x + expandButton.width / 2 - (brandBlock.x + brandBlock.width / 2)),
-  ).toBeLessThanOrEqual(3);
+  expect(rectanglesOverlap(collapsedLogo, expandButton)).toBe(false);
+  expectHandleToStraddleBrandCorner(expandButton, brandBlock);
 
   await playLink.hover();
   await expect
@@ -88,9 +134,42 @@ test('adapts Play from a landscape tablet desk to a portrait board-first stack',
       return portraitControls.y > portraitBoard.y + portraitBoard.height - 2;
     })
     .toBe(true);
+
+  const wideViewports = [
+    { width: 1648, height: 828, minimumDeskWidth: 520 },
+    { width: 2048, height: 941, minimumDeskWidth: 620 },
+  ];
+
+  for (const viewport of wideViewports) {
+    await page.setViewportSize(viewport);
+    const geometry = await page.evaluate(() => {
+      const boardFrame = document
+        .querySelector<HTMLElement>('app-chess-board .board-frame')!
+        .getBoundingClientRect();
+      const frame = document.querySelector<HTMLElement>('.app-frame')!;
+      const sidebar = document.querySelector<HTMLElement>('.game-panel')!.getBoundingClientRect();
+      return {
+        boardHeight: boardFrame.height,
+        boardRight: boardFrame.right,
+        boardWidth: boardFrame.width,
+        frameClientHeight: frame.clientHeight,
+        frameScrollHeight: frame.scrollHeight,
+        sidebarLeft: sidebar.left,
+        sidebarWidth: sidebar.width,
+      };
+    });
+
+    expect(Math.abs(geometry.boardWidth - geometry.boardHeight)).toBeLessThanOrEqual(1);
+    expect(geometry.boardHeight).toBeGreaterThanOrEqual(viewport.height * 0.86);
+    expect(geometry.frameScrollHeight).toBeLessThanOrEqual(geometry.frameClientHeight + 1);
+    expect(geometry.sidebarWidth).toBeGreaterThanOrEqual(viewport.minimumDeskWidth);
+    expect(geometry.sidebarWidth).toBeLessThanOrEqual(641);
+    expect(geometry.sidebarLeft - geometry.boardRight).toBeGreaterThanOrEqual(13);
+    expect(geometry.sidebarLeft - geometry.boardRight).toBeLessThanOrEqual(27);
+  }
 });
 
-test('launches each workspace and provides project information', async ({ page }) => {
+test('launches each workspace and provides project information', async ({ page }, testInfo) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'LealChess' })).toBeVisible();
   await expect(page.getByRole('link', { name: /Play/ })).toHaveAttribute('href', '/play');
@@ -98,20 +177,57 @@ test('launches each workspace and provides project information', async ({ page }
   await expect(page.getByRole('link', { name: /Settings/ })).toHaveAttribute('href', '/settings');
 
   await page.goto('/about');
-  await expect(page.getByRole('heading', { name: 'About' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Private report' })).toHaveAttribute(
-    'href',
-    'https://github.com/Swellshinider/LealChess/security/advisories/new',
-  );
+  await expect(page.getByRole('heading', { name: 'About LealChess' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Why LealChess' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Our Mission' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'We Are Open Source' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Issues and Contributions' })).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: 'Report a security issue privately' }),
+  ).toHaveAttribute('href', 'https://github.com/Swellshinider/LealChess/security/advisories/new');
 
   await page.goto('/help');
   await expect(page).toHaveURL(/\/about$/);
-  await expect(page.getByRole('heading', { name: 'About' })).toBeVisible();
-  await expect(page.getByText('v0.6.0', { exact: true })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Swellshinider/LealChess' })).toHaveAttribute(
+  await expect(page.getByRole('heading', { name: 'About LealChess' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'View the source on GitHub' })).toHaveAttribute(
     'href',
     'https://github.com/Swellshinider/LealChess',
   );
+
+  if (testInfo.project.name.includes('mobile')) {
+    await page.getByRole('button', { name: 'Open navigation' }).click();
+    await expect(page.getByRole('dialog', { name: 'Navigation menu' })).toContainText(
+      'Version v0.6.0',
+    );
+  } else {
+    await expect(page.locator('#primary-navigation .version-label')).toContainText(
+      'Version v0.6.0',
+    );
+  }
+});
+
+test('uses the shared readable typography scale across pages and controls', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'Computed typography smoke test');
+
+  await page.goto('/');
+  await expectTypographyTokens(page);
+  await expectFontSizeAtLeast(page.locator('.search-summary'), 16);
+  await expectFontSizeAtLeast(page.locator('.kicker'), 13);
+  await expectFontSizeAtLeast(page.locator('nav small').first(), 13);
+
+  await page.goto('/settings');
+  await expectFontSizeAtLeast(page.locator('#primary-navigation .route-links a').first(), 14);
+  await expectFontSizeAtLeast(page.locator('form label').first(), 14);
+  await expectFontSizeAtLeast(page.locator('.form-help'), 14);
+
+  await page.goto('/play');
+  const setupDialog = page.getByRole('dialog', { name: 'Choose your side' });
+  await expectFontSizeAtLeast(setupDialog.locator('.kicker'), 13);
+  await expectFontSizeAtLeast(setupDialog.locator('.intro'), 16);
+  await expectFontSizeAtLeast(setupDialog.locator('label'), 14);
+  await expectFontSizeAtLeast(setupDialog.locator('.color-options button').first(), 14);
 });
 
 test('publishes indexable metadata only for public pages', async ({ page, request }) => {
@@ -165,14 +281,34 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
   await expect(page.getByText('LealChess storage used', { exact: true })).toBeVisible();
   await expect(page.getByTestId('storage-usage-value')).toHaveText(/\d+(?:\.\d+)? (?:B|KB|MB|GB)/);
-  await page.evaluate(() => {
-    localStorage.setItem(
-      'lealchess.stockfish.downloads',
-      JSON.stringify(['stockfish-18-single@18.0.8']),
-    );
+  await page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('leal-chess');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const transaction = database.transaction('engineAssets', 'readwrite');
+    transaction.objectStore('engineAssets').put({
+      id: 'stockfish-18-full',
+      script: new ArrayBuffer(1),
+      wasm: new ArrayBuffer(1),
+      installedAt: new Date().toISOString(),
+      bytes: 113_013_789,
+    });
+    await new Promise<void>((resolve, reject) => {
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+    database.close();
   });
   await page.reload();
   await expect(page.getByTestId('storage-usage-value')).toContainText('107.8 MB');
+  const confirmVariationRemoval = page.getByLabel(/Confirm variation removal/);
+  await expect(confirmVariationRemoval).toBeChecked();
+  await confirmVariationRemoval.uncheck();
+  await expect.poll(() => storedPreference(page, 'confirmVariationRemoval')).toBe(false);
+  await page.reload();
+  await expect(page.getByLabel(/Confirm variation removal/)).not.toBeChecked();
   await expect(page.getByLabel(/Mute sounds/)).not.toBeChecked();
   const soundVolume = page.getByLabel('Sound volume');
   const soundVolumeTrack = soundVolume.locator('xpath=..');
@@ -217,10 +353,16 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   await page.getByRole('button', { name: 'Clear all data' }).first().click();
   await expect(page.getByRole('alertdialog')).toBeVisible();
   await page.getByRole('button', { name: 'Clear all data' }).last().click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/play$/);
+  const onboarding = page.getByRole('dialog', {
+    name: 'Set the board, then make the first plan',
+  });
+  await expect(onboarding).toBeVisible();
+  await onboarding.getByRole('button', { name: 'Skip tour' }).click();
   await page.goto('/settings');
   await expect(page.getByLabel('Board palette')).toHaveValue('tournament');
   await expect(page.getByLabel('Sound volume')).toHaveValue('100');
+  await expect(page.getByLabel(/Confirm variation removal/)).toBeChecked();
   await expect(page.getByTestId('storage-usage-value')).toHaveText(/\s*\d+ B\s*/);
   expect(
     await page.evaluate(() => localStorage.getItem('lealchess.stockfish.downloads')),
@@ -276,4 +418,92 @@ async function expectWorkspaceToFitViewport(page: import('@playwright/test').Pag
   expect(geometry.frameWidth).toBeLessThanOrEqual(geometry.frameClientWidth + 1);
   expect(geometry.boardBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
   expect(geometry.controlsBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
+}
+
+async function expectDocumentNotToOverflowHorizontally(page: import('@playwright/test').Page) {
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const scrollingElement = document.scrollingElement!;
+        return scrollingElement.scrollWidth <= scrollingElement.clientWidth + 1;
+      }),
+    )
+    .toBe(true);
+}
+
+async function elementFitsViewportHorizontally(locator: import('@playwright/test').Locator) {
+  return locator.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    return bounds.left >= 0 && bounds.right <= window.innerWidth;
+  });
+}
+
+function rectanglesOverlap(
+  first: { x: number; y: number; width: number; height: number },
+  second: { x: number; y: number; width: number; height: number },
+) {
+  return !(
+    first.x + first.width <= second.x ||
+    second.x + second.width <= first.x ||
+    first.y + first.height <= second.y ||
+    second.y + second.height <= first.y
+  );
+}
+
+function expectHandleToStraddleBrandCorner(
+  handle: { x: number; y: number; width: number; height: number },
+  brandBlock: { x: number; y: number; width: number; height: number },
+) {
+  expect(
+    Math.abs(handle.x + handle.width / 2 - (brandBlock.x + brandBlock.width)),
+  ).toBeLessThanOrEqual(2);
+  expect(
+    Math.abs(handle.y + handle.height / 2 - (brandBlock.y + brandBlock.height)),
+  ).toBeLessThanOrEqual(2);
+}
+
+async function expectTypographyTokens(page: import('@playwright/test').Page) {
+  const tokens = await page.locator('html').evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      micro: style.getPropertyValue('--type-micro').trim(),
+      caption: style.getPropertyValue('--type-caption').trim(),
+      small: style.getPropertyValue('--type-small').trim(),
+      body: style.getPropertyValue('--type-body').trim(),
+    };
+  });
+
+  expect(tokens).toEqual({
+    micro: '0.75rem',
+    caption: '0.8125rem',
+    small: '0.875rem',
+    body: '1rem',
+  });
+}
+
+async function expectFontSizeAtLeast(
+  locator: import('@playwright/test').Locator,
+  minimumPixels: number,
+) {
+  await expect(locator).toBeVisible();
+  await expect
+    .poll(() => locator.evaluate((element) => parseFloat(getComputedStyle(element).fontSize)))
+    .toBeGreaterThanOrEqual(minimumPixels);
+}
+
+async function storedPreference(page: import('@playwright/test').Page, key: string) {
+  return page.evaluate(async (preferenceKey) => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('leal-chess');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const value = await new Promise<unknown>((resolve, reject) => {
+      const request = database.transaction('state').objectStore('state').get('preferences');
+      request.onsuccess = () => resolve(request.result?.value?.[preferenceKey]);
+      request.onerror = () => reject(request.error);
+    });
+    database.close();
+    return value;
+  }, key);
 }

@@ -1,0 +1,64 @@
+:host {
+  display: block;
+}
+.score,
+.score ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.score {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 0;
+  align-items: center;
+}
+.score > li:not(.variation-row),
+.variation-row ol > li {
+  align-items: center;
+  display: inline-flex;
+}
+.move-number {
+  color: var(--mist);
+  font-family: var(--font-utility);
+  font-size: var(--type-micro);
+  margin: 0 4px 0 8px;
+}
+button {
+  background: transparent;
+  border: 0;
+  border-radius: 3px;
+  color: var(--paper);
+  min-height: 32px;
+  padding: 5px 7px;
+}
+button:hover,
+button.current {
+  background: var(--surface-container-highest);
+}
+.selected-path > button {
+  box-shadow: inset 0 -2px var(--primary-container);
+}
+button.current {
+  box-shadow: inset 0 -2px var(--amber);
+}
+button i {
+  color: var(--mist);
+  font-family: var(--font-utility);
+  font-size: var(--type-micro);
+  font-style: normal;
+  margin-left: 5px;
+}
+.variation-row {
+  align-items: center;
+  color: var(--mist);
+  display: inline-flex;
+  margin-left: calc(var(--variation-depth) * 8px);
+}
+.variation-row ol {
+  display: inline-flex;
+  flex-wrap: wrap;
+}
+.start-position {
+  margin-right: 4px;
+}

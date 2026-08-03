@@ -10,7 +10,8 @@ app-explorer-page {
   }
 
   .explorer-page {
-    --explorer-padding: clamp(14px, 2vw, 28px);
+    --explorer-padding-block: clamp(8px, 1.2dvh, 12px);
+    --explorer-padding-inline: clamp(12px, 1.8vw, 24px);
 
     background: var(--night);
     container-type: inline-size;
@@ -19,15 +20,16 @@ app-explorer-page {
     flex-direction: column;
     height: 100%;
     min-width: 0;
-    overflow: hidden;
-    padding: var(--explorer-padding);
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: var(--explorer-padding-block) var(--explorer-padding-inline);
   }
 
   .import-dialog header span,
   .piece-palette > div > span {
     color: var(--primary);
     font-family: var(--font-utility);
-    font-size: 0.62rem;
+    font-size: var(--type-caption);
     letter-spacing: 0.09em;
     text-transform: uppercase;
   }
@@ -80,20 +82,28 @@ app-explorer-page {
   .analysis-workspace {
     display: grid;
     flex: 1 1 auto;
-    gap: clamp(14px, 2cqw, 26px);
-    grid-template-columns: minmax(430px, 1fr) clamp(300px, 27cqw, 350px);
+    align-items: stretch;
+    column-gap: clamp(14px, 1.6cqw, 22px);
+    grid-template-columns: minmax(0, 1fr) clamp(430px, 40cqw, 640px);
     height: 100%;
     margin: 0 auto;
-    max-width: 1280px;
+    max-width: 1600px;
     min-height: 0;
     width: 100%;
   }
 
   .board-workbench {
+    --board-strip-height: 34px;
+    --board-strips-height: calc(var(--board-strip-height) + var(--board-strip-height));
+    --explorer-fit-tolerance: 2px;
     --explorer-board-size: min(
       100%,
-      820px,
-      calc(100dvh - var(--explorer-padding) - var(--explorer-padding) - 12px - 40px - 42px - 47px)
+      1024px,
+      calc(
+        100dvh - var(--explorer-padding-block) - var(--explorer-padding-block) - var(
+            --board-strips-height
+          ) - var(--explorer-fit-tolerance)
+      )
     );
 
     align-content: center;
@@ -102,11 +112,13 @@ app-explorer-page {
     grid-template-areas:
       '. heading'
       'rail board'
-      '. navigation';
+      '. engine';
     grid-template-columns: 34px minmax(0, 1fr);
     grid-template-rows: auto auto auto;
     height: 100%;
+    justify-self: end;
     min-width: 0;
+    width: min(100%, calc(var(--explorer-board-size) + 44px));
 
     &.setup-mode {
       grid-template-areas:
@@ -131,7 +143,7 @@ app-explorer-page {
   .evaluation-score {
     color: var(--paper);
     font-family: var(--font-utility);
-    font-size: 0.58rem;
+    font-size: var(--type-caption);
     font-weight: 700;
     left: 50%;
     position: absolute;
@@ -194,7 +206,7 @@ app-explorer-page {
     grid-area: heading;
     justify-self: center;
     max-width: var(--explorer-board-size);
-    min-height: 42px;
+    min-height: var(--board-strip-height);
     padding-bottom: 2px;
     width: var(--explorer-board-size);
 
@@ -205,7 +217,7 @@ app-explorer-page {
     strong {
       display: block;
       font-family: var(--font-utility);
-      font-size: 0.72rem;
+      font-size: var(--type-small);
       font-weight: 500;
       text-transform: capitalize;
     }
@@ -221,6 +233,35 @@ app-explorer-page {
     display: block;
     position: relative;
     width: 100%;
+  }
+
+  .engine-board-strip {
+    align-items: center;
+    color: var(--mist);
+    display: grid;
+    gap: 8px;
+    grid-area: engine;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    justify-self: center;
+    min-height: var(--board-strip-height);
+    padding: 3px 2px;
+    width: var(--explorer-board-size);
+
+    span,
+    small {
+      font-family: var(--font-utility);
+      font-size: var(--type-micro);
+    }
+
+    strong {
+      color: var(--paper);
+      font-family: var(--font-utility);
+      font-size: var(--type-caption);
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
   .position-navigation {
@@ -247,7 +288,8 @@ app-explorer-page {
 
   .analysis-ledger {
     align-self: stretch;
-    background: var(--surface);
+    background: var(--surface-container);
+    border: 1px solid rgb(200 213 207 / 16%);
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -278,13 +320,13 @@ app-explorer-page {
     > span {
       color: var(--mist);
       font-family: var(--font-utility);
-      font-size: 0.58rem;
+      font-size: var(--type-caption);
       text-transform: uppercase;
     }
 
     strong {
       font-family: var(--font-utility);
-      font-size: 0.72rem;
+      font-size: var(--type-small);
       font-weight: 500;
       margin-top: 3px;
     }
@@ -316,7 +358,7 @@ app-explorer-page {
     > div:first-child {
       display: flex;
       font-family: var(--font-utility);
-      font-size: 0.65rem;
+      font-size: var(--type-caption);
       justify-content: space-between;
       text-transform: uppercase;
     }
@@ -326,7 +368,7 @@ app-explorer-page {
       border: 0;
       color: var(--primary);
       font-family: var(--font-utility);
-      font-size: 0.62rem;
+      font-size: var(--type-caption);
       margin-top: 9px;
       padding: 0;
       text-decoration: underline;
@@ -335,7 +377,7 @@ app-explorer-page {
 
     p {
       color: #ffb4ab;
-      font-size: 0.72rem;
+      font-size: var(--type-small);
     }
   }
 
@@ -369,7 +411,7 @@ app-explorer-page {
     small {
       color: var(--mist);
       font-family: var(--font-utility);
-      font-size: 0.55rem;
+      font-size: var(--type-micro);
     }
   }
 
@@ -395,7 +437,7 @@ app-explorer-page {
     strong,
     li > span:last-child {
       font-family: var(--font-utility);
-      font-size: 0.68rem;
+      font-size: var(--type-caption);
     }
 
     li > span:last-child {
@@ -425,7 +467,7 @@ app-explorer-page {
 
   .terminal-position {
     color: var(--mist);
-    font-size: 0.78rem;
+    font-size: var(--type-small);
     margin: 16px 0 2px;
   }
 
@@ -487,16 +529,16 @@ app-explorer-page {
 
     small {
       color: var(--mist);
-      font-size: 0.55rem;
+      font-size: var(--type-micro);
     }
 
     strong {
-      font-size: 0.78rem;
+      font-size: var(--type-small);
     }
 
     i {
       color: var(--mist);
-      font-size: 0.5rem;
+      font-size: var(--type-micro);
       font-style: normal;
       grid-column: 4;
     }
@@ -510,7 +552,7 @@ app-explorer-page {
   .move-badge {
     border-left: 3px solid var(--classification-color, var(--outline));
     color: var(--classification-color, var(--mist));
-    font-size: 0.57rem;
+    font-size: var(--type-micro);
     justify-self: end;
     padding-left: 6px;
     text-transform: uppercase;
@@ -522,7 +564,7 @@ app-explorer-page {
 
     p {
       color: #ffb4ab;
-      font-size: 0.72rem;
+      font-size: var(--type-small);
     }
 
     button {
@@ -568,7 +610,7 @@ app-explorer-page {
 
     .eraser {
       font-family: var(--font-utility);
-      font-size: 0.65rem;
+      font-size: var(--type-caption);
       padding: 0 10px;
     }
   }
@@ -584,7 +626,7 @@ app-explorer-page {
   .setup-panel fieldset {
     color: var(--mist);
     font-family: var(--font-utility);
-    font-size: 0.61rem;
+    font-size: var(--type-caption);
   }
 
   .setup-fields select {
@@ -616,7 +658,7 @@ app-explorer-page {
   .setup-error,
   .import-error {
     color: #ffb4ab;
-    font-size: 0.72rem;
+    font-size: var(--type-small);
   }
 
   .setup-utilities,
@@ -700,7 +742,7 @@ app-explorer-page {
     label {
       color: var(--mist);
       display: block;
-      font-size: 0.75rem;
+      font-size: var(--type-small);
       margin-top: 14px;
     }
 
@@ -709,7 +751,7 @@ app-explorer-page {
       border: 1px solid var(--outline-variant);
       color: var(--paper);
       font-family: var(--font-utility);
-      font-size: 0.72rem;
+      font-size: var(--type-small);
       line-height: 1.55;
       margin-top: 7px;
       padding: 12px;
@@ -789,7 +831,7 @@ app-explorer-page {
       span {
         display: block;
         font-family: var(--font-utility);
-        font-size: 0.58rem;
+        font-size: var(--type-caption);
         margin-top: 4px;
       }
     }
@@ -808,9 +850,27 @@ app-explorer-page {
     }
   }
 
-  @container (max-width: 1020px) {
+  @container (max-width: 900px) {
     .analysis-workspace {
-      grid-template-columns: minmax(390px, 1fr) minmax(300px, 350px);
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto;
+      height: auto;
+      row-gap: clamp(14px, 2cqw, 24px);
+    }
+
+    .explorer-page {
+      overflow-y: auto;
+    }
+
+    .board-workbench {
+      justify-self: center;
+      max-width: 1068px;
+      width: 100%;
+    }
+
+    .analysis-ledger {
+      max-height: 620px;
+      min-height: 500px;
     }
   }
 
@@ -850,12 +910,14 @@ app-explorer-page {
       gap: 6px;
       grid-template-columns: 24px minmax(0, 1fr);
       margin: auto;
-      max-width: 690px;
+      max-width: none;
     }
 
     .analysis-ledger {
       height: auto;
+      max-height: none;
       margin-top: 18px;
+      min-height: 560px;
       overflow: visible;
     }
 

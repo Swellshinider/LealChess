@@ -17,13 +17,13 @@
   span {
     color: var(--mist);
     font-family: var(--font-utility);
-    font-size: 0.6rem;
+    font-size: var(--type-caption);
     text-transform: uppercase;
   }
 
   strong {
     color: var(--paper);
-    font-size: 0.76rem;
+    font-size: var(--type-small);
     margin-top: 4px;
   }
 
@@ -32,7 +32,7 @@
     border: 0;
     color: var(--primary);
     font-family: var(--font-utility);
-    font-size: 0.62rem;
+    font-size: var(--type-caption);
     min-height: 36px;
     padding: 0 2px;
     text-transform: uppercase;

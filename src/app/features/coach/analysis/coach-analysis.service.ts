@@ -4,13 +4,11 @@ import type { ChessColor } from '../../../shared/chess/chess.types';
 import { openingBookPlyCount } from './opening-index';
 import { CoachRepositoryService } from '../data/coach-repository.service';
 import type { GameAnalysis, ImportedGame, MoveAnalysis } from '../domain/coach.types';
-import {
-  ANALYSIS_DEPTH,
-  ANALYSIS_ENGINE_VERSION,
-  ANALYSIS_SCHEMA_VERSION,
-} from './analysis.constants';
+import { ANALYSIS_ENGINE_VERSION, ANALYSIS_SCHEMA_VERSION } from './analysis.constants';
 import { analysisFingerprint, categorizeMistake, moveToSan, moveToUci } from './analysis-rules';
 import { assessMove, legacyClassification } from './review-classification';
+import { AnalysisSettingsService } from '../../../core/engine/analysis-settings.service';
+import { analysisProfileFingerprint } from '../../../core/engine/analysis-profiles';
 
 export type AnalysisPhase =
   'idle' | 'ready' | 'starting' | 'running' | 'partial' | 'complete' | 'error';
@@ -20,6 +18,7 @@ export interface AnalysisViewState {
   completed: number;
   total: number;
   error: string | null;
+  stale?: boolean;
 }
 
 const INITIAL_STATE: AnalysisViewState = {
@@ -33,6 +32,7 @@ const INITIAL_STATE: AnalysisViewState = {
 export class CoachAnalysisService {
   private readonly engine = inject(ANALYSIS_ENGINE_PORT);
   private readonly repository = inject(CoachRepositoryService);
+  private readonly settings = inject(AnalysisSettingsService);
   private readonly mutableAnalysis = signal<GameAnalysis | null>(null);
   private readonly mutableState = signal<AnalysisViewState>(INITIAL_STATE);
   private abortController: AbortController | null = null;
@@ -41,17 +41,25 @@ export class CoachAnalysisService {
   readonly state = this.mutableState.asReadonly();
 
   async load(game: ImportedGame, learnerColor: ChessColor): Promise<void> {
-    const [cached, fingerprint] = await Promise.all([
+    const [cached, fingerprint, profile] = await Promise.all([
       this.repository.analysis(game.key),
       analysisFingerprint(game, learnerColor),
+      this.settings.profile('game-review'),
     ]);
     const analysis = cached?.sourceFingerprint === fingerprint ? cached : null;
+    const profileFingerprint = analysisProfileFingerprint(profile);
+    const stale = Boolean(
+      analysis &&
+      analysis.profileFingerprint !== profileFingerprint &&
+      !(analysis.profileFingerprint === undefined && analysis.depth === 16),
+    );
     this.mutableAnalysis.set(analysis);
     this.mutableState.set({
       phase: analysis?.status === 'complete' ? 'complete' : analysis ? 'partial' : 'ready',
       completed: analysis?.reviewMoves?.length ?? analysis?.moves.length ?? 0,
       total: game.moves.length,
       error: null,
+      stale,
     });
   }
 
@@ -69,14 +77,28 @@ export class CoachAnalysisService {
     restart: boolean,
   ): Promise<void> {
     if (this.abortController) return;
-    const fingerprint = await analysisFingerprint(game, learnerColor);
+    const [fingerprint, profile] = await Promise.all([
+      analysisFingerprint(game, learnerColor),
+      this.settings.profile('game-review'),
+    ]);
+    const profileFingerprint = analysisProfileFingerprint(profile);
     const userMoves = game.moves.filter((move) => move.color === learnerColor);
     const reviewMoves = game.moves;
     const cached = this.mutableAnalysis();
     let analysis =
-      !restart && cached?.sourceFingerprint === fingerprint
+      !restart &&
+      cached?.sourceFingerprint === fingerprint &&
+      (cached.profileFingerprint === profileFingerprint ||
+        (cached.profileFingerprint === undefined && profile.depth === 16 && profile.lines === 2))
         ? cached
-        : this.newAnalysis(game, learnerColor, fingerprint, userMoves.length);
+        : this.newAnalysis(
+            game,
+            learnerColor,
+            fingerprint,
+            userMoves.length,
+            profile.depth,
+            profileFingerprint,
+          );
     this.mutableAnalysis.set(analysis);
     if (restart) await this.repository.saveAnalysis(analysis);
     this.abortController = new AbortController();
@@ -88,7 +110,7 @@ export class CoachAnalysisService {
     });
 
     try {
-      await this.engine.initialize();
+      await this.engine.initialize(profile.engineId);
       if (this.abortController.signal.aborted) {
         throw new DOMException('Analysis cancelled.', 'AbortError');
       }
@@ -99,8 +121,9 @@ export class CoachAnalysisService {
         if (completedPlies.has(move.ply)) continue;
         const best = await this.engine.analyze({
           fen: move.fenBefore,
-          depth: ANALYSIS_DEPTH,
-          multiPv: 2,
+          engineId: profile.engineId,
+          depth: profile.depth,
+          multiPv: profile.lines,
           signal: this.abortController.signal,
         });
         if (!best.bestMove) throw new Error(`No best move was returned for ply ${move.ply}.`);
@@ -110,7 +133,8 @@ export class CoachAnalysisService {
             ? best
             : await this.engine.analyze({
                 fen: move.fenBefore,
-                depth: ANALYSIS_DEPTH,
+                engineId: profile.engineId,
+                depth: profile.depth,
                 searchMove: move.uci,
                 signal: this.abortController.signal,
               });
@@ -197,13 +221,16 @@ export class CoachAnalysisService {
     learnerColor: ChessColor,
     sourceFingerprint: string,
     totalUserMoves: number,
+    depth: number,
+    profileFingerprint: string,
   ): GameAnalysis {
     return {
       importedGameKey: game.key,
       schemaVersion: ANALYSIS_SCHEMA_VERSION,
       sourceFingerprint,
       engineVersion: ANALYSIS_ENGINE_VERSION,
-      depth: ANALYSIS_DEPTH,
+      depth,
+      profileFingerprint,
       learnerColor,
       status: 'partial',
       totalUserMoves,
