@@ -3,7 +3,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 
 export const ONBOARDING_COMPLETION_KEY = 'lealchess.onboarding.completed';
-export const ONBOARDING_COMPLETION_VERSION = '2';
+export const ONBOARDING_COMPLETION_VERSION = '3';
 
 export interface OnboardingStep {
   readonly id: string;
@@ -27,10 +27,10 @@ export const ONBOARDING_STEPS: readonly OnboardingStep[] = [
     hint: 'Stockfish runs entirely on this device.',
   },
   {
-    id: 'settings-import',
-    route: '/settings',
-    anchors: ['settings-import'],
-    eyebrow: 'Settings',
+    id: 'learn-import',
+    route: '/learn',
+    anchors: ['learn-import'],
+    eyebrow: 'Learn · imports',
     title: 'Bring your games to the study desk',
     description:
       'Enter a Chess.com username, a Lichess username, or both. Games are fetched only when you choose Import games.',
@@ -54,7 +54,7 @@ export const ONBOARDING_STEPS: readonly OnboardingStep[] = [
     title: 'Turn each game into a lesson',
     description:
       'Imported and LealChess games appear here. Filter the archive, open a review, and practice better continuations.',
-    hint: 'No games yet? Return to Settings whenever you are ready to import.',
+    hint: 'No games yet? Open the import panel above whenever you are ready.',
   },
   {
     id: 'explorer',

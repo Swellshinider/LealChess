@@ -77,22 +77,6 @@
   text-transform: uppercase;
 }
 
-form {
-  align-items: end;
-  display: grid;
-  gap: 14px;
-  grid-template-columns: repeat(2, minmax(150px, 1fr)) 130px 160px auto;
-
-  label {
-    color: var(--mist);
-    display: grid;
-    font-family: var(--font-utility);
-    font-size: var(--type-small);
-    gap: 7px;
-    text-transform: uppercase;
-  }
-}
-
 input,
 select {
   background: var(--night);
@@ -100,77 +84,6 @@ select {
   color: var(--paper);
   min-height: 44px;
   padding: 8px 11px;
-}
-
-form > button {
-  background: var(--primary);
-  border: 0;
-  color: var(--on-primary);
-  font-weight: 700;
-  min-height: 44px;
-  padding: 8px 18px;
-}
-
-.form-help,
-.field-error {
-  color: var(--mist);
-  font-size: var(--type-small);
-  margin: 10px 0 0;
-}
-
-.field-error {
-  color: #f2b0aa;
-}
-
-.platform-statuses {
-  display: grid;
-  gap: 10px;
-  grid-template-columns: repeat(2, 1fr);
-  margin-top: 18px;
-}
-
-.platform-status {
-  background: var(--surface-lowest);
-  border-left: 4px solid var(--teal);
-  color: var(--mist);
-  padding: 14px 16px;
-
-  &[data-state='error'] {
-    border-color: var(--danger);
-  }
-
-  &[data-state='success'],
-  &[data-state='warning'] {
-    border-color: var(--amber);
-  }
-
-  > div {
-    display: flex;
-    justify-content: space-between;
-  }
-
-  strong {
-    color: var(--paper);
-  }
-
-  span {
-    color: var(--amber);
-    font-family: var(--font-utility);
-    font-size: var(--type-caption);
-    text-transform: uppercase;
-  }
-
-  p {
-    margin: 7px 0 0;
-  }
-
-  button {
-    background: transparent;
-    border: 1px solid rgb(200 213 207 / 28%);
-    color: var(--paper);
-    margin-top: 10px;
-    min-height: 38px;
-  }
 }
 
 .board-settings-layout {
@@ -576,12 +489,6 @@ form > button {
   }
 }
 
-@media (max-width: 980px) {
-  form {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 @media (max-width: 760px) {
   .settings-shell {
     display: block;
@@ -604,11 +511,6 @@ form > button {
 }
 
 @media (max-width: 560px) {
-  form,
-  .platform-statuses {
-    grid-template-columns: 1fr;
-  }
-
   .section-heading,
   .getting-started,
   .danger-zone {

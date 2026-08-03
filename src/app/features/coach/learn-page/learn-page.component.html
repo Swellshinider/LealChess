@@ -5,6 +5,8 @@
       <h1>Learn and Improve</h1>
     </header>
 
+    <app-import-panel appOnboardingAnchor="learn-import" />
+
     <section appOnboardingAnchor="learn-overview" class="dashboard" aria-label="Learning overview">
       <article class="progress-panel">
         <app-rating-trend [series]="ratingSeries()" />
@@ -112,7 +114,7 @@
             <span aria-hidden="true">!</span>
             <h3>No games were added</h3>
             <p>
-              Follow the recovery step in the import desk, then retry only the platform that failed.
+              Follow the recovery step in the panel above, then retry only the platform that failed.
               Your saved study data has not changed.
             </p>
           </div>
@@ -120,8 +122,7 @@
           <div class="empty-state">
             <span aria-hidden="true">♙</span>
             <h3>Your study ledger is ready</h3>
-            <p>Play Stockfish or import games from Chess.com or Lichess to begin.</p>
-            <a routerLink="/settings">Open Settings</a>
+            <p>Play Stockfish or import your games from Chess.com or Lichess above to begin.</p>
           </div>
         }
       } @else {
