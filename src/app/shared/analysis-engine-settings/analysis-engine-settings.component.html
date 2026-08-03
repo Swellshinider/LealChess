@@ -1,21 +1,34 @@
-<button
-  type="button"
-  class="machine-plate"
-  [class.expanded]="!compact()"
-  [attr.aria-label]="'Configure ' + label() + ' engine'"
-  [attr.aria-expanded]="open()"
-  (click)="show()"
->
-  <span class="machine-mark" aria-hidden="true">SF</span>
-  <span>
-    <strong>{{ label() }}</strong>
-    <small
-      >{{ engine().name.replace('Stockfish 18 ', '') }} · D{{ profile().depth }} ·
-      {{ profile().lines }} lines</small
+@if (compact()) {
+  <button
+    type="button"
+    class="engine-config"
+    [attr.aria-label]="'Configure ' + label() + ' engine'"
+    [attr.title]="label() + ' · ' + summary()"
+    [attr.aria-expanded]="open()"
+    (click)="show()"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 7h9M17 7h3M4 17h5M13 17h7" />
+      <path d="M15 4.5v5M11 14.5v5" />
+    </svg>
+  </button>
+} @else {
+  <div class="engine-row" role="group" [attr.aria-labelledby]="'engine-row-' + workflow()">
+    <span>
+      <strong [id]="'engine-row-' + workflow()">{{ label() }}</strong>
+      <small>{{ summary() }}</small>
+    </span>
+    <button
+      type="button"
+      class="configure"
+      [attr.aria-label]="'Configure ' + label() + ' engine'"
+      [attr.aria-expanded]="open()"
+      (click)="show()"
     >
-  </span>
-  <span class="gear" aria-hidden="true">⚙</span>
-</button>
+      Configure
+    </button>
+  </div>
+}
 
 @if (open()) {
   <div class="engine-backdrop" (mousedown)="close()">
