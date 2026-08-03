@@ -1,0 +1,52 @@
+<section class="batch-analysis-panel" [attr.data-phase]="state().phase">
+  @if (state().phase === 'idle') {
+    <form [formGroup]="batchForm" (ngSubmit)="start()">
+      <label>
+        Games to analyze
+        <input
+          type="number"
+          min="1"
+          max="50"
+          formControlName="count"
+          aria-describedby="batch-eligible-count"
+        />
+      </label>
+      <button type="submit" [disabled]="batchForm.invalid || !eligibleCount()">
+        Analyze games
+      </button>
+    </form>
+    <p id="batch-eligible-count" class="form-help">
+      @if (eligibleCount()) {
+        {{ eligibleCount() }} {{ eligibleCount() === 1 ? 'game needs' : 'games need' }} analysis,
+        newest first.
+      } @else {
+        All imported games are analyzed.
+      }
+    </p>
+  } @else if (state().phase === 'starting' || state().phase === 'running') {
+    <div class="progress-copy" aria-live="polite">
+      <span>{{ progressLabel() }}</span>
+      <strong>{{ progress() }}%</strong>
+    </div>
+    <div
+      class="progress-track"
+      role="progressbar"
+      aria-label="Batch game analysis"
+      [attr.aria-valuemin]="0"
+      [attr.aria-valuemax]="100"
+      [attr.aria-valuenow]="progress()"
+    >
+      <span [style.width.%]="progress()"></span>
+    </div>
+    <button type="button" class="text-action" (click)="cancel()">Cancel</button>
+  } @else {
+    <div class="batch-summary" [attr.role]="state().phase === 'error' ? 'alert' : 'status'">
+      @if (state().phase === 'error') {
+        <p class="analysis-error">{{ state().error }}</p>
+      } @else {
+        <p>{{ summaryLabel() }}</p>
+      }
+      <button type="button" class="text-action" (click)="dismiss()">Dismiss</button>
+    </div>
+  }
+</section>

@@ -81,6 +81,13 @@ export class CoachImportService {
   readonly priorities = computed(() => learningPriorities(this.completedAnalyses()));
 
   async initialize(): Promise<void> {
+    await this.refreshAnalyses();
+  }
+
+  /** Reconciles cached analyses against the current games and profiles, dropping any analysis
+   * whose source fingerprint no longer matches. Safe to call while a background analysis run is
+   * still writing new results, so the ledger and study priorities can update live. */
+  async refreshAnalyses(): Promise<void> {
     const [profiles, games, cachedAnalyses] = await Promise.all([
       this.repository.profiles(),
       this.repository.gamesForActiveProfiles(),
