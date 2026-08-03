@@ -7,7 +7,7 @@ import { ENGINE_PORT } from './core/engine/engine.types';
 import { StockfishEngineService } from './core/engine/stockfish-engine.service';
 import { ANALYSIS_ENGINE_PORT } from './core/engine/analysis-engine.types';
 import { StockfishAnalysisEngineService } from './core/engine/stockfish-analysis-engine.service';
-import { BATCH_ANALYSIS_ENGINE_PORT } from './features/coach/analysis/batch-analysis.service';
+import { BATCH_ANALYSIS_ENGINE_PORT } from './features/coach/analysis/batch-analysis.types';
 import { IndexedDbPersistenceService } from './core/persistence/indexed-db-persistence.service';
 import { PERSISTENCE_PORT } from './core/persistence/persistence.types';
 import { provideClientHydration } from '@angular/platform-browser';

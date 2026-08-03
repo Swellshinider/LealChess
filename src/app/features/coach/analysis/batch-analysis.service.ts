@@ -1,29 +1,15 @@
-import { Injectable, InjectionToken, computed, inject, signal } from '@angular/core';
-import type { AnalysisEnginePort } from '../../../core/engine/analysis-engine.types';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { AnalysisSettingsService } from '../../../core/engine/analysis-settings.service';
 import { CoachRepositoryService } from '../data/coach-repository.service';
 import type { GameAnalysis, ImportedGame, ImportedProfile } from '../domain/coach.types';
 import { learnerColorForGame } from './analysis-rules';
+import { BATCH_ANALYSIS_ENGINE_PORT } from './batch-analysis.types';
+import type { BatchAnalysisState } from './batch-analysis.types';
 import { selectGamesForBatchAnalysis } from './batch-analysis-selection';
 import { prepareGameAnalysis, runGameAnalysis } from './game-analysis-runner';
 
-export const BATCH_ANALYSIS_ENGINE_PORT = new InjectionToken<AnalysisEnginePort>(
-  'BATCH_ANALYSIS_ENGINE_PORT',
-);
-
-export type BatchAnalysisPhase =
-  'idle' | 'starting' | 'running' | 'cancelled' | 'complete' | 'error';
-
-export interface BatchAnalysisState {
-  phase: BatchAnalysisPhase;
-  total: number;
-  completed: number;
-  failed: number;
-  currentIndex: number;
-  currentGameKey: string | null;
-  currentMoves: { completed: number; total: number };
-  error: string | null;
-}
+export { BATCH_ANALYSIS_ENGINE_PORT } from './batch-analysis.types';
+export type { BatchAnalysisPhase, BatchAnalysisState } from './batch-analysis.types';
 
 const INITIAL_STATE: BatchAnalysisState = {
   phase: 'idle',
