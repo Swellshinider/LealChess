@@ -118,7 +118,28 @@ jobs:
           node-version: 24.15.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+      - name: Resolve installed Playwright version
+        id: playwright-version
+        run: |
+          version="$(pnpm exec playwright --version | awk '{print $2}')"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ms-playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}-${{ matrix.browser }}
+      - if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+      - if: ${{ steps.playwright-cache.outputs.cache-hit == 'true' }}
+        run: pnpm exec playwright install-deps ${{ matrix.browser }}
+      - name: Cache Angular build cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .angular/cache
+          key: angular-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            angular-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
       - run: pnpm exec playwright test --project=${{ matrix.project }}
       - name: Upload ${{ matrix.project }} Playwright report
         if: ${{ failure() }}

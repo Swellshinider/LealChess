@@ -230,7 +230,8 @@ test('uses the shared readable typography scale across pages and controls', asyn
   await expectFontSizeAtLeast(setupDialog.locator('.color-options button').first(), 14);
 });
 
-test('publishes indexable metadata only for public pages', async ({ page, request }) => {
+test('publishes indexable metadata only for public pages', async ({ page, request }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'Metadata is engine-independent HTML/HTTP');
   await page.goto('/');
   await expect(page).toHaveTitle('LealChess | Local Chess Analysis & Training');
   await expect(page.locator('meta[name="description"]')).toHaveAttribute(
