@@ -21,7 +21,7 @@ export default defineConfig({
       origins: [
         {
           origin: baseURL,
-          localStorage: [{ name: 'lealchess.onboarding.completed', value: '2' }],
+          localStorage: [{ name: 'lealchess.onboarding.completed', value: '3' }],
         },
       ],
     },

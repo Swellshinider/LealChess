@@ -6,106 +6,6 @@
       <h1>Settings</h1>
     </header>
 
-    <section appOnboardingAnchor="settings-import" aria-labelledby="accounts-heading">
-      <div class="section-heading">
-        <div>
-          <p class="folio">Accounts & imports</p>
-          <h2 id="accounts-heading">Bring your games to the study desk</h2>
-        </div>
-        <span>Saved locally</span>
-      </div>
-
-      <form [formGroup]="importForm" [attr.aria-busy]="coach.loading()" (ngSubmit)="importGames()">
-        <label>
-          Chess.com username
-          <input
-            formControlName="chessComUsername"
-            autocomplete="username"
-            placeholder="Username"
-          />
-        </label>
-        <label>
-          Lichess username
-          <input formControlName="lichessUsername" autocomplete="username" placeholder="Username" />
-        </label>
-        <label>
-          Games per platform
-          <input formControlName="maxGames" type="number" min="1" max="100" />
-        </label>
-        <label>
-          Speed
-          <select formControlName="speed">
-            <option value="any">Any</option>
-            <option value="bullet">Bullet</option>
-            <option value="blitz">Blitz</option>
-            <option value="rapid">Rapid</option>
-            <option value="classical-daily">Classical / Daily</option>
-          </select>
-        </label>
-        <button type="submit" [disabled]="coach.loading()">
-          {{ coach.loading() ? 'Importing…' : 'Import games' }}
-        </button>
-      </form>
-      <p class="form-help">
-        Enter either username. Each platform imports separately, so one can still succeed if the
-        other is unavailable.
-      </p>
-      @if (usernameError()) {
-        <p class="field-error" role="alert">Enter a Chess.com or Lichess username.</p>
-      }
-      @if (importForm.controls.maxGames.invalid && importForm.controls.maxGames.touched) {
-        <p class="field-error">Choose between 1 and 100 games per platform.</p>
-      }
-
-      <div class="platform-statuses">
-        @for (
-          status of [coach.statuses()['chess-com'], coach.statuses().lichess];
-          track status.platform
-        ) {
-          <article
-            class="platform-status"
-            [attr.data-state]="status.state"
-            [attr.role]="status.state === 'error' ? 'alert' : 'status'"
-            [attr.aria-busy]="status.state === 'loading'"
-          >
-            <div>
-              <strong>{{ status.platform === 'chess-com' ? 'Chess.com' : 'Lichess' }}</strong>
-              <span>{{ status.state }}</span>
-            </div>
-            <p>{{ status.message }}</p>
-            @if (status.recovery) {
-              <p class="recovery">{{ status.recovery }}</p>
-            }
-            @if (status.canRetry) {
-              <button type="button" (click)="retry(status.platform)">
-                Retry {{ status.platform === 'chess-com' ? 'Chess.com' : 'Lichess' }}
-              </button>
-            }
-          </article>
-        }
-      </div>
-    </section>
-
-    <section aria-labelledby="engine-heading">
-      <div class="section-heading">
-        <div>
-          <p class="folio">Analysis engine</p>
-          <h2 id="engine-heading">Set up each study desk</h2>
-        </div>
-        <span>Saved locally</span>
-      </div>
-      <p class="keyboard-intro">
-        Each workflow keeps its own engine, depth, and line count. Engine files are shared so they
-        only use storage once.
-      </p>
-      <div class="engine-list">
-        <app-analysis-engine-settings workflow="game-review" [compact]="false" />
-        <app-analysis-engine-settings workflow="practice" [compact]="false" />
-        <app-analysis-engine-settings workflow="live-analysis" [compact]="false" />
-        <app-analysis-engine-settings workflow="explorer" [compact]="false" />
-      </div>
-    </section>
-
     <section aria-labelledby="board-heading">
       <div class="section-heading">
         <div>
@@ -200,6 +100,26 @@
           [soundEnabled]="preferences().soundEnabled"
           [soundVolume]="preferences().soundVolume"
         />
+      </div>
+    </section>
+
+    <section aria-labelledby="engine-heading">
+      <div class="section-heading">
+        <div>
+          <p class="folio">Analysis engine</p>
+          <h2 id="engine-heading">Set up each study desk</h2>
+        </div>
+        <span>Saved locally</span>
+      </div>
+      <p class="keyboard-intro">
+        Each workflow keeps its own engine, depth, and line count. Engine files are shared so they
+        only use storage once.
+      </p>
+      <div class="engine-list">
+        <app-analysis-engine-settings workflow="game-review" [compact]="false" />
+        <app-analysis-engine-settings workflow="practice" [compact]="false" />
+        <app-analysis-engine-settings workflow="live-analysis" [compact]="false" />
+        <app-analysis-engine-settings workflow="explorer" [compact]="false" />
       </div>
     </section>
 

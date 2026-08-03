@@ -14,7 +14,8 @@ const pgn = `[Event "Imported game"]
 test.beforeEach(async ({ page }) => {
   await mockChessCom(page);
   await mockLichess(page);
-  await page.goto('/settings');
+  await page.goto('/learn');
+  await openImportPanel(page);
 });
 
 test('deletes an imported game and allows a later import to restore it', async ({ page }) => {
@@ -32,7 +33,8 @@ test('deletes an imported game and allows a later import to restore it', async (
   await dialog.getByRole('button', { name: 'Delete game' }).click();
   await expect(game).toHaveCount(0);
 
-  await page.goto('/settings');
+  await page.goto('/learn');
+  await openImportPanel(page);
   await page.getByRole('button', { name: 'Import games' }).click();
   await expect(page.getByText('Added 1 game.')).toBeVisible();
   await page.goto('/learn');
@@ -53,7 +55,8 @@ test('imports both platforms, persists and deduplicates games, then replays move
 
   await page.reload();
   await expect(page.locator('.game-list article')).toHaveCount(2);
-  await page.goto('/settings');
+  await page.goto('/learn');
+  await openImportPanel(page);
   await expect(page.getByLabel('Chess.com username')).toHaveValue('Learner');
 
   await page.getByRole('button', { name: 'Import games' }).click();
@@ -201,7 +204,10 @@ test('shows rating progress and filters the game archive', async ({ page }) => {
 
   await page.getByRole('combobox', { name: 'Result', exact: true }).selectOption('all');
   await page.getByRole('combobox', { name: 'Platform', exact: true }).selectOption('lichess');
-  await page.getByRole('combobox', { name: 'Speed', exact: true }).selectOption('blitz');
+  await page
+    .locator('.filter-bar')
+    .getByRole('combobox', { name: 'Speed', exact: true })
+    .selectOption('blitz');
   await expect(page.locator('.game-list article')).toHaveCount(1);
   await expect(page.locator('.game-list article').first()).toContainText('DrawOpponent');
 
@@ -538,6 +544,13 @@ test('announces import validation and has no serious accessibility violations', 
   await expect(page.getByRole('alert')).toHaveText('Enter a Chess.com or Lichess username.');
   await assertNoSeriousA11yViolations(page);
 });
+
+async function openImportPanel(page: Page): Promise<void> {
+  const panel = page.locator('details.import-panel');
+  if (!(await panel.evaluate((element) => (element as HTMLDetailsElement).open))) {
+    await panel.locator('summary').click();
+  }
+}
 
 async function mockChessCom(page: Page): Promise<void> {
   await page.route('**/api.chess.com/**', (route) => {

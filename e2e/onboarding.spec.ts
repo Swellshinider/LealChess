@@ -17,7 +17,7 @@ test('walks through the real workspaces and can replay from Settings', async ({ 
   await expect(white).toHaveAttribute('aria-pressed', 'true');
 
   await tour.getByRole('button', { name: 'Next' }).click();
-  await expect(page).toHaveURL(/\/settings$/);
+  await expect(page).toHaveURL(/\/learn$/);
   await expect(
     page.getByRole('dialog', { name: 'Bring your games to the study desk' }),
   ).toBeVisible();
@@ -30,7 +30,6 @@ test('walks through the real workspaces and can replay from Settings', async ({ 
       name: 'Next',
     })
     .click();
-  await expect(page).toHaveURL(/\/learn$/);
   await expect(
     page.getByRole('dialog', { name: 'See the patterns across your play' }),
   ).toBeVisible();
@@ -64,8 +63,9 @@ test('walks through the real workspaces and can replay from Settings', async ({ 
     page.getByRole('dialog', { name: 'Set the board, then make the first plan' }),
   ).toHaveCount(0);
 
-  await page.goto('/settings');
+  await page.goto('/learn');
   await expect(page.getByLabel('Chess.com username')).toHaveValue('Learner');
+  await page.goto('/settings');
   const replay = page.getByRole('button', { name: 'Replay onboarding' });
   await replay.click();
   await expect(page).toHaveURL(/\/play$/);

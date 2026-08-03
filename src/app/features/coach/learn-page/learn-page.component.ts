@@ -16,6 +16,7 @@ import type { GameAnalysis, ImportedGame } from '../domain/coach.types';
 import type { GameSource } from '../domain/coach.types';
 import { categoryLabel } from '../analysis/analysis-rules';
 import { isConcernClassification } from '../analysis/review-classification';
+import { ImportPanelComponent } from '../import-panel/import-panel.component';
 import {
   DEFAULT_LEARN_GAME_FILTERS,
   availableGameSpeeds,
@@ -29,6 +30,7 @@ import { RatingTrendComponent } from './rating-trend/rating-trend.component';
 @Component({
   selector: 'app-learn-page',
   imports: [
+    ImportPanelComponent,
     ModalFocusDirective,
     OnboardingAnchorDirective,
     RatingTrendComponent,

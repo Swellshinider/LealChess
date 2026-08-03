@@ -84,7 +84,7 @@ describe('OnboardingService', () => {
     service.next();
     await Promise.resolve();
     expect(service.currentStep()).toBe(1);
-    expect(router.navigateByUrl).toHaveBeenLastCalledWith('/settings');
+    expect(router.navigateByUrl).toHaveBeenLastCalledWith('/learn');
   });
 
   it('does not interrupt a direct link or a completed visitor', () => {

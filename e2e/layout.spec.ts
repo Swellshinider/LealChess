@@ -219,6 +219,8 @@ test('uses the shared readable typography scale across pages and controls', asyn
 
   await page.goto('/settings');
   await expectFontSizeAtLeast(page.locator('#primary-navigation .route-links a').first(), 14);
+
+  await page.goto('/learn');
   await expectFontSizeAtLeast(page.locator('form label').first(), 14);
   await expectFontSizeAtLeast(page.locator('.form-help'), 14);
 

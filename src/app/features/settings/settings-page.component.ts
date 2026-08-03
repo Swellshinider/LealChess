@@ -6,8 +6,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import type { OnDestroy, OnInit } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import type { OnInit } from '@angular/core';
 import { BOARD_THEMES } from '../../core/game/board-themes';
 import {
   DEFAULT_PREFERENCES,
@@ -31,23 +30,17 @@ import {
   SettingsPersistenceService,
   type LealChessStorageUsage,
 } from '../../core/persistence/settings-persistence.service';
-import { OnboardingAnchorDirective } from '../../core/onboarding/onboarding-anchor.directive';
 import { OnboardingService } from '../../core/onboarding/onboarding.service';
 import { ModalFocusDirective } from '../../shared/a11y/modal-focus.directive';
 import { SideNavigationComponent } from '../../shared/layout/side-navigation/side-navigation.component';
 import { AnalysisEngineSettingsComponent } from '../../shared/analysis-engine-settings/analysis-engine-settings.component';
-import { CoachImportService } from '../coach/data/coach-import.service';
-import type { ChessPlatform, SpeedFilter } from '../coach/domain/coach.types';
 import { SettingsPreviewBoardComponent } from './settings-preview-board/settings-preview-board.component';
-import type { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-settings-page',
   imports: [
     AnalysisEngineSettingsComponent,
     ModalFocusDirective,
-    OnboardingAnchorDirective,
-    ReactiveFormsModule,
     SettingsPreviewBoardComponent,
     SideNavigationComponent,
   ],
@@ -55,18 +48,16 @@ import type { Subscription } from 'rxjs';
   styleUrl: './settings-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SettingsPageComponent implements OnInit, OnDestroy {
+export class SettingsPageComponent implements OnInit {
   private readonly persistence = inject(PERSISTENCE_PORT);
   private readonly settingsPersistence = inject(SettingsPersistenceService);
   protected readonly onboarding = inject(OnboardingService);
-  protected readonly coach = inject(CoachImportService);
   protected readonly themes = BOARD_THEMES;
   protected readonly preferences = signal<GamePreferences>({ ...DEFAULT_PREFERENCES });
   protected readonly keybindingActions = KEYBINDING_ACTIONS;
   protected readonly keybindingLabels = KEYBINDING_LABELS;
   protected readonly capturingKeybinding = signal<KeybindingAction | null>(null);
   protected readonly keybindingError = signal<string | null>(null);
-  protected readonly usernameError = signal(false);
   protected readonly clearConfirmationOpen = signal(false);
   protected readonly clearing = signal(false);
   protected readonly storageUsage = signal<LealChessStorageUsage | null | undefined>(undefined);
@@ -74,63 +65,16 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
     const usage = this.storageUsage();
     return formatStorageUsage(usage === null || usage === undefined ? usage : usage.total);
   });
-  protected readonly importForm = new FormGroup({
-    chessComUsername: new FormControl('', { nonNullable: true }),
-    lichessUsername: new FormControl('', { nonNullable: true }),
-    maxGames: new FormControl(20, {
-      nonNullable: true,
-      validators: [Validators.required, Validators.min(1), Validators.max(100)],
-    }),
-    speed: new FormControl<SpeedFilter>('any', { nonNullable: true }),
-  });
-  private importPreferencesSubscription: Subscription | null = null;
-
-  constructor() {
-    this.importForm.disable();
-  }
 
   async ngOnInit(): Promise<void> {
-    await this.coach.initialize();
-    const [restored, importPreferences] = await Promise.all([
-      this.persistence.restore(),
-      this.settingsPersistence.importPreferences(this.coach.profiles()),
-    ]);
+    const restored = await this.persistence.restore();
     this.preferences.set(restored.preferences);
-    this.importForm.setValue(importPreferences, { emitEvent: false });
-    this.importPreferencesSubscription = this.importForm.valueChanges.subscribe(() => {
-      if (this.importForm.valid) {
-        void this.settingsPersistence.saveImportPreferences(this.importForm.getRawValue());
-      }
-    });
-    this.importForm.enable({ emitEvent: false });
     this.storageUsage.set(await this.settingsPersistence.calculateStorageUsage());
-  }
-
-  ngOnDestroy(): void {
-    this.importPreferencesSubscription?.unsubscribe();
   }
 
   @HostListener('document:keydown.escape')
   protected closeClearConfirmation(): void {
     this.clearConfirmationOpen.set(false);
-  }
-
-  protected async importGames(): Promise<void> {
-    const request = this.importForm.getRawValue();
-    const hasUsername = Boolean(request.chessComUsername.trim() || request.lichessUsername.trim());
-    this.usernameError.set(!hasUsername);
-    if (!hasUsername || this.importForm.invalid || this.coach.loading()) {
-      this.importForm.markAllAsTouched();
-      return;
-    }
-    await this.settingsPersistence.saveImportPreferences(request);
-    await this.coach.import(request);
-    await this.refreshStorageUsage();
-  }
-
-  protected async retry(platform: ChessPlatform): Promise<void> {
-    await this.coach.retry(platform);
-    await this.refreshStorageUsage();
   }
 
   protected updateBoolean(
@@ -254,11 +198,6 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
     const next = { ...this.preferences(), ...changes };
     this.preferences.set(next);
     void this.persistence.savePreferences(next);
-  }
-
-  private async refreshStorageUsage(): Promise<void> {
-    this.storageUsage.set(undefined);
-    this.storageUsage.set(await this.settingsPersistence.calculateStorageUsage());
   }
 }
 

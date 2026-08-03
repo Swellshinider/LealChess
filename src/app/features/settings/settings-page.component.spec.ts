@@ -4,7 +4,6 @@ import type { KeybindingAction } from '../../core/keyboard/keybindings';
 import { OnboardingService } from '../../core/onboarding/onboarding.service';
 import { PERSISTENCE_PORT } from '../../core/persistence/persistence.types';
 import { SettingsPersistenceService } from '../../core/persistence/settings-persistence.service';
-import { CoachImportService } from '../coach/data/coach-import.service';
 import { SettingsPageComponent, formatStorageUsage } from './settings-page.component';
 
 class TestableSettingsPageComponent extends SettingsPageComponent {
@@ -62,7 +61,6 @@ describe('SettingsPageComponent keybindings', () => {
           useValue: { savePreferences },
         },
         { provide: SettingsPersistenceService, useValue: {} },
-        { provide: CoachImportService, useValue: {} },
         { provide: OnboardingService, useValue: { start: vi.fn() } },
       ],
     });
