@@ -35,8 +35,35 @@ To release:
 4. Create and push the immutable `vMAJOR.MINOR.PATCH` tag.
 5. Confirm the Release workflow validates the version, reruns quality checks, and creates the
    GitHub Release with generated release notes.
+6. Fast-forward `release` to the tagged commit and push it. This is what publishes the new version
+   to production; the GitHub Release alone does not deploy anything.
 
 Never move or delete a published release tag.
+
+## Deployment
+
+Production is a Netlify site serving the static build. There is no deploy job in either workflow
+and no deploy configuration in the repository — the site is wired up in the Netlify dashboard.
+
+| Setting           | Value                     |
+| ----------------- | ------------------------- |
+| Production branch | `release`                 |
+| Build command     | `pnpm build`              |
+| Publish directory | `dist/leal-chess/browser` |
+
+Pushing to `release` triggers a build and deploy to <https://lealchess.com>. `main` is not
+deployed, so a change is only live once it has been promoted through step 6 above.
+
+`public/_headers` and `public/_redirects` are copied into the build output and interpreted by
+Netlify. They are load-bearing:
+
+- `_headers` applies `X-Robots-Tag: noindex, nofollow` to the private routes.
+- `_redirects` rewrites each private route to `/index.html` so client-side routing resolves, and
+  deliberately omits a `/*` catch-all, which would turn unknown URLs into soft 404s.
+
+`scripts/verify-seo.mjs` asserts both files ship, that private routes stay out of the sitemap, and
+that no catch-all rewrite has been introduced. Run `pnpm verify:seo` after any change to routing,
+`public/_headers`, or `public/_redirects`.
 
 ## Publication settings
 
