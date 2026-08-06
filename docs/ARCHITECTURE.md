@@ -15,9 +15,14 @@ features → core → shared
 - `core` contains application-wide chess, engine, persistence, and sound capabilities.
 - `shared` contains small presentation-neutral types, accessibility helpers, and reusable UI.
 
-Core and shared code must not import features. Features must not import one another; move a proven
-cross-feature concept to core or shared behind a deliberately small API. Avoid catch-all utility
-modules and abstractions created for only one caller.
+Core and shared code must not import features. Shared code must not import core. Features must not
+import one another; move a proven cross-feature concept to core or shared behind a deliberately
+small API. Avoid catch-all utility modules and abstractions created for only one caller.
+
+`eslint.config.js` enforces these boundaries, so `pnpm lint` fails on a violation. Type-only
+imports are restricted too, since a compile-time cycle is still a cycle. The rule does not inspect
+dynamic `import()`; do not use one to work around a boundary. Any deliberate exception is listed in
+`ALLOWED_SIBLING_IMPORTS` with its reason.
 
 ## Route shells and feature stores
 
