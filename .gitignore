@@ -58,6 +58,3 @@ Desktop.ini
 *.swp
 *.swo
 *~
-
-# Local product backlog
-/docs/BACKLOG.md
