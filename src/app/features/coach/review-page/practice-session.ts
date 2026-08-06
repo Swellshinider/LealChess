@@ -2,7 +2,7 @@ import { Chess } from 'chess.js';
 import type { MoveInput } from '../../../core/game/game.types';
 import type { TrainingPosition } from '../domain/coach.types';
 import type { PracticeMoveCommit, PracticeSession, PracticeVariationNode } from './practice.types';
-import { moveToUci } from '../analysis/analysis-rules';
+import { moveToUci } from '../../../core/game/chess-move';
 
 const ROOT_ID = 'root';
 

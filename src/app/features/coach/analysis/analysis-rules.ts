@@ -1,5 +1,4 @@
 import { Chess } from 'chess.js';
-import type { MoveInput } from '../../../core/game/game.types';
 import {
   ANALYSIS_DEPTH,
   ANALYSIS_ENGINE_VERSION,
@@ -17,7 +16,6 @@ import type {
 } from '../domain/coach.types';
 import type { ChessColor } from '../../../shared/chess/chess.types';
 import { isConcernClassification } from './review-classification';
-export { moveToUci } from '../../../core/game/chess-move';
 
 const ADVICE: Record<MistakeCategory, string> = {
   opening: 'Revisit opening principles and compare plans before committing to early moves.',
@@ -40,11 +38,6 @@ export function categorizeMistake(fen: string, ply: number, bestMoveSan: string)
   if (phase <= 8) return 'endgame';
   if (/[x+#=]/.test(bestMoveSan)) return 'tactical';
   return 'positional';
-}
-
-export function moveToSan(fen: string, move: MoveInput): string {
-  const played = new Chess(fen).move(move);
-  return played.san;
 }
 
 export function trainingPositions(

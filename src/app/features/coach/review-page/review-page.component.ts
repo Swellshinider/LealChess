@@ -41,7 +41,8 @@ import {
   rememberMoveTreeSelection,
   type MoveTreeNavigationState,
 } from '../../../shared/chess/move-tree-navigation';
-import { categoryLabel, moveAnalysisForPly, moveToUci } from '../analysis/analysis-rules';
+import { categoryLabel, moveAnalysisForPly } from '../analysis/analysis-rules';
+import { moveToUci } from '../../../core/game/chess-move';
 import type {
   EngineEvaluation,
   ImportedGame,

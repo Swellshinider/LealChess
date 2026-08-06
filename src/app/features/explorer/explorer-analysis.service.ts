@@ -4,8 +4,7 @@ import type {
   AnalysisEnginePort,
   PositionAnalysisResult,
 } from '../../core/engine/analysis-engine.types';
-import { candidateLines, moveToUci } from '../../core/game/chess-move';
-import { moveToSan } from '../coach/analysis/analysis-rules';
+import { candidateLines, moveToSan, moveToUci } from '../../core/game/chess-move';
 import { isOpeningPosition } from '../coach/analysis/opening-index';
 import { classifyReviewMove } from '../coach/analysis/review-classification';
 import type { ImportedMove } from '../coach/domain/coach.types';

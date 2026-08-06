@@ -4,7 +4,8 @@ import { analysisProfileFingerprint } from '../../../core/engine/analysis-profil
 import type { ChessColor } from '../../../shared/chess/chess.types';
 import type { GameAnalysis, ImportedGame, MoveAnalysis } from '../domain/coach.types';
 import { ANALYSIS_ENGINE_VERSION, ANALYSIS_SCHEMA_VERSION } from './analysis.constants';
-import { analysisFingerprint, categorizeMistake, moveToSan, moveToUci } from './analysis-rules';
+import { analysisFingerprint, categorizeMistake } from './analysis-rules';
+import { moveToSan, moveToUci } from '../../../core/game/chess-move';
 import { openingBookPlyCount } from './opening-index';
 import { assessMove, legacyClassification } from './review-classification';
 
