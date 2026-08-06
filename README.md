@@ -1,14 +1,42 @@
-<!-- markdownlint-disable MD033 MD041-->
-<center>
-
 # LealChess
 
 [![CI](https://github.com/Swellshinider/LealChess/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Swellshinider/LealChess/actions/workflows/ci.yml)
+[![License: GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue.svg)](LICENSE)
 
-LealChess is a free offline chess training application. The
-application has no account service, cloud database, or analytics.
+**Your local chess desk.** Play Stockfish, study the games you played on Chess.com and Lichess, and
+practice the decisions that cost you most — all privately in your browser.
 
-</center>
+**[Open LealChess →](https://lealchess.com)**
+
+![The LealChess review board with a game under analysis](docs/screenshots/lealchess_screenshot.png)
+
+## What it does
+
+- **Play** — games against Stockfish across a range of strengths, with move history, sounds, and
+  board themes.
+- **Learn** — import your games from Chess.com and Lichess, watch your rating trend, and run batch
+  analysis across a whole set of games.
+- **Review** — walk a game move by move with engine evaluation, classified mistakes, turning-point
+  insights, and a full variation tree.
+- **Practice** — replay the positions where a game turned and try to find the better move.
+- **Explorer** — analyze any position, set one up from FEN, and branch through variations.
+- **Settings** — engine profiles, board themes, sound, and keyboard shortcuts.
+
+## Privacy
+
+LealChess is local-first. There is no account service, no cloud database, and no analytics.
+
+- Your games, preferences, imports, and analysis are stored in your browser's IndexedDB.
+- Stockfish runs in a Web Worker and is served from the same origin, so analysis never leaves your
+  device.
+- The application contacts Chess.com or Lichess only when you explicitly ask it to import games.
+
+See [the privacy and data guide](docs/PRIVACY.md) for exactly what is stored and how to clear it,
+and the [FAQ](docs/FAQ.md) for common questions.
+
+## Browser support
+
+LealChess is tested against Chromium, Firefox, and WebKit on desktop, plus mobile Chromium.
 
 ## Requirements
 
@@ -63,7 +91,8 @@ persistence records, or engine orchestration.
 ## Contributing
 
 Start with [CONTRIBUTING.md](CONTRIBUTING.md) for setup, branch, implementation, and pull-request
-expectations. Additional project policies are documented in:
+expectations. [AGENTS.md](AGENTS.md) carries the same conventions in a form AI coding assistants
+can read. Additional project policies are documented in:
 
 - [Maintainer workflow](docs/MAINTAINING.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
