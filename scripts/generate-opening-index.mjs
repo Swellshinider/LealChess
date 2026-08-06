@@ -48,7 +48,7 @@ export const OPENING_NAME_DATA = ${JSON.stringify(
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const outputPath = resolve(
   scriptDirectory,
-  '../src/app/features/coach/analysis/opening-positions.generated.ts',
+  '../src/app/core/openings/opening-positions.generated.ts',
 );
 await writeFile(outputPath, output, 'utf8');
 console.log(

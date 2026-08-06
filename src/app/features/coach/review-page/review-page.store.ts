@@ -13,7 +13,7 @@ import { SoundService } from '../../../core/sound/sound.service';
 import type { ChessColor } from '../../../shared/chess/chess.types';
 import { learnerColorForGame, trainingPositions } from '../analysis/analysis-rules';
 import { CoachAnalysisService } from '../analysis/coach-analysis.service';
-import { detectOpening } from '../analysis/opening-index';
+import { loadOpeningBook } from '../../../core/openings/opening-book';
 import { CoachRepositoryService } from '../data/coach-repository.service';
 import type { GameSource, ImportedGame, TrainingPosition } from '../domain/coach.types';
 import { PracticeAnalysisService } from './practice-analysis.service';
@@ -109,7 +109,7 @@ export class ReviewPageStore {
         this.repository.profiles(),
       ]);
       if (game) {
-        const reviewedGame = this.withDetectedOpening(game);
+        const reviewedGame = await this.withDetectedOpening(game);
         this.game.set(reviewedGame);
         this.reviewSession.set(
           this.reviewRepository ? await this.reviewRepository.restore(reviewedGame) : null,
@@ -144,9 +144,9 @@ export class ReviewPageStore {
     await this.reviewRepository?.flush();
   }
 
-  private withDetectedOpening(game: ImportedGame): ImportedGame {
+  private async withDetectedOpening(game: ImportedGame): Promise<ImportedGame> {
     if (game.opening?.name.trim()) return game;
-    const opening = detectOpening(
+    const opening = (await loadOpeningBook()).detectOpening(
       game.moves[0]?.fenBefore,
       game.moves.map((move) => move.fenAfter),
     );

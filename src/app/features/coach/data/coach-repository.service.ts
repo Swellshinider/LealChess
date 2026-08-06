@@ -6,8 +6,8 @@ import type {
   GameSource,
   ImportedGame,
   ImportedProfile,
-  OpeningInfo,
 } from '../domain/coach.types';
+import type { OpeningInfo } from '../../../core/openings/opening.types';
 
 export interface ImportSaveResult {
   addedCount: number;

@@ -6,7 +6,7 @@ import type { GameAnalysis, ImportedGame, MoveAnalysis } from '../domain/coach.t
 import { ANALYSIS_ENGINE_VERSION, ANALYSIS_SCHEMA_VERSION } from './analysis.constants';
 import { analysisFingerprint, categorizeMistake } from './analysis-rules';
 import { moveToSan, moveToUci } from '../../../core/game/chess-move';
-import { openingBookPlyCount } from './opening-index';
+import { loadOpeningBook } from '../../../core/openings/opening-book';
 import { assessMove, legacyClassification } from './review-classification';
 
 export interface PrepareGameAnalysisOptions {
@@ -68,7 +68,8 @@ export async function runGameAnalysis(run: RunGameAnalysisOptions): Promise<Game
   let analysis = run.base;
   const reviewMoves = game.moves;
   const completedPlies = new Set((analysis.reviewMoves ?? []).map((move) => move.ply));
-  const bookPlyLimit = openingBookPlyCount(reviewMoves.map((move) => move.fenAfter));
+  const openingBook = await loadOpeningBook();
+  const bookPlyLimit = openingBook.openingBookPlyCount(reviewMoves.map((move) => move.fenAfter));
 
   for (const move of reviewMoves) {
     if (completedPlies.has(move.ply)) continue;

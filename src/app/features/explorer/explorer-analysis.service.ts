@@ -5,7 +5,7 @@ import type {
   PositionAnalysisResult,
 } from '../../core/engine/analysis-engine.types';
 import { candidateLines, moveToSan, moveToUci } from '../../core/game/chess-move';
-import { isOpeningPosition } from '../coach/analysis/opening-index';
+import { loadOpeningBook } from '../../core/openings/opening-book';
 import { classifyReviewMove } from '../coach/analysis/review-classification';
 import type { ImportedMove } from '../coach/domain/coach.types';
 import type {
@@ -53,6 +53,7 @@ export class ExplorerAnalysisService {
     profile?: AnalysisProfile,
   ): Promise<ExplorerMoveAssessment> {
     const selected = profile ?? (await this.settings.profile('explorer'));
+    const openingBook = await loadOpeningBook();
     await this.engine.initialize(selected.engineId);
     const best = await this.positionAnalysis(
       request.fenBefore,
@@ -82,7 +83,7 @@ export class ExplorerAnalysisService {
         importedMove,
         best,
         played,
-        isOpeningPosition(request.fenAfter),
+        openingBook.isOpeningPosition(request.fenAfter),
       ),
       depth,
       provisional: depth < selected.depth,

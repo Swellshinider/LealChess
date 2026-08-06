@@ -1,6 +1,7 @@
 import type { Square } from 'chess.js';
 import type { ChessColor } from '../../../shared/chess/chess.types';
 import type { EngineEvaluation } from '../../../core/engine/analysis-engine.types';
+import type { OpeningInfo } from '../../../core/openings/opening.types';
 
 export type ChessPlatform = 'chess-com' | 'lichess';
 export type GameSource = ChessPlatform | 'local';
@@ -21,11 +22,6 @@ export interface PlatformPlayer {
   username: string;
   rating?: number;
   result?: string;
-}
-
-export interface OpeningInfo {
-  eco?: string;
-  name: string;
 }
 
 export interface ImportedMove {
