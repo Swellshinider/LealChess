@@ -1,12 +1,27 @@
-# LealChess
+<!-- markdownlint-disable MD033 MD041 -->
 
-[![CI](https://github.com/Swellshinider/LealChess/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Swellshinider/LealChess/actions/workflows/ci.yml)
-[![License: GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue.svg)](LICENSE)
+<p align="center">
+  <img src="public/favicon.svg" width="120" alt="LealChess logo" />
+</p>
 
-**Your local chess desk.** Play Stockfish, study the games you played on Chess.com and Lichess, and
-practice the decisions that cost you most — all privately in your browser.
+<h1 align="center">LealChess</h1>
 
-**[Open LealChess →](https://lealchess.com)**
+<p align="center">
+  <a href="https://github.com/Swellshinider/LealChess/actions/workflows/ci.yml"><img src="https://github.com/Swellshinider/LealChess/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" /></a>
+  <a href="https://github.com/Swellshinider/LealChess/releases/latest"><img src="https://img.shields.io/github/v/release/Swellshinider/LealChess?label=release&color=d99a3d" alt="Latest release" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0--only-blue.svg" alt="License: GPL-3.0-only" /></a>
+  <br />
+  <a href="https://lealchess.com">Play LealChess</a> ·
+  <a href="docs/PRIVACY.md">Privacy</a> ·
+  <a href="docs/FAQ.md">FAQ</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a> ·
+  <a href="https://github.com/Swellshinider/LealChess/issues">Report a bug</a>
+</p>
+
+<p align="center">
+  Play Stockfish, study the games you played on Chess.com and Lichess, and practice the decisions
+  that cost you most — all privately in your browser.
+</p>
 
 ![The LealChess review board with a game under analysis](docs/screenshots/lealchess_screenshot.png)
 
