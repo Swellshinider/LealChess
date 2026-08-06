@@ -43,8 +43,8 @@ import {
 } from '../../../shared/chess/move-tree-navigation';
 import { categoryLabel, moveAnalysisForPly } from '../analysis/analysis-rules';
 import { moveToUci } from '../../../core/game/chess-move';
+import type { EngineEvaluation } from '../../../core/engine/analysis-engine.types';
 import type {
-  EngineEvaluation,
   ImportedGame,
   MoveAnalysis,
   MoveClassification,

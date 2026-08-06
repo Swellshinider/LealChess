@@ -1,5 +1,6 @@
 import type { Square } from 'chess.js';
 import type { ChessColor } from '../../../shared/chess/chess.types';
+import type { EngineEvaluation } from '../../../core/engine/analysis-engine.types';
 
 export type ChessPlatform = 'chess-com' | 'lichess';
 export type GameSource = ChessPlatform | 'local';
@@ -120,11 +121,6 @@ export type ConcernMoveClassification = Extract<
 >;
 export type MistakeCategory = 'opening' | 'tactical' | 'positional' | 'endgame';
 export type AnalysisStatus = 'partial' | 'complete';
-
-export interface EngineEvaluation {
-  score: { kind: 'centipawn'; value: number } | { kind: 'mate'; moves: number };
-  depth: number;
-}
 
 export interface MoveAnalysis {
   importedGameKey: string;

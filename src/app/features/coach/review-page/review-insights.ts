@@ -1,6 +1,6 @@
 import { Chess, type PieceSymbol, type Square } from 'chess.js';
+import type { EngineEvaluation } from '../../../core/engine/analysis-engine.types';
 import type {
-  EngineEvaluation,
   GameAnalysis,
   ImportedGame,
   ImportedMove,

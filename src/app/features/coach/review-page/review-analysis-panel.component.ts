@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import type { ChessColor } from '../../../shared/chess/chess.types';
+import type { EngineEvaluation } from '../../../core/engine/analysis-engine.types';
 import type {
-  EngineEvaluation,
   GameAnalysis,
   ImportedGame,
   MoveAnalysis,

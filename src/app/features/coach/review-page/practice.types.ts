@@ -1,10 +1,7 @@
 import type { MoveInput } from '../../../core/game/game.types';
 import type { ChessColor } from '../../../shared/chess/chess.types';
-import type {
-  EngineEvaluation,
-  ReviewMoveClassification,
-  TrainingPosition,
-} from '../domain/coach.types';
+import type { ReviewMoveClassification, TrainingPosition } from '../domain/coach.types';
+import type { EngineEvaluation } from '../../../core/engine/analysis-engine.types';
 
 export type PracticeAnalysisPhase = 'idle' | 'quick' | 'refining' | 'complete' | 'error';
 

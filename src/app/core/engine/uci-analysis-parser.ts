@@ -1,4 +1,4 @@
-import type { EngineEvaluation } from '../../features/coach/domain/coach.types';
+import type { EngineEvaluation } from './analysis-engine.types';
 
 export interface UciAnalysisInfo {
   evaluation: EngineEvaluation;
