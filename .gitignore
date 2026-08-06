@@ -59,7 +59,5 @@ Desktop.ini
 *.swo
 *~
 
-# Local agent instructions
-AGENTS.md
-CLAUDE.md
-BACKLOG.md
+# Local product backlog
+/docs/BACKLOG.md
