@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { AboutPageComponent } from './about-page.component';
 
 describe('AboutPageComponent', () => {
-  it('presents the mission, open-source project, and contribution paths', async () => {
+  it('presents the mission, data handling, open-source project, and contribution paths', async () => {
     vi.stubGlobal(
       'matchMedia',
       vi.fn(() => ({
@@ -27,10 +27,12 @@ describe('AboutPageComponent', () => {
     expect(headings).toEqual([
       'Why LealChess',
       'Our Mission',
+      'Your Data',
       'We Are Open Source',
       'Issues and Contributions',
     ]);
     expect(links).toContain('https://github.com/Swellshinider/LealChess');
+    expect(links).toContain('https://github.com/Swellshinider/LealChess/blob/main/docs/PRIVACY.md');
     expect(links).toContain('https://github.com/Swellshinider/LealChess/issues');
     expect(links).toContain('https://github.com/Swellshinider/LealChess/security/advisories/new');
     expect(host.querySelector('a[href*="LICENSE"]')).toBeNull();
