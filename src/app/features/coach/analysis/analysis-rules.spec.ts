@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { EngineEvaluation, GameAnalysis, ImportedGame } from '../domain/coach.types';
+import type { GameAnalysis, ImportedGame } from '../domain/coach.types';
+import type { EngineEvaluation } from '../../../core/engine/analysis-engine.types';
 import { categorizeMistake, learningPriorities, trainingPositions } from './analysis-rules';
 
 describe('analysis rules', () => {

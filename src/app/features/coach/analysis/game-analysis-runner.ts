@@ -4,9 +4,10 @@ import { analysisProfileFingerprint } from '../../../core/engine/analysis-profil
 import type { ChessColor } from '../../../shared/chess/chess.types';
 import type { GameAnalysis, ImportedGame, MoveAnalysis } from '../domain/coach.types';
 import { ANALYSIS_ENGINE_VERSION, ANALYSIS_SCHEMA_VERSION } from './analysis.constants';
-import { analysisFingerprint, categorizeMistake, moveToSan, moveToUci } from './analysis-rules';
-import { openingBookPlyCount } from './opening-index';
-import { assessMove, legacyClassification } from './review-classification';
+import { analysisFingerprint, categorizeMistake } from './analysis-rules';
+import { moveToSan, moveToUci } from '../../../core/game/chess-move';
+import { loadOpeningBook } from '../../../core/openings/opening-book';
+import { assessMove, legacyClassification } from '../../../core/analysis/move-classification';
 
 export interface PrepareGameAnalysisOptions {
   game: ImportedGame;
@@ -67,7 +68,8 @@ export async function runGameAnalysis(run: RunGameAnalysisOptions): Promise<Game
   let analysis = run.base;
   const reviewMoves = game.moves;
   const completedPlies = new Set((analysis.reviewMoves ?? []).map((move) => move.ply));
-  const bookPlyLimit = openingBookPlyCount(reviewMoves.map((move) => move.fenAfter));
+  const openingBook = await loadOpeningBook();
+  const bookPlyLimit = openingBook.openingBookPlyCount(reviewMoves.map((move) => move.fenAfter));
 
   for (const move of reviewMoves) {
     if (completedPlies.has(move.ply)) continue;

@@ -1,9 +1,16 @@
 import type { Square } from 'chess.js';
 import type { ChessColor } from '../../../shared/chess/chess.types';
+import type { EngineEvaluation } from '../../../core/engine/analysis-engine.types';
+import type { OpeningInfo } from '../../../core/openings/opening.types';
+import type { SpeedFilter } from '../../../core/persistence/persistence.types';
+import type {
+  ConcernMoveClassification,
+  MoveClassification,
+  ReviewMoveClassification,
+} from '../../../core/analysis/move-classification.types';
 
 export type ChessPlatform = 'chess-com' | 'lichess';
 export type GameSource = ChessPlatform | 'local';
-export type SpeedFilter = 'any' | 'bullet' | 'blitz' | 'rapid' | 'classical-daily';
 export type ImportState = 'idle' | 'loading' | 'success' | 'warning' | 'error';
 export type ParseStatus = 'ready' | 'unsupported-variant' | 'invalid-pgn' | 'unavailable';
 
@@ -20,11 +27,6 @@ export interface PlatformPlayer {
   username: string;
   rating?: number;
   result?: string;
-}
-
-export interface OpeningInfo {
-  eco?: string;
-  name: string;
 }
 
 export interface ImportedMove {
@@ -102,29 +104,8 @@ export interface PgnParseResult {
   error?: string;
 }
 
-export type MoveClassification = 'good' | 'inaccuracy' | 'mistake' | 'blunder';
-export type ReviewMoveClassification =
-  | 'book'
-  | 'brilliant'
-  | 'great'
-  | 'best'
-  | 'excellent'
-  | 'good'
-  | 'inaccuracy'
-  | 'mistake'
-  | 'miss'
-  | 'blunder';
-export type ConcernMoveClassification = Extract<
-  ReviewMoveClassification,
-  'inaccuracy' | 'mistake' | 'miss' | 'blunder'
->;
 export type MistakeCategory = 'opening' | 'tactical' | 'positional' | 'endgame';
 export type AnalysisStatus = 'partial' | 'complete';
-
-export interface EngineEvaluation {
-  score: { kind: 'centipawn'; value: number } | { kind: 'mate'; moves: number };
-  depth: number;
-}
 
 export interface MoveAnalysis {
   importedGameKey: string;

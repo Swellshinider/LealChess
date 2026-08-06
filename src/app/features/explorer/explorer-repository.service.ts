@@ -1,7 +1,14 @@
 import { Injectable, inject } from '@angular/core';
-import { LealChessDatabaseService } from '../../core/persistence/leal-chess-database.service';
+import {
+  LealChessDatabaseService,
+  type LealChessStoreRecords,
+} from '../../core/persistence/leal-chess-database.service';
 import { EXPLORER_SESSION_SCHEMA_VERSION, type ExplorerSession } from './explorer.types';
 import { resetAnalysisVersion } from './explorer-session';
+
+interface ExplorerRecords extends LealChessStoreRecords {
+  explorerSessions: ExplorerSession;
+}
 
 @Injectable()
 export class ExplorerRepositoryService {
@@ -10,7 +17,9 @@ export class ExplorerRepositoryService {
 
   async restore(): Promise<ExplorerSession | null> {
     try {
-      const record = await (await this.database.open()).get('explorerSessions', 'active');
+      const record = await (
+        await this.database.open<ExplorerRecords>()
+      ).get('explorerSessions', 'active');
       if (!isExplorerSession(record)) return null;
       return resetAnalysisVersion(record);
     } catch {
@@ -21,7 +30,7 @@ export class ExplorerRepositoryService {
   save(session: ExplorerSession): Promise<void> {
     const snapshot = structuredClone(session);
     const queued = this.writes.then(async () => {
-      await (await this.database.open()).put('explorerSessions', snapshot);
+      await (await this.database.open<ExplorerRecords>()).put('explorerSessions', snapshot);
     });
     this.writes = queued.catch(() => undefined);
     return queued;
@@ -29,7 +38,7 @@ export class ExplorerRepositoryService {
 
   clear(): Promise<void> {
     const queued = this.writes.then(async () => {
-      await (await this.database.open()).delete('explorerSessions', 'active');
+      await (await this.database.open<ExplorerRecords>()).delete('explorerSessions', 'active');
     });
     this.writes = queued.catch(() => undefined);
     return queued;

@@ -1,7 +1,12 @@
 import { InjectionToken } from '@angular/core';
 import type { MoveInput } from '../game/game.types';
-import type { EngineEvaluation } from '../../features/coach/domain/coach.types';
 import type { AnalysisEngineId } from './analysis-profiles';
+
+/** A single engine score, as produced by the UCI parser and consumed across every analysis flow. */
+export interface EngineEvaluation {
+  score: { kind: 'centipawn'; value: number } | { kind: 'mate'; moves: number };
+  depth: number;
+}
 
 export interface PositionAnalysisRequest {
   /** Optional only for restored/test callers; workflows should always snapshot and provide it. */

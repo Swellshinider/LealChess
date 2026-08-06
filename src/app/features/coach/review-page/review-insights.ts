@@ -1,14 +1,17 @@
 import { Chess, type PieceSymbol, type Square } from 'chess.js';
+import type { EngineEvaluation } from '../../../core/engine/analysis-engine.types';
 import type {
-  EngineEvaluation,
   GameAnalysis,
   ImportedGame,
   ImportedMove,
   MistakeCategory,
   MoveAnalysis,
-  ReviewMoveClassification,
 } from '../domain/coach.types';
-import { compareMateOutcomes, isConcernClassification } from '../analysis/review-classification';
+import type { ReviewMoveClassification } from '../../../core/analysis/move-classification.types';
+import {
+  compareMateOutcomes,
+  isConcernClassification,
+} from '../../../core/analysis/move-classification';
 import { createTacticalLineInsight, type TacticalLineInsight } from './review-tactical-insight';
 
 export const REVIEW_CLASSIFICATIONS: readonly ReviewMoveClassification[] = [

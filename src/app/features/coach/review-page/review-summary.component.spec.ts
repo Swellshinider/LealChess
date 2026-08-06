@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { ReviewMoveClassification } from '../domain/coach.types';
+import type { ReviewMoveClassification } from '../../../core/analysis/move-classification.types';
 import type { GameReviewSummary } from './review-insights';
 import { REVIEW_CLASSIFICATIONS } from './review-insights';
 import { ReviewSummaryComponent } from './review-summary.component';

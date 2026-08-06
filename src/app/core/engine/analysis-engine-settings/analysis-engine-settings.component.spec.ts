@@ -1,9 +1,9 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_ANALYSIS_PROFILES } from '../../core/engine/analysis-profiles';
-import { AnalysisSettingsService } from '../../core/engine/analysis-settings.service';
-import { EngineAssetManagerService } from '../../core/engine/engine-asset-manager.service';
+import { DEFAULT_ANALYSIS_PROFILES } from '../analysis-profiles';
+import { AnalysisSettingsService } from '../analysis-settings.service';
+import { EngineAssetManagerService } from '../engine-asset-manager.service';
 import { AnalysisEngineSettingsComponent } from './analysis-engine-settings.component';
 
 function configureEngineSettingsTestBed(updateProfile = vi.fn(() => Promise.resolve())) {

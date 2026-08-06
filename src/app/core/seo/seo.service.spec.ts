@@ -1,20 +1,24 @@
 import { DOCUMENT } from '@angular/common';
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Meta } from '@angular/platform-browser';
 import { provideRouter, Router, type Routes } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { LandingPageComponent } from '../../features/landing/landing-page.component';
 import { ABOUT_SEO, HOME_SEO, SEO_ROUTE_DATA } from './seo.types';
 import { SeoService } from './seo.service';
 
+/** The service reads route data, not markup, so any routable component will do. */
+@Component({ selector: 'app-seo-test-page', template: '' })
+class TestPageComponent {}
+
 const routes: Routes = [
-  { path: '', component: LandingPageComponent, data: { [SEO_ROUTE_DATA]: HOME_SEO } },
+  { path: '', component: TestPageComponent, data: { [SEO_ROUTE_DATA]: HOME_SEO } },
   {
     path: 'about',
-    component: LandingPageComponent,
+    component: TestPageComponent,
     data: { [SEO_ROUTE_DATA]: ABOUT_SEO },
   },
-  { path: 'workspace', component: LandingPageComponent },
+  { path: 'workspace', component: TestPageComponent },
 ];
 
 describe('SeoService', () => {

@@ -33,7 +33,7 @@ import {
 import { OnboardingService } from '../../core/onboarding/onboarding.service';
 import { ModalFocusDirective } from '../../shared/a11y/modal-focus.directive';
 import { SideNavigationComponent } from '../../shared/layout/side-navigation/side-navigation.component';
-import { AnalysisEngineSettingsComponent } from '../../shared/analysis-engine-settings/analysis-engine-settings.component';
+import { AnalysisEngineSettingsComponent } from '../../core/engine/analysis-engine-settings/analysis-engine-settings.component';
 import { SettingsPreviewBoardComponent } from './settings-preview-board/settings-preview-board.component';
 
 @Component({

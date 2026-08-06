@@ -23,6 +23,11 @@ export function moveToUci(move: MoveInput): string {
   return `${move.from}${move.to}${move.promotion ?? ''}`;
 }
 
+export function moveToSan(fen: string, move: MoveInput): string {
+  const played = new Chess(fen).move(move);
+  return played.san;
+}
+
 export function candidateLines(
   fen: string,
   result: PositionAnalysisResult,

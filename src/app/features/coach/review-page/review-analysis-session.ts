@@ -7,7 +7,7 @@ import {
   type ReviewAnalysisSession,
   type ReviewMoveNode,
 } from './review-analysis-session.types';
-import { moveToUci } from '../analysis/analysis-rules';
+import { moveToUci } from '../../../core/game/chess-move';
 
 const ROOT_ID = 'root' as const;
 

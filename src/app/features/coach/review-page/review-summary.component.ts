@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import type { AnalysisPhase } from '../analysis/coach-analysis.service';
-import type { ImportedGame, ReviewMoveClassification } from '../domain/coach.types';
+import type { ImportedGame } from '../domain/coach.types';
+import type { ReviewMoveClassification } from '../../../core/analysis/move-classification.types';
 import { REVIEW_CLASSIFICATIONS, type GameReviewSummary } from './review-insights';
 import { ReviewEvaluationTimelineComponent } from './review-evaluation-timeline.component';
 

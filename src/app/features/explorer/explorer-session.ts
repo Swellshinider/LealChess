@@ -1,6 +1,6 @@
 import { Chess } from 'chess.js';
 import { STARTING_FEN, type MoveInput } from '../../core/game/game.types';
-import { moveToUci } from '../coach/analysis/analysis-rules';
+import { moveToUci } from '../../core/game/chess-move';
 import {
   EXPLORER_ANALYSIS_VERSION,
   EXPLORER_SESSION_SCHEMA_VERSION,

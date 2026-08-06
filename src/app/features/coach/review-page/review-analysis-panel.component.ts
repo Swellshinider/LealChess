@@ -1,13 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import type { ChessColor } from '../../../shared/chess/chess.types';
-import type {
-  EngineEvaluation,
-  GameAnalysis,
-  ImportedGame,
-  MoveAnalysis,
-  ReviewMoveClassification,
-} from '../domain/coach.types';
-import { isConcernClassification } from '../analysis/review-classification';
+import type { EngineEvaluation } from '../../../core/engine/analysis-engine.types';
+import type { GameAnalysis, ImportedGame, MoveAnalysis } from '../domain/coach.types';
+import type { ReviewMoveClassification } from '../../../core/analysis/move-classification.types';
+import { isConcernClassification } from '../../../core/analysis/move-classification';
 import type { MoveExplanation, ReviewEvaluationPoint } from './review-insights';
 import { ReviewEvaluationTimelineComponent } from './review-evaluation-timeline.component';
 import { ReviewMoveTreeComponent } from './review-move-tree.component';

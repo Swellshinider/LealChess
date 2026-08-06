@@ -41,15 +41,14 @@ import {
   rememberMoveTreeSelection,
   type MoveTreeNavigationState,
 } from '../../../shared/chess/move-tree-navigation';
-import { categoryLabel, moveAnalysisForPly, moveToUci } from '../analysis/analysis-rules';
+import { categoryLabel, moveAnalysisForPly } from '../analysis/analysis-rules';
+import { moveToUci } from '../../../core/game/chess-move';
+import type { EngineEvaluation } from '../../../core/engine/analysis-engine.types';
+import type { ImportedGame, MoveAnalysis, PlatformPlayer } from '../domain/coach.types';
 import type {
-  EngineEvaluation,
-  ImportedGame,
-  MoveAnalysis,
   MoveClassification,
-  PlatformPlayer,
   ReviewMoveClassification,
-} from '../domain/coach.types';
+} from '../../../core/analysis/move-classification.types';
 import {
   PRACTICE_ANALYSIS_ENGINE_PORT,
   PracticeAnalysisService,
@@ -90,7 +89,7 @@ import {
   REVIEW_LIVE_ANALYSIS_ENGINE_PORT,
   ReviewLiveAnalysisService,
 } from './review-live-analysis.service';
-import { AnalysisEngineSettingsComponent } from '../../../shared/analysis-engine-settings/analysis-engine-settings.component';
+import { AnalysisEngineSettingsComponent } from '../../../core/engine/analysis-engine-settings/analysis-engine-settings.component';
 import { AnalysisSettingsService } from '../../../core/engine/analysis-settings.service';
 import { analysisProfileFingerprint } from '../../../core/engine/analysis-profiles';
 import type { ReviewCandidateLine } from './review-analysis-session.types';

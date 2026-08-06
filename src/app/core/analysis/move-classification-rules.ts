@@ -1,4 +1,4 @@
-import type { ReviewMoveClassification } from '../domain/coach.types';
+import type { ReviewMoveClassification } from './move-classification.types';
 
 export interface ReviewClassificationInput {
   book: boolean;

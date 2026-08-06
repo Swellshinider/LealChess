@@ -5,8 +5,8 @@ import type {
   PositionAnalysisResult,
 } from '../../../core/engine/analysis-engine.types';
 import { candidateLines, moveToUci } from '../../../core/game/chess-move';
-import { isOpeningPosition } from '../analysis/opening-index';
-import { classifyReviewMove } from '../analysis/review-classification';
+import { loadOpeningBook } from '../../../core/openings/opening-book';
+import { classifyReviewMove } from '../../../core/analysis/move-classification';
 import type { ImportedMove } from '../domain/coach.types';
 import type {
   PracticeAnalysisRequest,
@@ -112,6 +112,7 @@ export class PracticeAnalysisService {
     signal: AbortSignal,
     profile: AnalysisProfile,
   ): Promise<PracticeAnalysisResult> {
+    const openingBook = await loadOpeningBook();
     const best = await this.positionAnalysis(request.fenBefore, depth, signal, profile);
     const played =
       best.bestMove && moveToUci(best.bestMove) === moveToUci(request.move)
@@ -137,7 +138,7 @@ export class PracticeAnalysisService {
       importedMove,
       best,
       played,
-      isOpeningPosition(request.fenAfter),
+      openingBook.isOpeningPosition(request.fenAfter),
     );
     const candidates = new Chess(request.fenAfter).isGameOver()
       ? []

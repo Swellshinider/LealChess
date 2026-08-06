@@ -1,6 +1,6 @@
 import type { MoveInput } from '../../../core/game/game.types';
 import type { ChessColor } from '../../../shared/chess/chess.types';
-import type { EngineEvaluation } from '../domain/coach.types';
+import type { EngineEvaluation } from '../../../core/engine/analysis-engine.types';
 
 export const REVIEW_ANALYSIS_SESSION_SCHEMA_VERSION = 1;
 export const REVIEW_ANALYSIS_VERSION = 'stockfish-18-multipv-3-depth-16-v1';

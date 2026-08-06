@@ -1,13 +1,22 @@
 import { Injectable, inject } from '@angular/core';
-import { LealChessDatabaseService } from '../../../core/persistence/leal-chess-database.service';
+import {
+  LealChessDatabaseService,
+  type LealChessStoreRecords,
+} from '../../../core/persistence/leal-chess-database.service';
 import type {
   ChessPlatform,
   GameAnalysis,
   GameSource,
   ImportedGame,
   ImportedProfile,
-  OpeningInfo,
 } from '../domain/coach.types';
+import type { OpeningInfo } from '../../../core/openings/opening.types';
+
+interface CoachRecords extends LealChessStoreRecords {
+  coachProfiles: ImportedProfile;
+  importedGames: ImportedGame;
+  gameAnalyses: GameAnalysis;
+}
 
 export interface ImportSaveResult {
   addedCount: number;
@@ -19,11 +28,11 @@ export class CoachRepositoryService {
   private readonly database = inject(LealChessDatabaseService);
 
   async profiles(): Promise<ImportedProfile[]> {
-    return (await this.database.open()).getAll('coachProfiles');
+    return (await this.database.open<CoachRecords>()).getAll('coachProfiles');
   }
 
   async gamesForActiveProfiles(): Promise<ImportedGame[]> {
-    const database = await this.database.open();
+    const database = await this.database.open<CoachRecords>();
     const [profiles, games] = await Promise.all([
       database.getAll('coachProfiles'),
       database.getAll('importedGames'),
@@ -40,26 +49,26 @@ export class CoachRepositoryService {
   }
 
   async game(platform: GameSource, gameId: string): Promise<ImportedGame | undefined> {
-    return (await this.database.open()).get('importedGames', `${platform}:${gameId}`);
+    return (await this.database.open<CoachRecords>()).get('importedGames', `${platform}:${gameId}`);
   }
 
   async analysis(gameKey: string): Promise<GameAnalysis | undefined> {
-    return (await this.database.open()).get('gameAnalyses', gameKey);
+    return (await this.database.open<CoachRecords>()).get('gameAnalyses', gameKey);
   }
 
   async analyses(): Promise<GameAnalysis[]> {
-    return (await this.database.open()).getAll('gameAnalyses');
+    return (await this.database.open<CoachRecords>()).getAll('gameAnalyses');
   }
 
   async saveAnalysis(analysis: GameAnalysis): Promise<void> {
-    await (await this.database.open()).put('gameAnalyses', analysis);
+    await (await this.database.open<CoachRecords>()).put('gameAnalyses', analysis);
   }
 
   async saveLocalGame(game: ImportedGame): Promise<void> {
     if (game.platform !== 'local') {
       throw new Error('Only local games can be saved through this operation.');
     }
-    const database = await this.database.open();
+    const database = await this.database.open<CoachRecords>();
     const existing = await database.get('importedGames', game.key);
     await database.put('importedGames', {
       ...game,
@@ -69,7 +78,7 @@ export class CoachRepositoryService {
   }
 
   async saveOpeningIfMissing(gameKey: string, opening: OpeningInfo): Promise<void> {
-    const database = await this.database.open();
+    const database = await this.database.open<CoachRecords>();
     const transaction = database.transaction('importedGames', 'readwrite');
     const store = transaction.objectStore('importedGames');
     const existing = await store.get(gameKey);
@@ -80,7 +89,7 @@ export class CoachRepositoryService {
   }
 
   async deleteGame(game: ImportedGame): Promise<void> {
-    const database = await this.database.open();
+    const database = await this.database.open<CoachRecords>();
     const transaction = database.transaction(
       ['state', 'importedGames', 'gameAnalyses', 'reviewAnalysisSessions'],
       'readwrite',
@@ -104,7 +113,7 @@ export class CoachRepositoryService {
     profile: ImportedProfile,
     games: ImportedGame[],
   ): Promise<ImportSaveResult> {
-    const database = await this.database.open();
+    const database = await this.database.open<CoachRecords>();
     const transaction = database.transaction(['coachProfiles', 'importedGames'], 'readwrite');
     const store = transaction.objectStore('importedGames');
     let addedCount = 0;
