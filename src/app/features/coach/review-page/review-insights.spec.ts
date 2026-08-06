@@ -1,12 +1,8 @@
 import { Chess } from 'chess.js';
 import { parseImportedPgn } from '../parsing/pgn-parser';
 import type { EngineEvaluation } from '../../../core/engine/analysis-engine.types';
-import type {
-  GameAnalysis,
-  ImportedGame,
-  MoveAnalysis,
-  ReviewMoveClassification,
-} from '../domain/coach.types';
+import type { GameAnalysis, ImportedGame, MoveAnalysis } from '../domain/coach.types';
+import type { ReviewMoveClassification } from '../../../core/analysis/move-classification.types';
 import {
   createGameReviewSummary,
   createMoveExplanation,

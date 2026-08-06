@@ -1,5 +1,5 @@
 import type { PieceSymbol, Square } from 'chess.js';
-import type { ReviewMoveClassification } from '../coach/domain/coach.types';
+import type { ReviewMoveClassification } from '../../core/analysis/move-classification.types';
 import type { EngineEvaluation } from '../../core/engine/analysis-engine.types';
 import type { MoveInput } from '../../core/game/game.types';
 import type { ChessColor } from '../../shared/chess/chess.types';

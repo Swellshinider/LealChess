@@ -7,7 +7,7 @@ import { ANALYSIS_ENGINE_VERSION, ANALYSIS_SCHEMA_VERSION } from './analysis.con
 import { analysisFingerprint, categorizeMistake } from './analysis-rules';
 import { moveToSan, moveToUci } from '../../../core/game/chess-move';
 import { loadOpeningBook } from '../../../core/openings/opening-book';
-import { assessMove, legacyClassification } from './review-classification';
+import { assessMove, legacyClassification } from '../../../core/analysis/move-classification';
 
 export interface PrepareGameAnalysisOptions {
   game: ImportedGame;

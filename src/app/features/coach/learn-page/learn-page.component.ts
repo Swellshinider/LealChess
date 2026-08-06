@@ -15,7 +15,7 @@ import { CoachImportService } from '../data/coach-import.service';
 import type { GameAnalysis, ImportedGame } from '../domain/coach.types';
 import type { GameSource } from '../domain/coach.types';
 import { categoryLabel } from '../analysis/analysis-rules';
-import { isConcernClassification } from '../analysis/review-classification';
+import { isConcernClassification } from '../../../core/analysis/move-classification';
 import { ImportPanelComponent } from '../import-panel/import-panel.component';
 import { BatchAnalysisPanelComponent } from './batch-analysis-panel/batch-analysis-panel.component';
 import {

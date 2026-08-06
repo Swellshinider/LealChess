@@ -1,9 +1,9 @@
 import { Chess, type Square } from 'chess.js';
 import { describe, expect, it } from 'vitest';
-import type { PositionAnalysisResult } from '../../../core/engine/analysis-engine.types';
-import { STARTING_FEN } from '../../../core/game/game.types';
-import type { ImportedMove, ReviewMoveClassification } from '../domain/coach.types';
-import { assessMove, classifyReviewMove, legacyClassification } from './review-classification';
+import type { PositionAnalysisResult } from '../engine/analysis-engine.types';
+import { STARTING_FEN } from '../game/game.types';
+import type { ClassifiedMove, ReviewMoveClassification } from './move-classification.types';
+import { assessMove, classifyReviewMove, legacyClassification } from './move-classification';
 
 describe('review move classification', () => {
   it('recognizes opening-book and sound-sacrifice moves', () => {
@@ -12,12 +12,11 @@ describe('review move classification', () => {
       'book',
     );
 
-    const sacrifice: ImportedMove = {
+    const sacrifice: ClassifiedMove = {
       ...baseMove(),
       from: 'd1',
       to: 'h5',
       uci: 'd1h5',
-      san: 'Qh5',
       fenBefore: '7k/8/6p1/8/8/8/8/3QK3 w - - 0 1',
       fenAfter: '7k/8/6p1/7Q/8/8/8/4K3 b - - 1 1',
     };
@@ -212,11 +211,9 @@ function centipawnResultWithoutWdl(bestMove: string, value: number): PositionAna
   };
 }
 
-function baseMove(): ImportedMove {
+function baseMove(): ClassifiedMove {
   return {
-    ply: 1,
     color: 'white',
-    san: 'e4',
     from: 'e2',
     to: 'e4',
     uci: 'e2e4',
@@ -225,12 +222,11 @@ function baseMove(): ImportedMove {
   };
 }
 
-function moveFrom(fen: string, san: string): ImportedMove {
+function moveFrom(fen: string, san: string): ClassifiedMove {
   const chess = new Chess(fen);
   const played = chess.move(san);
   return {
     ...baseMove(),
-    san: played.san,
     from: played.from,
     to: played.to,
     uci: `${played.from}${played.to}${played.promotion ?? ''}`,

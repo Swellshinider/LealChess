@@ -44,13 +44,11 @@ import {
 import { categoryLabel, moveAnalysisForPly } from '../analysis/analysis-rules';
 import { moveToUci } from '../../../core/game/chess-move';
 import type { EngineEvaluation } from '../../../core/engine/analysis-engine.types';
+import type { ImportedGame, MoveAnalysis, PlatformPlayer } from '../domain/coach.types';
 import type {
-  ImportedGame,
-  MoveAnalysis,
   MoveClassification,
-  PlatformPlayer,
   ReviewMoveClassification,
-} from '../domain/coach.types';
+} from '../../../core/analysis/move-classification.types';
 import {
   PRACTICE_ANALYSIS_ENGINE_PORT,
   PracticeAnalysisService,

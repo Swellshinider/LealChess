@@ -6,8 +6,8 @@ import type {
 } from '../../core/engine/analysis-engine.types';
 import { candidateLines, moveToSan, moveToUci } from '../../core/game/chess-move';
 import { loadOpeningBook } from '../../core/openings/opening-book';
-import { classifyReviewMove } from '../coach/analysis/review-classification';
-import type { ImportedMove } from '../coach/domain/coach.types';
+import { classifyReviewMove } from '../../core/analysis/move-classification';
+import type { ClassifiedMove } from '../../core/analysis/move-classification.types';
 import type {
   ExplorerCandidateLine,
   ExplorerMoveAnalysisRequest,
@@ -68,10 +68,8 @@ export class ExplorerAnalysisService {
       moveToUci(best.bestMove) === uci
         ? best
         : await this.forcedMoveAnalysis(request.fenBefore, uci, depth, signal, selected);
-    const importedMove: ImportedMove = {
-      ply: 1,
+    const playedMove: ClassifiedMove = {
       color: request.color,
-      san: request.san,
       from: request.move.from,
       to: request.move.to,
       uci,
@@ -80,7 +78,7 @@ export class ExplorerAnalysisService {
     };
     return {
       classification: classifyReviewMove(
-        importedMove,
+        playedMove,
         best,
         played,
         openingBook.isOpeningPosition(request.fenAfter),

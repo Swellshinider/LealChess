@@ -9,7 +9,8 @@ import {
 } from '@angular/core';
 import type { BoardTheme } from '../../../core/game/game.types';
 import type { ChessColor } from '../../../shared/chess/chess.types';
-import type { GameAnalysis, ReviewMoveClassification } from '../domain/coach.types';
+import type { GameAnalysis } from '../domain/coach.types';
+import type { ReviewMoveClassification } from '../../../core/analysis/move-classification.types';
 import type { ReviewAnalysisSession, ReviewMoveNode } from './review-analysis-session.types';
 import { reviewAncestorIds } from './review-analysis-session';
 import {

@@ -3,8 +3,8 @@ import {
   ANALYSIS_DEPTH,
   ANALYSIS_ENGINE_VERSION,
   ANALYSIS_SCHEMA_VERSION,
-  FORCED_MATE_THRESHOLDS,
 } from './analysis.constants';
+import { FORCED_MATE_THRESHOLDS } from '../../../core/analysis/move-classification.types';
 import type {
   GameAnalysis,
   ImportedGame,
@@ -15,7 +15,7 @@ import type {
   TrainingPosition,
 } from '../domain/coach.types';
 import type { ChessColor } from '../../../shared/chess/chess.types';
-import { isConcernClassification } from './review-classification';
+import { isConcernClassification } from '../../../core/analysis/move-classification';
 
 const ADVICE: Record<MistakeCategory, string> = {
   opening: 'Revisit opening principles and compare plans before committing to early moves.',

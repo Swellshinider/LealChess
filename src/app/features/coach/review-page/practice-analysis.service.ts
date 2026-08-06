@@ -6,7 +6,7 @@ import type {
 } from '../../../core/engine/analysis-engine.types';
 import { candidateLines, moveToUci } from '../../../core/game/chess-move';
 import { loadOpeningBook } from '../../../core/openings/opening-book';
-import { classifyReviewMove } from '../analysis/review-classification';
+import { classifyReviewMove } from '../../../core/analysis/move-classification';
 import type { ImportedMove } from '../domain/coach.types';
 import type {
   PracticeAnalysisRequest,

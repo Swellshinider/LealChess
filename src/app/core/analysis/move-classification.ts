@@ -1,14 +1,14 @@
 import { Chess, type Color, type PieceSymbol } from 'chess.js';
-import type { PositionAnalysisResult } from '../../../core/engine/analysis-engine.types';
-import { moveToUci } from '../../../core/game/chess-move';
-import type {
-  ConcernMoveClassification,
-  ImportedMove,
-  MoveClassification,
-  ReviewMoveClassification,
-} from '../domain/coach.types';
-import { FORCED_MATE_THRESHOLDS } from './analysis.constants';
-import { classifyReviewMoveQuality } from './review-classification-rules';
+import type { PositionAnalysisResult } from '../engine/analysis-engine.types';
+import { moveToUci } from '../game/chess-move';
+import {
+  FORCED_MATE_THRESHOLDS,
+  type ClassifiedMove,
+  type ConcernMoveClassification,
+  type MoveClassification,
+  type ReviewMoveClassification,
+} from './move-classification.types';
+import { classifyReviewMoveQuality } from './move-classification-rules';
 
 export interface MoveAssessment {
   classification: ReviewMoveClassification;
@@ -27,7 +27,7 @@ export type MateComparison =
   | 'losing-mate-shortened';
 
 export function classifyReviewMove(
-  move: ImportedMove,
+  move: ClassifiedMove,
   best: PositionAnalysisResult,
   played: PositionAnalysisResult,
   book = false,
@@ -36,7 +36,7 @@ export function classifyReviewMove(
 }
 
 export function assessMove(
-  move: ImportedMove,
+  move: ClassifiedMove,
   best: PositionAnalysisResult,
   played: PositionAnalysisResult,
   book = false,
@@ -71,7 +71,7 @@ export function assessMove(
 }
 
 export function compareMateOutcomes(
-  move: Pick<ImportedMove, 'fenAfter'>,
+  move: Pick<ClassifiedMove, 'fenAfter'>,
   best: PositionAnalysisResult['evaluation'],
   played: PositionAnalysisResult['evaluation'],
 ): MateComparison {
@@ -169,7 +169,7 @@ function evaluationExpected(evaluation: PositionAnalysisResult['evaluation']): n
   return 1 / (1 + Math.exp(-evaluation.score.value / 240));
 }
 
-function isSoundSacrifice(move: ImportedMove): boolean {
+function isSoundSacrifice(move: ClassifiedMove): boolean {
   const before = new Chess(move.fenBefore);
   const piece = before.get(move.from)?.type;
   if (!piece || piece === 'p' || piece === 'k') return false;

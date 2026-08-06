@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   classifyReviewMoveQuality,
   type ReviewClassificationInput,
-} from './review-classification-rules';
+} from './move-classification-rules';
 
 const base: ReviewClassificationInput = {
   book: false,
