@@ -1,21 +1,29 @@
 import { Injectable } from '@angular/core';
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import type {
-  GameAnalysis,
-  ImportedGame,
-  ImportedProfile,
-} from '../../features/coach/domain/coach.types';
 import type { GamePreferences } from '../game/game.types';
 import type { ImportPreferences, PersistedGame } from './persistence.types';
-import type { ExplorerSession } from '../../features/explorer/explorer.types';
-import type { ReviewAnalysisSession } from '../../features/coach/review-page/review-analysis-session.types';
 import type { AnalysisEngineId, AnalysisSettings } from '../engine/analysis-profiles';
 
 export const LEAL_CHESS_DATABASE_NAME = 'leal-chess';
 export const LEAL_CHESS_DATABASE_VERSION = 6;
 export const PROFILE_KEYS_INDEX = 'by-profile-key';
 
-export interface LealChessDatabase extends DBSchema {
+/**
+ * Record shapes for the feature-owned stores. Core describes the store names, keys, and indexes,
+ * which are a persisted compatibility boundary; each feature repository supplies the value types
+ * it reads and writes by calling `open<R>()` with its own map.
+ */
+export interface LealChessStoreRecords {
+  coachProfiles: unknown;
+  importedGames: unknown;
+  gameAnalyses: unknown;
+  explorerSessions: unknown;
+  reviewAnalysisSessions: unknown;
+}
+
+export interface LealChessDatabase<
+  R extends LealChessStoreRecords = LealChessStoreRecords,
+> extends DBSchema {
   state: {
     key: 'active-game' | 'preferences' | 'import-preferences' | 'analysis-settings';
     value:
@@ -25,25 +33,25 @@ export interface LealChessDatabase extends DBSchema {
       | { key: 'analysis-settings'; value: AnalysisSettings };
   };
   coachProfiles: {
-    key: ImportedProfile['platform'];
-    value: ImportedProfile;
+    key: 'chess-com' | 'lichess';
+    value: R['coachProfiles'];
   };
   importedGames: {
     key: string;
-    value: ImportedGame;
+    value: R['importedGames'];
     indexes: { 'by-profile-key': string };
   };
   gameAnalyses: {
     key: string;
-    value: GameAnalysis;
+    value: R['gameAnalyses'];
   };
   explorerSessions: {
-    key: ExplorerSession['id'];
-    value: ExplorerSession;
+    key: 'active';
+    value: R['explorerSessions'];
   };
   reviewAnalysisSessions: {
-    key: ReviewAnalysisSession['importedGameKey'];
-    value: ReviewAnalysisSession;
+    key: string;
+    value: R['reviewAnalysisSessions'];
   };
   engineAssets: {
     key: AnalysisEngineId;
@@ -61,7 +69,10 @@ export interface LealChessDatabase extends DBSchema {
 export class LealChessDatabaseService {
   private database: Promise<IDBPDatabase<LealChessDatabase>> | null = null;
 
-  open(): Promise<IDBPDatabase<LealChessDatabase>> {
+  /** Callers pass their own record map so feature value types stay checked at the repository. */
+  open<R extends LealChessStoreRecords = LealChessStoreRecords>(): Promise<
+    IDBPDatabase<LealChessDatabase<R>>
+  > {
     this.database ??= openDB<LealChessDatabase>(
       LEAL_CHESS_DATABASE_NAME,
       LEAL_CHESS_DATABASE_VERSION,
@@ -92,6 +103,6 @@ export class LealChessDatabaseService {
         },
       },
     );
-    return this.database;
+    return this.database as unknown as Promise<IDBPDatabase<LealChessDatabase<R>>>;
   }
 }

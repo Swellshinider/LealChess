@@ -2,6 +2,7 @@ import type { Square } from 'chess.js';
 import type { ChessColor } from '../../../shared/chess/chess.types';
 import type { EngineEvaluation } from '../../../core/engine/analysis-engine.types';
 import type { OpeningInfo } from '../../../core/openings/opening.types';
+import type { SpeedFilter } from '../../../core/persistence/persistence.types';
 import type {
   ConcernMoveClassification,
   MoveClassification,
@@ -10,7 +11,6 @@ import type {
 
 export type ChessPlatform = 'chess-com' | 'lichess';
 export type GameSource = ChessPlatform | 'local';
-export type SpeedFilter = 'any' | 'bullet' | 'blitz' | 'rapid' | 'classical-daily';
 export type ImportState = 'idle' | 'loading' | 'success' | 'warning' | 'error';
 export type ParseStatus = 'ready' | 'unsupported-variant' | 'invalid-pgn' | 'unavailable';
 

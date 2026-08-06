@@ -7,9 +7,11 @@ import type {
   PendingPremove,
 } from '../game/game.types';
 import type { BotRating } from '../engine/bot-rating';
-import type { SpeedFilter } from '../../features/coach/domain/coach.types';
 
 export const PERSISTENCE_SCHEMA_VERSION = 2;
+
+export const SPEED_FILTERS = ['any', 'bullet', 'blitz', 'rapid', 'classical-daily'] as const;
+export type SpeedFilter = (typeof SPEED_FILTERS)[number];
 
 export interface PersistedGame {
   schemaVersion: typeof PERSISTENCE_SCHEMA_VERSION;

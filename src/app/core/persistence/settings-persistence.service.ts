@@ -1,8 +1,21 @@
 import { Injectable, inject } from '@angular/core';
-import type { ImportedProfile } from '../../features/coach/domain/coach.types';
 import { clearOnboardingCompletion } from '../onboarding/onboarding.service';
-import { DEFAULT_IMPORT_PREFERENCES, type ImportPreferences } from './persistence.types';
+import {
+  DEFAULT_IMPORT_PREFERENCES,
+  SPEED_FILTERS,
+  type ImportPreferences,
+  type SpeedFilter,
+} from './persistence.types';
 import { LealChessDatabaseService } from './leal-chess-database.service';
+
+/**
+ * The part of an imported platform profile that seeding import preferences needs. Feature profile
+ * types satisfy this structurally, so core does not depend on the coach domain.
+ */
+export interface ImportProfileHint {
+  readonly platform: 'chess-com' | 'lichess';
+  readonly username: string;
+}
 
 export interface LealChessStorageUsage {
   readonly records: number;
@@ -29,7 +42,10 @@ export class SettingsPersistenceService {
       const encoder = new TextEncoder();
       const records = recordsByStore
         .flat()
-        .reduce((total, record) => total + encoder.encode(JSON.stringify(record)).byteLength, 0);
+        .reduce<number>(
+          (total, record) => total + encoder.encode(JSON.stringify(record)).byteLength,
+          0,
+        );
       const engines = engineAssets.reduce((total, asset) => total + asset.bytes, 0);
       return { records, engines, total: records + engines };
     } catch {
@@ -37,7 +53,7 @@ export class SettingsPersistenceService {
     }
   }
 
-  async importPreferences(profiles: readonly ImportedProfile[]): Promise<ImportPreferences> {
+  async importPreferences(profiles: readonly ImportProfileHint[]): Promise<ImportPreferences> {
     const database = await this.database.open();
     const record = await database.get('state', 'import-preferences');
     if (record?.key === 'import-preferences') {
@@ -84,7 +100,6 @@ export class SettingsPersistenceService {
 export function normalizeImportPreferences(value: unknown): ImportPreferences {
   const record =
     typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
-  const speeds = ['any', 'bullet', 'blitz', 'rapid', 'classical-daily'];
   const maxGames = Number(record['maxGames']);
   return {
     chessComUsername:
@@ -94,8 +109,8 @@ export function normalizeImportPreferences(value: unknown): ImportPreferences {
       Number.isInteger(maxGames) && maxGames >= 1 && maxGames <= 100
         ? maxGames
         : DEFAULT_IMPORT_PREFERENCES.maxGames,
-    speed: speeds.includes(String(record['speed']))
-      ? (record['speed'] as ImportPreferences['speed'])
+    speed: SPEED_FILTERS.includes(record['speed'] as SpeedFilter)
+      ? (record['speed'] as SpeedFilter)
       : DEFAULT_IMPORT_PREFERENCES.speed,
   };
 }

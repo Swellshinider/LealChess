@@ -30,7 +30,7 @@ import { ChessgroundBoardComponent } from '../../shared/chess/chessground-board/
 import { ModalFocusDirective } from '../../shared/a11y/modal-focus.directive';
 import { ConfirmationDialogComponent } from '../../shared/a11y/confirmation-dialog/confirmation-dialog.component';
 import { SideNavigationComponent } from '../../shared/layout/side-navigation/side-navigation.component';
-import { AnalysisEngineSettingsComponent } from '../../shared/analysis-engine-settings/analysis-engine-settings.component';
+import { AnalysisEngineSettingsComponent } from '../../core/engine/analysis-engine-settings/analysis-engine-settings.component';
 import {
   EMPTY_MOVE_TREE_NAVIGATION,
   jumpToEndNodeId,

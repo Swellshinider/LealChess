@@ -1,4 +1,5 @@
-import type { ImportedGame, ImportedProfile, SpeedFilter } from './coach.types';
+import type { ImportedGame, ImportedProfile } from './coach.types';
+import type { SpeedFilter } from '../../../core/persistence/persistence.types';
 
 export interface PlatformFetchRequest {
   username: string;

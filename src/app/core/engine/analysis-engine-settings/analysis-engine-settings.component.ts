@@ -15,10 +15,10 @@ import {
   engineCatalogEntry,
   type AnalysisEngineId,
   type AnalysisWorkflow,
-} from '../../core/engine/analysis-profiles';
-import { AnalysisSettingsService } from '../../core/engine/analysis-settings.service';
-import { EngineAssetManagerService } from '../../core/engine/engine-asset-manager.service';
-import { ModalFocusDirective } from '../a11y/modal-focus.directive';
+} from '../analysis-profiles';
+import { AnalysisSettingsService } from '../analysis-settings.service';
+import { EngineAssetManagerService } from '../engine-asset-manager.service';
+import { ModalFocusDirective } from '../../../shared/a11y/modal-focus.directive';
 
 @Component({
   selector: 'app-analysis-engine-settings',

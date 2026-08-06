@@ -89,7 +89,7 @@ import {
   REVIEW_LIVE_ANALYSIS_ENGINE_PORT,
   ReviewLiveAnalysisService,
 } from './review-live-analysis.service';
-import { AnalysisEngineSettingsComponent } from '../../../shared/analysis-engine-settings/analysis-engine-settings.component';
+import { AnalysisEngineSettingsComponent } from '../../../core/engine/analysis-engine-settings/analysis-engine-settings.component';
 import { AnalysisSettingsService } from '../../../core/engine/analysis-settings.service';
 import { analysisProfileFingerprint } from '../../../core/engine/analysis-profiles';
 import type { ReviewCandidateLine } from './review-analysis-session.types';

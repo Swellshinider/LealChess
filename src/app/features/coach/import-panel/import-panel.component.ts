@@ -5,7 +5,8 @@ import type { Subscription } from 'rxjs';
 import { OnboardingService } from '../../../core/onboarding/onboarding.service';
 import { SettingsPersistenceService } from '../../../core/persistence/settings-persistence.service';
 import { CoachImportService } from '../data/coach-import.service';
-import type { ChessPlatform, SpeedFilter } from '../domain/coach.types';
+import type { ChessPlatform } from '../domain/coach.types';
+import type { SpeedFilter } from '../../../core/persistence/persistence.types';
 
 @Component({
   selector: 'app-import-panel',

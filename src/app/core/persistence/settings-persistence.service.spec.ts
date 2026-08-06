@@ -59,13 +59,7 @@ describe('SettingsPersistenceService', () => {
   it('seeds usernames from profiles and persists import filters', async () => {
     const service = TestBed.inject(SettingsPersistenceService);
     const seeded = await service.importPreferences([
-      {
-        platform: 'lichess',
-        username: 'leal-player',
-        displayName: 'Leal Player',
-        profileUrl: 'https://lichess.org/@/leal-player',
-        updatedAt: '2026-07-27T12:00:00.000Z',
-      },
+      { platform: 'lichess', username: 'leal-player' },
     ]);
     expect(seeded.lichessUsername).toBe('leal-player');
 
