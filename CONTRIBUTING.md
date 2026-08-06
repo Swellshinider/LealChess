@@ -24,6 +24,9 @@ thin, place orchestration in feature stores, and put external integrations behin
 Angular components use kebab-case filenames, PascalCase types, camelCase members, and sibling
 `templateUrl` and `styleUrl` files. Prettier enforces single quotes and a 100-column width.
 
+If you use an AI coding assistant, [AGENTS.md](AGENTS.md) states these same conventions in a form
+it can read directly.
+
 Preserve local data formats unless an explicit migration is part of the issue. Never add analytics,
 remote storage, or new network access without discussing the privacy impact first.
 
@@ -33,7 +36,7 @@ remote storage, or new network access without discussing the privacy impact firs
   `chore/**`.
 - Use a concise commit subject without conventional-commit prefixes.
 - Keep changes focused and link the agreed issue in the pull request.
-- You can include screenshots in pull requests.
+- Include screenshots in the pull request for user-visible changes.
 
 Run `pnpm verify:quality` before opening a pull request and `pnpm e2e` for user-facing flows.
 Changes should include focused unit or characterization tests. Check keyboard use, focus order,
