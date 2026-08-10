@@ -67,7 +67,7 @@
       </svg>
       <span class="nav-copy">Settings</span>
     </a>
-    <a routerLink="/about" routerLinkActive="active" aria-label="About" data-tooltip="About">
+    <a href="/about/" [class.active]="isAboutRoute()" aria-label="About" data-tooltip="About">
       <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="12" cy="12" r="9" />
         <path d="M12 10v7M12 7h.01" />
@@ -140,7 +140,7 @@
       <a routerLink="/settings" routerLinkActive="active" (click)="navigation.closeMobile()">
         Settings
       </a>
-      <a routerLink="/about" routerLinkActive="active" (click)="navigation.closeMobile()">
+      <a href="/about/" [class.active]="isAboutRoute()" (click)="navigation.closeMobile()">
         About
       </a>
     </nav>

@@ -1,4 +1,4 @@
-/help                  /about      301
+/help                  /about/     301
 /play                  /index.html 200
 /settings              /index.html 200
 /learn/review/*        /index.html 200

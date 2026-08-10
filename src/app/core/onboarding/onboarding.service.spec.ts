@@ -70,10 +70,13 @@ describe('OnboardingService', () => {
 
   afterEach(() => TestBed.resetTestingModule());
 
-  it('starts from Home and navigates through the routed stops', async () => {
+  it('waits for an explicit start and then navigates through the routed stops', async () => {
     const service = TestBed.inject(OnboardingService);
 
-    service.initialize();
+    expect(service.active()).toBe(false);
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
+
+    service.start();
     expect(service.active()).toBe(true);
     expect(service.currentStep()).toBe(0);
     expect(router.navigateByUrl).toHaveBeenCalledWith('/play');
@@ -91,8 +94,8 @@ describe('OnboardingService', () => {
     router.url = '/learn';
     history.replaceState({}, '', '/learn');
     const directService = TestBed.inject(OnboardingService);
-    directService.initialize();
     expect(directService.active()).toBe(false);
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
 
     TestBed.resetTestingModule();
     writeOnboardingCompletion();
@@ -100,8 +103,8 @@ describe('OnboardingService', () => {
     router = new RouterStub();
     TestBed.configureTestingModule({ providers: [{ provide: Router, useValue: router }] });
     const completedService = TestBed.inject(OnboardingService);
-    completedService.initialize();
     expect(completedService.active()).toBe(false);
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
   });
 
   it('persists skipping and can replay from the beginning', async () => {
