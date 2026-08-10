@@ -1,4 +1,4 @@
-import { Injectable, afterNextRender, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 
@@ -74,8 +74,6 @@ export const ONBOARDING_STEP_COUNT = ONBOARDING_STEPS.length;
 export class OnboardingService {
   private readonly router = inject(Router);
   private readonly anchors = new Map<string, Set<HTMLElement>>();
-  private browserReady = false;
-  private completedInMemory = false;
   private expectedRoute: string | null = null;
   private navigationTicket = 0;
 
@@ -91,17 +89,7 @@ export class OnboardingService {
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event) => {
         const route = routePath(event.urlAfterRedirects);
-        if (!this.active()) {
-          if (
-            this.browserReady &&
-            !this.completedInMemory &&
-            route === '/' &&
-            !onboardingIsComplete()
-          ) {
-            this.start();
-          }
-          return;
-        }
+        if (!this.active()) return;
         if (route !== this.step().route && route !== this.expectedRoute) {
           this.skip();
           return;
@@ -109,20 +97,6 @@ export class OnboardingService {
         this.expectedRoute = null;
         this.refreshAnchor();
       });
-    afterNextRender(() => {
-      this.browserReady = true;
-      this.initialize();
-    });
-  }
-
-  initialize(): void {
-    if (
-      !this.completedInMemory &&
-      browserPath(this.router.url) === '/' &&
-      !onboardingIsComplete()
-    ) {
-      this.start();
-    }
   }
 
   start(): void {
@@ -170,7 +144,6 @@ export class OnboardingService {
   }
 
   clearCompletion(): void {
-    this.completedInMemory = false;
     this.expectedRoute = null;
     this.navigationTicket += 1;
     this.transitioning.set(false);
@@ -222,7 +195,6 @@ export class OnboardingService {
   }
 
   private complete(): void {
-    this.completedInMemory = true;
     this.expectedRoute = null;
     this.navigationTicket += 1;
     this.transitioning.set(false);
@@ -258,14 +230,6 @@ export function clearOnboardingCompletion(storage = browserStorage()): void {
 
 function routePath(url: string): string {
   return url.split(/[?#]/, 1)[0] || '/';
-}
-
-function browserPath(routerUrl: string): string {
-  try {
-    return typeof location === 'undefined' ? routePath(routerUrl) : location.pathname;
-  } catch {
-    return routePath(routerUrl);
-  }
 }
 
 function browserStorage(): Storage | undefined {

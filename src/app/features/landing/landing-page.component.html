@@ -28,9 +28,14 @@
         <small>Board, sound and shortcuts</small>
       </a>
     </nav>
+
+    <button type="button" class="tour-action" (click)="onboarding.start()">
+      Take the guided tour
+    </button>
   </section>
 
   <p class="privacy-note">
-    Games and analysis stay on this device. <a routerLink="/about">About LealChess</a>
+    Games and analysis stay on this device.
+    <a href="/about/">About LealChess</a>
   </p>
 </main>

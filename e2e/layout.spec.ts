@@ -176,7 +176,7 @@ test('launches each workspace and provides project information', async ({ page }
   await expect(page.getByRole('link', { name: /Learn/ })).toHaveAttribute('href', '/learn');
   await expect(page.getByRole('link', { name: /Settings/ })).toHaveAttribute('href', '/settings');
 
-  await page.goto('/about');
+  await page.goto('/about/');
   await expect(page.getByRole('heading', { name: 'About LealChess' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Why LealChess' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Our Mission' })).toBeVisible();
@@ -253,7 +253,7 @@ test('publishes indexable metadata only for public pages', async ({ page, reques
   await expect(page).toHaveTitle('About LealChess | Local-First Chess Training');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     'href',
-    'https://lealchess.com/about',
+    'https://lealchess.com/about/',
   );
   await expect(page.locator('#lealchess-structured-data')).toHaveCount(0);
 
@@ -267,7 +267,7 @@ test('publishes indexable metadata only for public pages', async ({ page, reques
 
   const sitemap = await request.get('/sitemap.xml');
   expect(sitemap.ok()).toBe(true);
-  expect(await sitemap.text()).toContain('<loc>https://lealchess.com/about</loc>');
+  expect(await sitemap.text()).toContain('<loc>https://lealchess.com/about/</loc>');
 });
 
 test('keeps unknown routes visible and offers a route home', async ({ page }) => {
@@ -356,6 +356,13 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   await page.getByRole('button', { name: 'Clear all data' }).first().click();
   await expect(page.getByRole('alertdialog')).toBeVisible();
   await page.getByRole('button', { name: 'Clear all data' }).last().click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('heading', { name: 'LealChess' })).toBeVisible();
+  await expect(
+    page.getByRole('dialog', { name: 'Set the board, then make the first plan' }),
+  ).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Take the guided tour' }).click();
   await expect(page).toHaveURL(/\/play$/);
   const onboarding = page.getByRole('dialog', {
     name: 'Set the board, then make the first plan',

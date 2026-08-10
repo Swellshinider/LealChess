@@ -4,6 +4,13 @@ test.use({ storageState: { cookies: [], origins: [] } });
 
 test('walks through the real workspaces and can replay from Settings', async ({ page }) => {
   await page.goto('/');
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('heading', { name: 'LealChess' })).toBeVisible();
+  await expect(
+    page.getByRole('dialog', { name: 'Set the board, then make the first plan' }),
+  ).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Take the guided tour' }).click();
   await expect(page).toHaveURL(/\/play$/);
 
   const tour = page.getByRole('dialog', { name: 'Set the board, then make the first plan' });
@@ -63,6 +70,12 @@ test('walks through the real workspaces and can replay from Settings', async ({ 
     page.getByRole('dialog', { name: 'Set the board, then make the first plan' }),
   ).toHaveCount(0);
 
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Take the guided tour' })).toBeVisible();
+  await expect(
+    page.getByRole('dialog', { name: 'Set the board, then make the first plan' }),
+  ).toHaveCount(0);
+
   await page.goto('/learn');
   await expect(page.getByLabel('Chess.com username')).toHaveValue('Learner');
   await page.goto('/settings');
@@ -111,6 +124,7 @@ test('does not interrupt a first-time direct link', async ({ page }) => {
 test('skips once and uses a bottom-sheet coachmark on mobile', async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.includes('mobile'), 'Mobile onboarding behavior');
   await page.goto('/');
+  await page.getByRole('button', { name: 'Take the guided tour' }).click();
 
   const tour = page.getByRole('dialog', { name: 'Set the board, then make the first plan' });
   await expect(tour).toHaveAttribute('data-placement', 'mobile');
