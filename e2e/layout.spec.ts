@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import packageMetadata from '../package.json';
 
 const responsivenessViewports = [
   { width: 320, height: 568 },
@@ -197,11 +198,11 @@ test('launches each workspace and provides project information', async ({ page }
   if (testInfo.project.name.includes('mobile')) {
     await page.getByRole('button', { name: 'Open navigation' }).click();
     await expect(page.getByRole('dialog', { name: 'Navigation menu' })).toContainText(
-      'Version v1.1.0',
+      `Version v${packageMetadata.version}`,
     );
   } else {
     await expect(page.locator('#primary-navigation .version-label')).toContainText(
-      'Version v1.1.0',
+      `Version v${packageMetadata.version}`,
     );
   }
 });
