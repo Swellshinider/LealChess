@@ -15,7 +15,7 @@ verifyPage(about, {
   title: 'About LealChess | Local-First Chess Training',
   description:
     'Learn how LealChess provides local-first chess play, game analysis, and focused practice without accounts, cloud storage, or tracking.',
-  canonical: 'https://lealchess.com/about',
+  canonical: 'https://lealchess.com/about/',
 });
 
 assertIncludes(home, 'Play Stockfish, study games from Chess.com and Lichess');
@@ -28,7 +28,7 @@ for (const asset of ['robots.txt', 'sitemap.xml', '_redirects', '_headers', 'soc
 
 const sitemap = read('sitemap.xml');
 assertIncludes(sitemap, '<loc>https://lealchess.com/</loc>');
-assertIncludes(sitemap, '<loc>https://lealchess.com/about</loc>');
+assertIncludes(sitemap, '<loc>https://lealchess.com/about/</loc>');
 for (const privateRoute of ['/play', '/learn', '/explorer', '/settings', '/learn/review']) {
   assert(
     !sitemap.includes(`lealchess.com${privateRoute}`),
@@ -38,6 +38,7 @@ for (const privateRoute of ['/play', '/learn', '/explorer', '/settings', '/learn
 
 const redirects = read('_redirects');
 assertIncludes(redirects, '/help');
+assertIncludes(redirects, '/about/');
 assertIncludes(redirects, '/learn/review/*');
 assert(
   !redirects.split(/\r?\n/u).some((line) => line.trimStart().startsWith('/* ')),

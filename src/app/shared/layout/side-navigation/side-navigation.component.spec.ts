@@ -36,7 +36,7 @@ describe('SideNavigationComponent', () => {
     expect(host.querySelector('[data-tooltip="Settings"]')).not.toBeNull();
     expect(
       host.querySelector<HTMLAnchorElement>('[data-tooltip="About"]')?.getAttribute('href'),
-    ).toBe('/about');
+    ).toBe('/about/');
     expect(host.querySelector('[aria-disabled="true"]')).toBeNull();
     expect(host.querySelector('.version-label')?.getAttribute('aria-label')).toBe(
       `LealChess version v${packageMetadata.version}`,
@@ -65,7 +65,7 @@ describe('SideNavigationComponent', () => {
 
     expect(drawer).not.toBeNull();
     expect(drawer.getAttribute('aria-modal')).toBe('true');
-    expect(drawer.querySelector<HTMLAnchorElement>('a[href="/about"]')).not.toBeNull();
+    expect(drawer.querySelector<HTMLAnchorElement>('a[href="/about/"]')).not.toBeNull();
     expect(drawer.querySelector('.drawer-heading strong')?.textContent?.trim()).toBe('LealChess');
     expect(drawer.querySelector('.drawer-version')?.textContent).toContain(
       `Version v${packageMetadata.version}`,

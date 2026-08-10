@@ -3,7 +3,7 @@ export const SEO_ROUTE_DATA = 'seo';
 export interface SeoRouteData {
   readonly title: string;
   readonly description: string;
-  readonly canonicalPath: '/' | '/about';
+  readonly canonicalPath: '/' | '/about/';
   readonly index: true;
 }
 
@@ -19,6 +19,6 @@ export const ABOUT_SEO: SeoRouteData = {
   title: 'About LealChess | Local-First Chess Training',
   description:
     'Learn how LealChess provides local-first chess play, game analysis, and focused practice without accounts, cloud storage, or tracking.',
-  canonicalPath: '/about',
+  canonicalPath: '/about/',
   index: true,
 };

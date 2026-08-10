@@ -165,6 +165,24 @@ nav {
   }
 }
 
+.tour-action {
+  background: transparent;
+  border: 0;
+  color: var(--primary);
+  cursor: pointer;
+  font-family: var(--font-utility);
+  font-size: var(--type-caption);
+  letter-spacing: 0.05em;
+  margin-top: 18px;
+  padding: 8px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+
+  &:hover {
+    color: var(--paper);
+  }
+}
+
 .privacy-note {
   bottom: 20px;
   color: rgb(200 213 207 / 58%);

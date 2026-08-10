@@ -72,7 +72,7 @@ describe('SeoService', () => {
     expect(meta.getTag("name='description'")?.content).toBe(ABOUT_SEO.description);
     expect(document.querySelectorAll("link[rel='canonical']")).toHaveLength(1);
     expect(document.querySelector<HTMLLinkElement>("link[rel='canonical']")?.href).toBe(
-      'https://lealchess.com/about',
+      'https://lealchess.com/about/',
     );
     expect(document.getElementById('lealchess-structured-data')).toBeNull();
   });
