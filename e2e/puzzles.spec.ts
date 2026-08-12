@@ -53,16 +53,22 @@ test('loads both providers, exposes credits, and filters offline practice', asyn
 
   await page.getByRole('button', { name: 'Hint 1 of 2' }).click();
   await expect(page.getByText('The correct piece is highlighted.')).toBeVisible();
+  await expect(page.locator('.solver-board .cg-shapes > g circle')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Hint 2 of 2' }).click();
+  await expect(page.getByText('The destination is shown.')).toBeVisible();
+  await expect(page.locator('.solver-board .cg-shapes > g line')).toHaveCount(1);
+  await expect(page.getByRole('button', { name: 'All hints shown' })).toBeDisabled();
+
+  const fileCoordinates = page.locator('.solver-board coords.files coord');
+  await expect(fileCoordinates.nth(0)).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await expect(fileCoordinates.nth(1)).toHaveCSS('color', 'rgb(24, 27, 21)');
+
   await page.getByRole('button', { name: 'Reveal' }).click();
   await expect(page.locator('.result')).toHaveText('revealed');
   await expect(
     page.locator('.result-tags').getByText('Queens Gambit', { exact: true }),
   ).toBeVisible();
-  await expect(page.locator('.history-list')).toContainText('revealed');
-
-  await page.reload();
-  await expect(page.getByRole('heading', { name: 'Recent attempts' })).toBeVisible();
-  await expect(page.locator('.history-list')).toContainText('revealed');
+  await expect(page.getByRole('heading', { name: 'Recent attempts' })).toHaveCount(0);
 });
 
 test('recovers one provider from cache when its live request fails', async ({ page }) => {

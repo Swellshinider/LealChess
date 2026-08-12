@@ -161,8 +161,12 @@
           <p id="puzzle-announcement" aria-live="polite">{{ announcement() }}</p>
           @if (!solver()?.complete) {
             <div class="solver-actions">
-              <button type="button" (click)="hint()">
-                Hint {{ (solver()?.hintLevel ?? 0) + 1 }} of 2</button
+              <button type="button" [disabled]="solver()?.hintLevel === 2" (click)="hint()">
+                @if (solver()?.hintLevel === 2) {
+                  All hints shown
+                } @else {
+                  Hint {{ (solver()?.hintLevel ?? 0) + 1 }} of 2
+                }</button
               ><button class="secondary" type="button" (click)="reveal()">Reveal</button>
             </div>
             <p class="spoiler-note">Themes and opening tags appear after completion.</p>
@@ -189,23 +193,6 @@
         </div>
       </section>
     }
-
-    <section class="history" aria-labelledby="history-title">
-      <h2 id="history-title">Recent attempts</h2>
-      @if (recentAttempts().length === 0) {
-        <p>Your last 20 attempts will appear here.</p>
-      } @else {
-        <div class="history-list">
-          @for (attempt of recentAttempts(); track attempt.id) {
-            <article>
-              <strong>{{ attempt.outcome.replaceAll('-', ' ') }}</strong
-              ><span>{{ attempt.source }} · {{ attempt.completedAt.slice(0, 10) }}</span
-              ><small>{{ attempt.mistakes }} mistakes · hint level {{ attempt.hintLevel }}</small>
-            </article>
-          }
-        </div>
-      }
-    </section>
   </main>
 </div>
 

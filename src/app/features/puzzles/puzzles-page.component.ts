@@ -74,7 +74,6 @@ export class PuzzlesPageComponent implements OnInit {
   protected readonly catalogMinimum = PUZZLE_CATALOG.ratingBounds[0];
   protected readonly catalogMaximum = PUZZLE_CATALOG.ratingBounds[1];
   protected readonly stats = computed(() => puzzleStats(this.attempts(), this.today));
-  protected readonly recentAttempts = computed(() => this.attempts().slice(0, 20));
   protected readonly ratingInvalid = computed(() => this.minimum() > this.maximum());
   protected readonly selectedThemes = computed(() =>
     this.selectedTags().filter((tag) => this.themes.includes(tag)),
@@ -105,7 +104,11 @@ export class PuzzlesPageComponent implements OnInit {
       events: { after: (from, to) => this.handleMove(from, to) },
     },
     premovable: { enabled: false },
-    drawable: { enabled: false, visible: true },
+    drawable: {
+      enabled: false,
+      visible: true,
+      autoShapes: this.hintShapes(),
+    },
   }));
 
   constructor() {
@@ -114,7 +117,6 @@ export class PuzzlesPageComponent implements OnInit {
       const board = this.board();
       if (board) {
         board.set(config);
-        board.setShapes(this.hintShapes());
       }
     });
   }
@@ -318,7 +320,7 @@ export class PuzzlesPageComponent implements OnInit {
       {
         orig: expected.slice(0, 2) as Key,
         ...(level === 2 ? { dest: expected.slice(2, 4) as Key } : {}),
-        brush: 'green',
+        brush: 'yellow',
       },
     ];
   }

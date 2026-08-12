@@ -86,8 +86,7 @@ section {
 }
 .daily-card,
 .filters,
-.solver-panel,
-.history-list article {
+.solver-panel {
   background: var(--surface-container);
   border: 1px solid var(--outline-variant);
   padding: 22px;
@@ -198,21 +197,21 @@ a {
     )
     0 0 / 25% 25%;
 }
-:host ::ng-deep .board .cg-wrap coords {
+:host ::ng-deep .board.cg-wrap coords {
   font-weight: 700;
   opacity: 1;
 }
-:host ::ng-deep .board .orientation-white .ranks :nth-child(odd),
-:host ::ng-deep .board .orientation-white .files :nth-child(odd),
-:host ::ng-deep .board .orientation-black .ranks :nth-child(even),
-:host ::ng-deep .board .orientation-black .files :nth-child(even) {
+:host ::ng-deep .board.orientation-white .ranks :nth-child(odd),
+:host ::ng-deep .board.orientation-white .files :nth-child(odd),
+:host ::ng-deep .board.orientation-black .ranks :nth-child(even),
+:host ::ng-deep .board.orientation-black .files :nth-child(even) {
   color: var(--coordinate-on-dark);
   text-shadow: 0 1px 2px rgb(0 0 0 / 65%);
 }
-:host ::ng-deep .board .orientation-white .ranks :nth-child(even),
-:host ::ng-deep .board .orientation-white .files :nth-child(even),
-:host ::ng-deep .board .orientation-black .ranks :nth-child(odd),
-:host ::ng-deep .board .orientation-black .files :nth-child(odd) {
+:host ::ng-deep .board.orientation-white .ranks :nth-child(even),
+:host ::ng-deep .board.orientation-white .files :nth-child(even),
+:host ::ng-deep .board.orientation-black .ranks :nth-child(odd),
+:host ::ng-deep .board.orientation-black .files :nth-child(odd) {
   color: var(--coordinate-on-light);
 }
 :host ::ng-deep .board cg-board square.move-dest {
@@ -258,18 +257,6 @@ a {
 }
 .spoiler-note {
   font-size: var(--type-small);
-}
-.history-list {
-  display: grid;
-  gap: 8px;
-}
-.history-list article {
-  display: grid;
-  grid-template-columns: 1fr auto;
-}
-.history-list small {
-  color: var(--outline);
-  grid-column: 1 / -1;
 }
 .promotion-backdrop {
   align-items: center;
