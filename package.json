@@ -17,7 +17,8 @@
     "verify:quality": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm verify:seo && pnpm run audit",
     "verify": "pnpm verify:quality && pnpm e2e",
     "verify:seo": "node scripts/verify-seo.mjs",
-    "generate:openings": "node scripts/generate-opening-index.mjs"
+    "generate:openings": "node scripts/generate-opening-index.mjs",
+    "generate:puzzles": "node scripts/generate-puzzle-catalog.mjs"
   },
   "private": true,
   "packageManager": "pnpm@11.17.0",

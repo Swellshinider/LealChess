@@ -1,0 +1,215 @@
+<div class="puzzles-shell">
+  <app-side-navigation />
+  <main class="puzzles-page">
+    <header class="page-heading">
+      <p class="eyebrow">Daily & offline practice</p>
+      <h1>Puzzles</h1>
+      <p>Train calculation with two daily challenges or filter the local Lichess collection.</p>
+    </header>
+
+    <section class="stats" aria-label="Puzzle statistics">
+      <div>
+        <strong>{{ stats().currentStreak }}</strong
+        ><span>Current streak</span>
+      </div>
+      <div>
+        <strong>{{ stats().longestStreak }}</strong
+        ><span>Longest streak</span>
+      </div>
+      <div>
+        <strong>{{ stats().cleanRate }}%</strong><span>Clean solves</span>
+      </div>
+      <div>
+        <strong>{{ stats().total }}</strong
+        ><span>Completed</span>
+      </div>
+    </section>
+
+    <section aria-labelledby="daily-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Fresh every day</p>
+          <h2 id="daily-title">Daily</h2>
+        </div>
+      </div>
+      <div class="daily-grid">
+        @for (
+          item of [
+            { name: 'Lichess', state: lichess() },
+            { name: 'Chess.com', state: chessCom() },
+          ];
+          track item.name
+        ) {
+          <article class="daily-card" [class.stale]="stale(item.state)">
+            <div>
+              <span class="provider">{{ item.name }}</span>
+              @if (item.state.status === 'loading') {
+                <span class="status">Loading…</span>
+              }
+              @if (stale(item.state)) {
+                <span class="status warning">Saved · no daily credit</span>
+              }
+            </div>
+            @if (item.state.cached; as cached) {
+              <h3>{{ cached.puzzle.title ?? 'Daily puzzle' }}</h3>
+              @if (dailyCompleted(cached)) {
+                <span class="status completed">Completed on this device</span>
+              }
+              <p>
+                {{
+                  cached.puzzle.rating
+                    ? 'Rated ' + cached.puzzle.rating
+                    : 'Find the best continuation.'
+                }}
+              </p>
+              @if (item.state.error) {
+                <p class="inline-note">{{ item.state.error }}</p>
+              }
+              <div class="card-actions">
+                <button type="button" (click)="selectDaily(item.state)">Solve</button>
+                <a [href]="cached.puzzle.externalUrl" target="_blank" rel="noopener noreferrer"
+                  >View on {{ item.name }}</a
+                >
+              </div>
+            } @else if (item.state.status === 'error') {
+              <p role="alert">{{ item.state.error }}</p>
+              <a
+                [href]="
+                  item.name === 'Lichess'
+                    ? 'https://lichess.org/training/daily'
+                    : 'https://www.chess.com/daily-chess-puzzle'
+                "
+                target="_blank"
+                rel="noopener noreferrer"
+                >Open {{ item.name }}</a
+              >
+            } @else {
+              <p>Contacting {{ item.name }} for today’s puzzle.</p>
+            }
+          </article>
+        }
+      </div>
+    </section>
+
+    <section class="practice" aria-labelledby="practice-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Works offline</p>
+          <h2 id="practice-title">Practice</h2>
+        </div>
+        <span>{{ catalogCount }} local puzzles</span>
+      </div>
+      <div class="filters">
+        <div class="tag-filters">
+          <app-puzzle-tag-combobox
+            label="Themes"
+            [options]="themes"
+            [selected]="selectedThemes()"
+            (selectionChange)="updateTagGroup('themes', $event)"
+          />
+          <app-puzzle-tag-combobox
+            label="Openings"
+            [options]="openings"
+            [selected]="selectedOpenings()"
+            (selectionChange)="updateTagGroup('openings', $event)"
+          />
+        </div>
+        <div class="rating-filter">
+          <label
+            >Minimum rating<input
+              type="number"
+              [min]="catalogMinimum"
+              [max]="catalogMaximum"
+              [value]="minimum()"
+              (input)="updateMinimum($any($event.target).value)" /></label
+          ><label
+            >Maximum rating<input
+              type="number"
+              [min]="catalogMinimum"
+              [max]="catalogMaximum"
+              [value]="maximum()"
+              (input)="updateMaximum($any($event.target).value)"
+          /></label>
+        </div>
+        @if (ratingInvalid()) {
+          <p class="error" role="alert">Minimum rating cannot be greater than maximum rating.</p>
+        }
+        @if (practiceError()) {
+          <p class="error" role="alert">{{ practiceError() }}</p>
+        }
+        <button type="button" [disabled]="ratingInvalid()" (click)="startPractice()">
+          Find a puzzle
+        </button>
+      </div>
+    </section>
+
+    @if (activePuzzle(); as puzzle) {
+      <section class="solver" aria-labelledby="solver-title">
+        <div class="solver-board">
+          <app-chessground-board
+            class="board"
+            [initialConfig]="boardConfig()"
+            data-board-theme="tournament"
+            role="img"
+            aria-label="Puzzle chessboard"
+            aria-describedby="puzzle-announcement"
+          />
+        </div>
+        <div class="solver-panel">
+          <p class="eyebrow">{{ puzzle.source === 'lichess-catalog' ? 'Practice' : 'Daily' }}</p>
+          <h2 id="solver-title">{{ puzzle.title ?? 'Find the best move' }}</h2>
+          <p id="puzzle-announcement" aria-live="polite">{{ announcement() }}</p>
+          @if (!solver()?.complete) {
+            <div class="solver-actions">
+              <button type="button" [disabled]="solver()?.hintLevel === 2" (click)="hint()">
+                @if (solver()?.hintLevel === 2) {
+                  All hints shown
+                } @else {
+                  Hint {{ (solver()?.hintLevel ?? 0) + 1 }} of 2
+                }</button
+              ><button class="secondary" type="button" (click)="reveal()">Reveal</button>
+            </div>
+            <p class="spoiler-note">Themes and opening tags appear after completion.</p>
+          } @else {
+            <p class="result">{{ completeLabel() }}</p>
+            <ol class="solution-line">
+              @for (move of solver()?.played; track $index) {
+                <li>{{ move }}</li>
+              }
+            </ol>
+            <div class="result-tags">
+              @for (tag of puzzle.themes; track tag) {
+                <span>{{ displayTag(tag) }}</span>
+              }
+              @for (tag of puzzle.openings; track tag) {
+                <span>{{ displayTag(tag) }}</span>
+              }
+            </div>
+            <button type="button" (click)="next()">Next</button>
+          }
+          <a [href]="puzzle.externalUrl" target="_blank" rel="noopener noreferrer"
+            >Original puzzle source</a
+          >
+        </div>
+      </section>
+    }
+  </main>
+</div>
+
+@if (pendingPromotion()) {
+  <div class="promotion-backdrop" role="dialog" aria-modal="true" aria-labelledby="promotion-title">
+    <div class="promotion-card">
+      <h2 id="promotion-title">Choose promotion</h2>
+      <div>
+        @for (piece of promotionPieces; track piece) {
+          <button type="button" (click)="choosePromotion(piece)">
+            {{
+              piece === 'q' ? 'Queen' : piece === 'r' ? 'Rook' : piece === 'b' ? 'Bishop' : 'Knight'
+            }}
+          </button>
+        }
+      </div>
+      <button class="secondary" type="button" (click)="cancelPromotion()">Cancel</button>
+    </div>
+  </div>
+}

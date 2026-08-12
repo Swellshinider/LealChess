@@ -20,3 +20,9 @@ LealChess includes or depends on the following open-source software:
 
 Dependency license texts remain available in their distributed packages. The combined application
 is distributed under GPL-3.0-only as required by Chessground and Stockfish.
+
+## Lichess puzzle database
+
+The optional offline puzzle catalog is generated from the Lichess puzzle database, dedicated to
+the public domain under CC0 1.0. Source and refresh instructions are documented in
+`docs/PUZZLES.md`. The raw database archive is not distributed with LealChess.

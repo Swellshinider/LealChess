@@ -14,6 +14,7 @@ const publicWorkspaceRoutes = [
   '/settings',
   '/learn',
   '/explorer',
+  '/puzzles',
   '/about',
   '/not-a-route',
 ] as const;
@@ -175,6 +176,7 @@ test('launches each workspace and provides project information', async ({ page }
   await expect(page.getByRole('heading', { name: 'LealChess' })).toBeVisible();
   await expect(page.getByRole('link', { name: /Play/ })).toHaveAttribute('href', '/play');
   await expect(page.getByRole('link', { name: /Learn/ })).toHaveAttribute('href', '/learn');
+  await expect(page.getByRole('link', { name: /Puzzles/ })).toHaveAttribute('href', '/puzzles');
   await expect(page.getByRole('link', { name: /Settings/ })).toHaveAttribute('href', '/settings');
 
   await page.goto('/about/');

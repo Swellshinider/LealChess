@@ -29,7 +29,14 @@ for (const asset of ['robots.txt', 'sitemap.xml', '_redirects', '_headers', 'soc
 const sitemap = read('sitemap.xml');
 assertIncludes(sitemap, '<loc>https://lealchess.com/</loc>');
 assertIncludes(sitemap, '<loc>https://lealchess.com/about/</loc>');
-for (const privateRoute of ['/play', '/learn', '/explorer', '/settings', '/learn/review']) {
+for (const privateRoute of [
+  '/play',
+  '/learn',
+  '/explorer',
+  '/puzzles',
+  '/settings',
+  '/learn/review',
+]) {
   assert(
     !sitemap.includes(`lealchess.com${privateRoute}`),
     `Private route leaked into sitemap: ${privateRoute}`,
@@ -40,6 +47,7 @@ const redirects = read('_redirects');
 assertIncludes(redirects, '/help');
 assertIncludes(redirects, '/about/');
 assertIncludes(redirects, '/learn/review/*');
+assertIncludes(redirects, '/puzzles');
 assert(
   !redirects.split(/\r?\n/u).some((line) => line.trimStart().startsWith('/* ')),
   'Catch-all rewrite would turn unknown URLs into soft 404s',
@@ -47,6 +55,7 @@ assert(
 
 const headers = read('_headers');
 assertIncludes(headers, 'X-Robots-Tag: noindex, nofollow');
+assertIncludes(headers, '/puzzles');
 
 console.log('SEO build artifacts verified.');
 

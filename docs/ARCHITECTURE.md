@@ -42,6 +42,9 @@ Services that cross a system boundary are adapters:
 - Stockfish services adapt Web Workers and the UCI protocol.
 - Chess.com and Lichess services adapt remote HTTP APIs.
 - IndexedDB repositories adapt durable browser storage.
+- The lazy `/puzzles` workspace owns daily-puzzle cache and attempt stores. Entering that route
+  contacts the anonymous Lichess and Chess.com public APIs for daily content; tagged practice reads
+  only the bundled catalog and remains offline. No puzzle attempts are submitted.
 - Sound adapts browser audio.
 
 Workflow code should depend on the narrow public service contract rather than worker, network, or
@@ -59,8 +62,9 @@ an exported TypeScript API.
 - Add an explicit, tested migration before making an incompatible schema change.
 - Failed or partial records must fall back safely without deleting unrelated local data.
 
-The application only contacts Chess.com or Lichess after an explicit import action. No analytics,
-tracking, cloud synchronization, or remote game storage belongs in the default architecture.
+The application contacts Chess.com or Lichess after an explicit import action or when the user
+enters Puzzles to load daily content. No analytics, tracking, cloud synchronization, puzzle
+submission, or remote game storage belongs in the default architecture.
 
 ## Stockfish workers
 
