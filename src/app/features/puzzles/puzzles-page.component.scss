@@ -1,0 +1,319 @@
+:host {
+  display: block;
+}
+.puzzles-shell {
+  display: flex;
+  min-height: 100dvh;
+}
+.puzzles-page {
+  margin: 0 auto;
+  max-width: 1320px;
+  min-width: 0;
+  padding: 42px clamp(18px, 4vw, 64px) 72px;
+  width: 100%;
+}
+.page-heading {
+  max-width: 680px;
+}
+.eyebrow,
+.provider {
+  color: var(--primary);
+  font-family: var(--font-utility);
+  font-size: var(--type-caption);
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+}
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  line-height: 1;
+  margin: 0;
+  text-transform: uppercase;
+}
+h1 {
+  font-size: clamp(3rem, 8vw, 6rem);
+}
+h2 {
+  font-size: 2rem;
+}
+h3 {
+  font-size: 1.45rem;
+}
+.page-heading > p:last-child,
+section p {
+  color: var(--mist);
+}
+.stats {
+  display: grid;
+  gap: 1px;
+  grid-template-columns: repeat(4, 1fr);
+  margin: 36px 0 54px;
+}
+.stats div {
+  background: var(--surface-container);
+  display: grid;
+  padding: 20px;
+}
+.stats strong {
+  color: var(--amber);
+  font-family: var(--font-display);
+  font-size: 2rem;
+}
+.stats span {
+  color: var(--mist);
+  font-size: var(--type-small);
+}
+section {
+  margin-top: 42px;
+}
+.section-heading {
+  align-items: end;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.section-heading > span {
+  color: var(--outline);
+  font-family: var(--font-utility);
+  font-size: var(--type-caption);
+}
+.daily-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, 1fr);
+}
+.daily-card,
+.filters,
+.solver-panel,
+.history-list article {
+  background: var(--surface-container);
+  border: 1px solid var(--outline-variant);
+  padding: 22px;
+}
+.daily-card > div:first-child {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+.daily-card h3 {
+  margin-top: 30px;
+}
+.daily-card.stale {
+  border-color: var(--amber);
+}
+.status {
+  color: var(--outline);
+  font-size: var(--type-caption);
+}
+.warning {
+  color: var(--amber);
+}
+.completed {
+  color: var(--primary);
+}
+.card-actions,
+.solver-actions {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+button {
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  color: var(--on-primary);
+  font-weight: 700;
+  min-height: 44px;
+  padding: 8px 16px;
+}
+button.secondary,
+.solver-actions .secondary {
+  background: transparent;
+  border-color: var(--outline);
+  color: var(--paper);
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+a {
+  color: var(--primary);
+  text-underline-offset: 3px;
+}
+.filters {
+  display: grid;
+  gap: 18px;
+}
+.tag-filters {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.rating-filter {
+  display: flex;
+  gap: 14px;
+}
+.rating-filter label {
+  display: grid;
+  gap: 5px;
+}
+.rating-filter input {
+  background: var(--surface-lowest);
+  border: 1px solid var(--outline);
+  color: var(--paper);
+  padding: 9px;
+  width: 150px;
+}
+.error {
+  color: #ffb4ab;
+  margin: 0;
+}
+.solver {
+  align-items: start;
+  display: grid;
+  gap: clamp(20px, 4vw, 52px);
+  grid-template-columns: minmax(300px, 640px) minmax(270px, 1fr);
+}
+.solver-board {
+  aspect-ratio: 1;
+  width: 100%;
+}
+.board {
+  --coordinate-on-dark: #fff;
+  --coordinate-on-light: var(--night);
+
+  display: block;
+  height: 100%;
+  overflow: hidden;
+  width: 100%;
+}
+:host ::ng-deep .board cg-board {
+  background: conic-gradient(
+      var(--board-dark) 25%,
+      var(--board-light) 0 50%,
+      var(--board-dark) 0 75%,
+      var(--board-light) 0
+    )
+    0 0 / 25% 25%;
+}
+:host ::ng-deep .board .cg-wrap coords {
+  font-weight: 700;
+  opacity: 1;
+}
+:host ::ng-deep .board .orientation-white .ranks :nth-child(odd),
+:host ::ng-deep .board .orientation-white .files :nth-child(odd),
+:host ::ng-deep .board .orientation-black .ranks :nth-child(even),
+:host ::ng-deep .board .orientation-black .files :nth-child(even) {
+  color: var(--coordinate-on-dark);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 65%);
+}
+:host ::ng-deep .board .orientation-white .ranks :nth-child(even),
+:host ::ng-deep .board .orientation-white .files :nth-child(even),
+:host ::ng-deep .board .orientation-black .ranks :nth-child(odd),
+:host ::ng-deep .board .orientation-black .files :nth-child(odd) {
+  color: var(--coordinate-on-light);
+}
+:host ::ng-deep .board cg-board square.move-dest {
+  background: radial-gradient(circle, rgb(23 36 44 / 62%) 0 22%, transparent 23%);
+}
+:host ::ng-deep .board cg-board square.oc.move-dest {
+  background: radial-gradient(
+    circle,
+    transparent 0 72%,
+    rgb(23 36 44 / 62%) 73% 86%,
+    transparent 87%
+  );
+}
+.solver-panel {
+  position: sticky;
+  top: 24px;
+}
+.solver-panel h2 {
+  margin: 8px 0 20px;
+}
+.result {
+  color: var(--primary);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  text-transform: uppercase;
+}
+.solution-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style-position: inside;
+  padding: 0;
+}
+.result-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 18px 0;
+}
+.result-tags span {
+  background: var(--primary-container);
+  padding: 5px 8px;
+}
+.spoiler-note {
+  font-size: var(--type-small);
+}
+.history-list {
+  display: grid;
+  gap: 8px;
+}
+.history-list article {
+  display: grid;
+  grid-template-columns: 1fr auto;
+}
+.history-list small {
+  color: var(--outline);
+  grid-column: 1 / -1;
+}
+.promotion-backdrop {
+  align-items: center;
+  background: rgb(0 0 0 / 75%);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 20px;
+  position: fixed;
+  z-index: 100;
+}
+.promotion-card {
+  background: var(--surface-container-high);
+  border: 1px solid var(--outline);
+  max-width: 420px;
+  padding: 24px;
+}
+.promotion-card > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0;
+}
+@media (max-width: 767px) {
+  .puzzles-shell {
+    display: block;
+  }
+  .puzzles-page {
+    padding-top: 26px;
+  }
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .daily-grid,
+  .solver {
+    grid-template-columns: 1fr;
+  }
+  .solver-panel {
+    position: static;
+  }
+  .rating-filter {
+    flex-wrap: wrap;
+  }
+  .tag-filters {
+    grid-template-columns: 1fr;
+  }
+}

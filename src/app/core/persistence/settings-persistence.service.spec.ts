@@ -51,9 +51,25 @@ describe('SettingsPersistenceService', () => {
       TestBed.inject(SettingsPersistenceService).calculateStorageUsage(),
     ).resolves.toEqual({
       records,
+      puzzles: 0,
       engines: 7_316_840,
       total: records + 7_316_840,
     });
+  });
+
+  it('includes fetched daily puzzles and attempts in local storage usage', async () => {
+    const database = await TestBed.inject(LealChessDatabaseService).open();
+    const daily = { provider: 'lichess', id: 'lichess', puzzle: { key: 'daily' } };
+    const attempt = { id: 'attempt-1', outcome: 'clean-solved' };
+    await database.put('puzzleDaily', daily);
+    await database.put('puzzleAttempts', attempt);
+
+    const puzzles =
+      new TextEncoder().encode(JSON.stringify(daily)).byteLength +
+      new TextEncoder().encode(JSON.stringify(attempt)).byteLength;
+    await expect(
+      TestBed.inject(SettingsPersistenceService).calculateStorageUsage(),
+    ).resolves.toEqual({ records: 0, puzzles, engines: 0, total: puzzles });
   });
 
   it('seeds usernames from profiles and persists import filters', async () => {
@@ -91,6 +107,8 @@ describe('SettingsPersistenceService', () => {
       installedAt: '2026-08-02T12:00:00.000Z',
       bytes: 113_013_789,
     });
+    await database.put('puzzleDaily', { provider: 'lichess', id: 'lichess' });
+    await database.put('puzzleAttempts', { id: 'attempt-1', outcome: 'clean-solved' });
     localStorage.setItem(ONBOARDING_COMPLETION_KEY, '1');
 
     await TestBed.inject(SettingsPersistenceService).clearAll();
@@ -102,10 +120,13 @@ describe('SettingsPersistenceService', () => {
     await expect(database.getAll('explorerSessions')).resolves.toEqual([]);
     await expect(database.getAll('reviewAnalysisSessions')).resolves.toEqual([]);
     await expect(database.getAll('engineAssets')).resolves.toEqual([]);
+    await expect(database.getAll('puzzleDaily')).resolves.toEqual([]);
+    await expect(database.getAll('puzzleAttempts')).resolves.toEqual([]);
     await expect(
       TestBed.inject(SettingsPersistenceService).calculateStorageUsage(),
     ).resolves.toEqual({
       records: 0,
+      puzzles: 0,
       engines: 0,
       total: 0,
     });

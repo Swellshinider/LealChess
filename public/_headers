@@ -12,3 +12,6 @@
 
 /explorer
   X-Robots-Tag: noindex, nofollow
+
+/puzzles
+  X-Robots-Tag: noindex, nofollow

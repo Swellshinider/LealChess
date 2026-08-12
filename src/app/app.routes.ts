@@ -44,6 +44,14 @@ export const routes: Routes = [
     title: 'Explorer | LealChess',
   },
   {
+    path: 'puzzles',
+    loadComponent: () =>
+      import('./features/puzzles/puzzles-page.component').then(
+        (module) => module.PuzzlesPageComponent,
+      ),
+    title: 'Puzzles | LealChess',
+  },
+  {
     path: 'about',
     loadComponent: () =>
       import('./features/about/about-page.component').then((module) => module.AboutPageComponent),
