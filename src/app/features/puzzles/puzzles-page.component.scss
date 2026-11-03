@@ -6,10 +6,12 @@
   min-height: 100dvh;
 }
 .puzzles-page {
+  container-type: inline-size;
+  flex: 1 1 auto;
   margin: 0 auto;
   max-width: 1320px;
   min-width: 0;
-  padding: 42px clamp(18px, 4vw, 64px) 72px;
+  padding: 40px 32px 64px;
   width: 100%;
 }
 .page-heading {
@@ -20,9 +22,9 @@
   color: var(--primary);
   font-family: var(--font-utility);
   font-size: var(--type-caption);
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
   margin: 0;
-  text-transform: uppercase;
+  text-transform: none;
 }
 h1,
 h2,
@@ -30,13 +32,14 @@ h3 {
   font-family: var(--font-display);
   line-height: 1;
   margin: 0;
-  text-transform: uppercase;
+  text-transform: none;
 }
 h1 {
-  font-size: clamp(3rem, 8vw, 6rem);
+  font-size: clamp(2rem, 3vw, 2.5rem);
+  font-weight: 600;
 }
 h2 {
-  font-size: 2rem;
+  font-size: 1.75rem;
 }
 h3 {
   font-size: 1.45rem;
@@ -47,32 +50,33 @@ section p {
 }
 .stats {
   display: grid;
-  gap: 1px;
-  grid-template-columns: repeat(4, 1fr);
-  margin: 36px 0 54px;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 24px 0 40px;
 }
 .stats div {
+  border-radius: 8px;
   background: var(--surface-container);
   display: grid;
   padding: 20px;
 }
 .stats strong {
-  color: var(--amber);
-  font-family: var(--font-display);
-  font-size: 2rem;
+  color: var(--paper);
+  font-family: var(--font-utility);
+  font-size: 1.75rem;
 }
 .stats span {
   color: var(--mist);
   font-size: var(--type-small);
 }
 section {
-  margin-top: 42px;
+  margin-top: 40px;
 }
 .section-heading {
   align-items: end;
   display: flex;
   justify-content: space-between;
-  margin-bottom: 18px;
+  margin-bottom: 24px;
 }
 .section-heading > span {
   color: var(--outline);
@@ -89,7 +93,8 @@ section {
 .solver-panel {
   background: var(--surface-container);
   border: 1px solid var(--outline-variant);
-  padding: 22px;
+  padding: 24px;
+  border-radius: 12px;
 }
 .daily-card > div:first-child {
   align-items: center;
@@ -97,7 +102,7 @@ section {
   justify-content: space-between;
 }
 .daily-card h3 {
-  margin-top: 30px;
+  margin-top: 24px;
 }
 .daily-card.stale {
   border-color: var(--amber);
@@ -117,13 +122,14 @@ section {
   align-items: center;
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
   margin-top: 20px;
 }
 button {
   background: var(--primary);
   border: 1px solid var(--primary);
   color: var(--on-primary);
-  font-weight: 700;
+  font-weight: 600;
   min-height: 44px;
   padding: 8px 16px;
 }
@@ -143,7 +149,7 @@ a {
 }
 .filters {
   display: grid;
-  gap: 18px;
+  gap: 20px;
 }
 .tag-filters {
   display: grid;
@@ -151,19 +157,22 @@ a {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .rating-filter {
+  flex-wrap: wrap;
   display: flex;
-  gap: 14px;
+  gap: 16px;
 }
 .rating-filter label {
   display: grid;
-  gap: 5px;
+  gap: 4px;
 }
 .rating-filter input {
   background: var(--surface-lowest);
   border: 1px solid var(--outline);
   color: var(--paper);
-  padding: 9px;
+  padding: 8px;
   width: 150px;
+  max-width: 100%;
+  min-height: 44px;
 }
 .error {
   color: #ffb4ab;
@@ -172,8 +181,8 @@ a {
 .solver {
   align-items: start;
   display: grid;
-  gap: clamp(20px, 4vw, 52px);
-  grid-template-columns: minmax(300px, 640px) minmax(270px, 1fr);
+  gap: 24px;
+  grid-template-columns: minmax(0, 640px) minmax(280px, 1fr);
 }
 .solver-board {
   aspect-ratio: 1;
@@ -181,7 +190,7 @@ a {
 }
 .board {
   --coordinate-on-dark: #fff;
-  --coordinate-on-light: var(--night);
+  --coordinate-on-light: #181b15;
 
   display: block;
   height: 100%;
@@ -198,7 +207,7 @@ a {
     0 0 / 25% 25%;
 }
 :host ::ng-deep .board.cg-wrap coords {
-  font-weight: 700;
+  font-weight: 600;
   opacity: 1;
 }
 :host ::ng-deep .board.orientation-white .ranks :nth-child(odd),
@@ -236,7 +245,7 @@ a {
   color: var(--primary);
   font-family: var(--font-display);
   font-size: 1.5rem;
-  text-transform: uppercase;
+  text-transform: none;
 }
 .solution-line {
   display: flex;
@@ -248,12 +257,12 @@ a {
 .result-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin: 18px 0;
+  gap: 8px;
+  margin: 16px 0;
 }
 .result-tags span {
   background: var(--primary-container);
-  padding: 5px 8px;
+  padding: 4px 8px;
 }
 .spoiler-note {
   font-size: var(--type-small);
@@ -269,6 +278,9 @@ a {
   z-index: 100;
 }
 .promotion-card {
+  border-radius: 12px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
   background: var(--surface-container-high);
   border: 1px solid var(--outline);
   max-width: 420px;
@@ -285,15 +297,12 @@ a {
     display: block;
   }
   .puzzles-page {
-    padding-top: 26px;
+    padding: 24px 12px 48px;
   }
   .stats {
     grid-template-columns: repeat(2, 1fr);
   }
-  .daily-grid,
-  .solver {
-    grid-template-columns: 1fr;
-  }
+
   .solver-panel {
     position: static;
   }
@@ -302,5 +311,45 @@ a {
   }
   .tag-filters {
     grid-template-columns: 1fr;
+  }
+}
+
+.daily-card > div:first-child {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.stats strong {
+  font-variant-numeric: tabular-nums;
+}
+
+@container (max-width: 900px) {
+  .solver {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .solver-panel {
+    position: static;
+  }
+
+  .solver-board {
+    max-width: 640px;
+  }
+}
+
+@container (max-width: 600px) {
+  .daily-grid,
+  .tag-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .daily-card,
+  .filters,
+  .solver-panel {
+    padding: 16px;
   }
 }

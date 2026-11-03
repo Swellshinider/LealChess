@@ -4,7 +4,7 @@
   display: flex;
   inset: 0;
   justify-content: center;
-  padding: 18px;
+  padding: 20px;
   position: fixed;
   z-index: 100;
 }
@@ -13,13 +13,15 @@ section {
   background: var(--carbon);
   border-color: rgb(200 213 207 / 22%) var(--surface-lowest) var(--surface-lowest)
     rgb(200 213 207 / 22%);
-  border-radius: 4px 0 4px 0;
+  border-radius: 12px;
   border-style: solid;
   border-width: 1px;
-  box-shadow: 0 28px 90px rgb(0 0 0 / 45%);
+  box-shadow: none;
   color: var(--paper);
-  max-width: 440px;
-  padding: 28px;
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  max-width: 480px;
+  padding: 32px;
   position: relative;
   width: 100%;
 }
@@ -29,8 +31,8 @@ section {
   border: 0;
   color: var(--mist);
   font-size: 1.5rem;
-  min-height: 42px;
-  min-width: 42px;
+  min-height: 44px;
+  min-width: 44px;
   position: absolute;
   right: 10px;
   top: 8px;
@@ -40,14 +42,12 @@ section {
   color: var(--primary);
   font-family: var(--font-utility);
   font-size: var(--type-caption);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
 }
 
 h2 {
   font-family: var(--font-display);
   font-size: clamp(2rem, 8vw, 2.8rem);
-  line-height: 0.95;
+  line-height: 1.08;
   margin: 8px 0;
 }
 
@@ -67,7 +67,7 @@ h2 {
     align-items: center;
     background: var(--surface-low);
     border: 1px solid var(--outline-variant);
-    border-radius: 3px 0 3px 0;
+    border-radius: 8px;
     color: var(--paper);
     display: flex;
     flex-direction: column;
@@ -94,8 +94,8 @@ label {
   color: var(--mist);
   display: block;
   font-size: var(--type-small);
-  font-weight: 700;
-  margin-bottom: 5px;
+  font-weight: 600;
+  margin-bottom: 4px;
 }
 
 .rating-heading {
@@ -112,7 +112,7 @@ output {
 
 input[type='range'] {
   accent-color: var(--primary);
-  min-height: 42px;
+  min-height: 44px;
   width: 100%;
 }
 
@@ -124,7 +124,7 @@ input[type='range'] {
   gap: 10px;
   grid-template-columns: auto 1fr;
   margin-top: 16px;
-  padding: 11px 12px;
+  padding: 12px 12px;
 
   &[data-state='error'] {
     border-left-color: var(--danger);
@@ -151,8 +151,8 @@ input[type='range'] {
     background: transparent;
     border: 1px solid var(--outline);
     color: var(--paper);
-    font-weight: 700;
-    min-height: 38px;
+    font-weight: 600;
+    min-height: 44px;
     padding: 6px 10px;
   }
 }
@@ -172,9 +172,9 @@ input[type='range'] {
 .start {
   background: var(--primary);
   border: 0;
-  border-radius: 3px 0 3px 0;
+  border-radius: 8px;
   color: var(--on-primary);
-  font-weight: 800;
+  font-weight: 600;
   margin-top: 12px;
   min-height: 48px;
   width: 100%;

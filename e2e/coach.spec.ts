@@ -195,7 +195,7 @@ test('shows rating progress and filters the game archive', async ({ page }) => {
   await expect(whitePiece).toHaveCSS('color', 'rgb(244, 241, 230)');
   await expect(whitePiece).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   await expect(blackPiece).toHaveText('♟');
-  await expect(blackPiece).toHaveCSS('color', 'rgb(12, 14, 11)');
+  await expect(blackPiece).toHaveCSS('color', 'rgb(15, 15, 16)');
   await expect(blackPiece).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
 
   await page.getByRole('combobox', { name: 'Result', exact: true }).selectOption('loss');
@@ -244,7 +244,7 @@ test('analyzes locally, caches the result, and opens a concern position', async 
   await expect(ideaToggle).toHaveAttribute('aria-pressed', 'false');
   await expect(page.getByText('Advantage graph', { exact: true })).toBeVisible();
   await expect(page.locator('.advantage-label, .equal-label')).toHaveCount(0);
-  await expect(page.locator('.zero-line')).toHaveCSS('stroke', 'rgb(137, 139, 131)');
+  await expect(page.locator('.zero-line')).toHaveCSS('stroke', 'rgb(146, 145, 138)');
   await expect(page.locator('.zero-line')).toHaveCSS('stroke-dasharray', 'none');
   await expect(page.locator('.evaluation-rail')).toBeVisible();
   await expect(page.locator('.evaluation-rail')).toHaveAttribute('aria-label', /White evaluation/);
@@ -824,7 +824,7 @@ async function expectReviewResponsiveness(page: Page): Promise<void> {
         expect(geometry.deskWidth).toBeGreaterThanOrEqual(viewport.minimumDeskWidth);
         expect(geometry.deskWidth).toBeLessThanOrEqual(641);
         expect(geometry.deskLeft - geometry.boardRight).toBeGreaterThanOrEqual(13);
-        expect(geometry.deskLeft - geometry.boardRight).toBeLessThanOrEqual(23);
+        expect(geometry.deskLeft - geometry.boardRight).toBeLessThanOrEqual(24);
       }
     }
   }

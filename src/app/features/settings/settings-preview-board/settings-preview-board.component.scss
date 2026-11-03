@@ -18,7 +18,7 @@
     color: var(--mist);
     font-family: var(--font-utility);
     font-size: var(--type-caption);
-    text-transform: uppercase;
+    text-transform: none;
   }
 
   strong {
@@ -35,13 +35,13 @@
     font-size: var(--type-caption);
     min-height: 36px;
     padding: 0 2px;
-    text-transform: uppercase;
+    text-transform: none;
   }
 }
 
 .preview-board {
   aspect-ratio: 1;
-  box-shadow: 0 12px 28px rgb(1 16 23 / 24%);
+  box-shadow: none;
   overflow: hidden;
   position: relative;
   width: 100%;

@@ -1,45 +1,43 @@
 <main class="launch-page">
-  <div class="coordinate-field" aria-hidden="true">
-    <span class="file-a">a</span><span class="file-h">h</span> <span class="rank-eight">8</span
-    ><span class="rank-one">1</span>
-  </div>
-
-  <section class="launch-card" aria-labelledby="launch-title">
-    <img src="/favicon.svg" alt="" />
-    <p class="kicker">Your local chess desk</p>
-    <h1 id="launch-title">LealChess</h1>
-    <p class="promise">Play. Study. Improve.</p>
-    <p class="search-summary">
-      Play Stockfish, study games from Chess.com and Lichess, and practice the decisions that cost
-      you most—all privately in your browser.
-    </p>
-
-    <nav aria-label="Choose a workspace">
-      <a class="primary-action" routerLink="/play">
-        <span>Play</span>
-        <small>Start or continue a game</small>
-      </a>
-      <a routerLink="/learn">
-        <span>Learn</span>
-        <small>Review your study ledger</small>
-      </a>
-      <a routerLink="/puzzles">
-        <span>Puzzles</span>
-        <small>Daily challenges and offline practice</small>
-      </a>
-      <a routerLink="/settings">
-        <span>Settings</span>
-        <small>Board, sound and shortcuts</small>
-      </a>
-    </nav>
-
-    <button type="button" class="tour-action" (click)="onboarding.start()">
-      Take the guided tour
-    </button>
+  <header class="launch-header">
+    <a class="brand" routerLink="/" aria-label="LealChess home"
+      ><img src="/favicon.svg" alt="" />
+      <h1>LealChess</h1></a
+    ><a href="/about/">About the project</a>
+  </header>
+  <section class="launch-layout" aria-labelledby="launch-title">
+    <div class="launch-copy">
+      <p class="kicker">Your local chess desk</p>
+      <h2 id="launch-title">Play a game.<br />Understand every move.</h2>
+      <p class="search-summary">
+        Play Stockfish, study games from Chess.com and Lichess, and practice the decisions that cost
+        you most—all privately in your browser.
+      </p>
+      <nav aria-label="Choose a workspace">
+        <a class="primary-action" routerLink="/play"
+          ><span>Play</span><small>Start or continue a game</small></a
+        ><a routerLink="/learn"><span>Learn</span><small>Review your study ledger</small></a
+        ><a class="quiet-link" routerLink="/puzzles"
+          ><span>Puzzles</span><small>Daily and offline practice</small></a
+        ><a class="quiet-link" routerLink="/settings"
+          ><span>Settings</span><small>Make this desk yours</small></a
+        >
+      </nav>
+      <button type="button" class="tour-action" (click)="onboarding.start()">
+        Take the guided tour
+      </button>
+    </div>
+    <figure class="product-preview" aria-label="Chess opening preview after e4, e5, Nf3, Nc6">
+      <div class="preview-heading"><span>Room to think</span><span>White to move</span></div>
+      <div class="preview-board" aria-hidden="true">
+        <app-chessground-board [initialConfig]="previewConfig" />
+      </div>
+      <figcaption>
+        <span class="notation">1. e4 e5 &nbsp; 2. Nf3 Nc6</span><span>The next move is yours</span>
+      </figcaption>
+    </figure>
   </section>
-
-  <p class="privacy-note">
-    Games and analysis stay on this device.
-    <a href="/about/">About LealChess</a>
-  </p>
+  <footer class="privacy-note">
+    <span>Games and analysis stay on this device.</span><span>No account. Your own pace.</span>
+  </footer>
 </main>

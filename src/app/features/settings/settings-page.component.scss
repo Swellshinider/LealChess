@@ -8,11 +8,12 @@
 }
 
 .settings-page {
+  container-type: inline-size;
   flex: 1 1 auto;
   margin: 0 auto;
   max-width: 1344px;
   min-width: 0;
-  padding: clamp(34px, 5vw, 64px) clamp(16px, 3vw, 44px) 70px;
+  padding: 40px 32px 64px;
   width: 100%;
 }
 
@@ -23,27 +24,28 @@
     color: var(--primary);
     font-family: var(--font-utility);
     font-size: var(--type-caption);
-    letter-spacing: 0.08em;
+    letter-spacing: 0;
     margin: 0 0 5px;
-    text-transform: uppercase;
+    text-transform: none;
   }
 
   h1 {
     font-family: var(--font-display);
-    font-size: clamp(2.2rem, 5vw, 3.7rem);
-    line-height: 0.9;
+    font-size: clamp(2rem, 3vw, 2.5rem);
+    font-weight: 600;
+    line-height: 1.15;
     margin: 0;
   }
 }
 
 .settings-page > section {
   background: var(--surface-container);
-  border-color: rgb(200 213 207 / 18%) var(--surface-lowest) var(--surface-lowest)
-    rgb(200 213 207 / 18%);
+  border-color: var(--outline-variant);
+  border-radius: 12px;
   border-style: solid;
   border-width: 1px;
-  margin-top: 18px;
-  padding: clamp(18px, 3vw, 30px);
+  margin-top: 24px;
+  padding: 24px;
 }
 
 .section-heading {
@@ -52,7 +54,7 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 22px;
-  padding-bottom: 14px;
+  padding-bottom: 16px;
 
   h2 {
     font-family: var(--font-display);
@@ -64,7 +66,7 @@
     color: var(--mist);
     font-family: var(--font-utility);
     font-size: var(--type-caption);
-    text-transform: uppercase;
+    text-transform: none;
   }
 }
 
@@ -72,9 +74,9 @@
   color: var(--primary);
   font-family: var(--font-utility);
   font-size: var(--type-caption);
-  letter-spacing: 0.05em;
+  letter-spacing: 0;
   margin: 0;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 input,
@@ -83,14 +85,14 @@ select {
   border: 1px solid rgb(200 213 207 / 22%);
   color: var(--paper);
   min-height: 44px;
-  padding: 8px 11px;
+  padding: 8px 12px;
 }
 
 .board-settings-layout {
   align-items: start;
   display: grid;
-  gap: clamp(24px, 3vw, 44px);
-  grid-template-columns: minmax(280px, 1fr) minmax(260px, 400px);
+  gap: 32px;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 360px);
 }
 
 .keyboard-intro {
@@ -107,14 +109,14 @@ select {
   border-bottom: 1px solid rgb(200 213 207 / 12%);
   display: grid;
   gap: 12px;
-  grid-template-columns: minmax(180px, 1fr) minmax(150px, 220px) 74px;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 220px) 76px;
   min-height: 68px;
-  padding: 10px 2px;
+  padding: 12px 0;
 }
 
 .keybinding-name {
   color: var(--paper);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .keybinding-capture,
@@ -123,7 +125,7 @@ select {
   background: transparent;
   border: 1px solid rgb(200 213 207 / 28%);
   color: var(--paper);
-  min-height: 42px;
+  min-height: 44px;
 }
 
 .keybinding-capture {
@@ -164,7 +166,7 @@ select {
 .engine-list {
   border-top: 1px solid rgb(200 213 207 / 12%);
   display: grid;
-  margin-top: 18px;
+  margin-top: 24px;
 }
 
 .switch-row,
@@ -174,8 +176,8 @@ select {
   border-bottom: 1px solid rgb(200 213 207 / 12%);
   display: flex;
   justify-content: space-between;
-  min-height: 70px;
-  padding: 10px 2px;
+  min-height: 72px;
+  padding: 12px 0;
 
   strong,
   small {
@@ -295,6 +297,7 @@ select {
 }
 
 .switch-row input {
+  flex-shrink: 0;
   accent-color: var(--primary);
   height: 22px;
   min-height: 0;
@@ -336,7 +339,7 @@ select {
     border: 1px solid var(--primary);
     color: var(--on-primary);
     flex: 0 0 auto;
-    font-weight: 700;
+    font-weight: 600;
     min-height: 44px;
     padding: 8px 16px;
   }
@@ -372,8 +375,8 @@ select {
   span {
     color: var(--mist);
     font-size: var(--type-small);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    letter-spacing: 0;
+    text-transform: none;
   }
 
   strong {
@@ -385,7 +388,7 @@ select {
 .storage-value {
   align-items: center;
   display: flex;
-  gap: 7px;
+  gap: 8px;
 }
 
 .storage-help {
@@ -419,7 +422,8 @@ select {
   background: var(--night);
   border: 1px solid rgb(200 213 207 / 28%);
   bottom: calc(100% + 8px);
-  box-shadow: 0 12px 32px rgb(0 0 0 / 45%);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
   color: var(--paper);
   font-size: var(--type-small);
   font-weight: 400;
@@ -453,7 +457,9 @@ select {
 .confirmation-card {
   background: var(--surface-container);
   border-left: 4px solid var(--danger);
-  box-shadow: 0 24px 80px rgb(0 0 0 / 50%);
+  border-radius: 12px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
   max-width: 520px;
   padding: 28px;
 
@@ -469,7 +475,7 @@ select {
 
   > div {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     justify-content: flex-end;
     margin-top: 24px;
   }
@@ -478,8 +484,8 @@ select {
     background: var(--night);
     border: 1px solid rgb(200 213 207 / 24%);
     color: var(--paper);
-    min-height: 42px;
-    padding: 8px 15px;
+    min-height: 44px;
+    padding: 8px 16px;
   }
 
   .danger {
@@ -489,28 +495,24 @@ select {
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 767px) {
   .settings-shell {
     display: block;
   }
 
   .settings-page {
-    padding: 28px 12px 48px;
+    padding: 24px 12px 48px;
   }
 
   .section-heading,
   .getting-started,
   .danger-zone {
     align-items: start;
-    gap: 14px;
-  }
-
-  .board-settings-layout {
-    grid-template-columns: 1fr;
+    gap: 16px;
   }
 }
 
-@media (max-width: 560px) {
+@container (max-width: 560px) {
   .section-heading,
   .getting-started,
   .danger-zone {
@@ -518,7 +520,7 @@ select {
   }
 
   .keybinding-row {
-    grid-template-columns: 1fr 74px;
+    grid-template-columns: minmax(0, 1fr) 76px;
 
     .keybinding-name {
       grid-column: 1 / -1;
@@ -528,7 +530,7 @@ select {
   .keybinding-footer {
     align-items: stretch;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
   }
 
   .local-data-actions,
@@ -554,7 +556,7 @@ select {
   .storage-tooltip {
     left: auto;
     right: 0;
-    width: min(280px, calc(100vw - 40px));
+    width: min(280px, calc(100cqw - 48px));
   }
 
   .range-row {
@@ -571,4 +573,55 @@ select {
       width: auto;
     }
   }
+}
+
+@container (max-width: 720px) {
+  .local-data-actions {
+    width: 100%;
+  }
+
+  .board-settings-layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  app-settings-preview-board {
+    max-width: 400px;
+    width: 100%;
+  }
+
+  .section-heading,
+  .getting-started,
+  .danger-zone {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+@container (max-width: 560px) {
+  .settings-page > section {
+    padding: 16px;
+  }
+
+  .select-row {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+
+    select {
+      min-width: 0;
+      width: 100%;
+    }
+  }
+}
+
+.switch-row,
+.range-row {
+  gap: 16px;
+}
+
+.getting-started,
+.danger-zone {
+  gap: 24px;
 }

@@ -78,9 +78,11 @@
           </label>
           <label class="select-row">
             <span>Board palette</span>
-            <select [value]="preferences().boardTheme" (change)="updateTheme($event)">
+            <select (change)="updateTheme($event)">
               @for (theme of themes; track theme.id) {
-                <option [value]="theme.id">{{ theme.label }}</option>
+                <option [value]="theme.id" [selected]="theme.id === preferences().boardTheme">
+                  {{ theme.label }}
+                </option>
               }
             </select>
           </label>

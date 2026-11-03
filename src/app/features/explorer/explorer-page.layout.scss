@@ -30,8 +30,6 @@ app-explorer-page {
     color: var(--primary);
     font-family: var(--font-utility);
     font-size: var(--type-caption);
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
   }
 
   .workspace-toolbar {
@@ -83,7 +81,7 @@ app-explorer-page {
     display: grid;
     flex: 1 1 auto;
     align-items: stretch;
-    column-gap: clamp(14px, 1.6cqw, 22px);
+    column-gap: clamp(16px, 1.6cqw, 24px);
     grid-template-columns: minmax(0, 1fr) clamp(430px, 40cqw, 640px);
     height: 100%;
     margin: 0 auto;
@@ -93,7 +91,7 @@ app-explorer-page {
   }
 
   .board-workbench {
-    --board-strip-height: 34px;
+    --board-strip-height: 40px;
     --board-strips-height: calc(var(--board-strip-height) + var(--board-strip-height));
     --explorer-fit-tolerance: 2px;
     --explorer-board-size: min(
@@ -144,7 +142,7 @@ app-explorer-page {
     color: var(--paper);
     font-family: var(--font-utility);
     font-size: var(--type-caption);
-    font-weight: 700;
+    font-weight: 600;
     left: 50%;
     position: absolute;
     text-shadow: 0 1px 2px rgb(0 0 0 / 80%);
@@ -181,7 +179,6 @@ app-explorer-page {
       bottom: 0;
       left: 0;
       position: absolute;
-      transition: height 260ms ease;
       width: 100%;
     }
 
@@ -227,7 +224,7 @@ app-explorer-page {
   }
 
   .explorer-board-frame {
-    box-shadow: 0 12px 28px rgb(1 16 23 / 24%);
+    box-shadow: none;
     overflow: hidden;
   }
 
@@ -247,7 +244,7 @@ app-explorer-page {
     grid-template-columns: auto minmax(0, 1fr) auto;
     justify-self: center;
     min-height: var(--board-strip-height);
-    padding: 3px 2px;
+    padding: 4px 2px;
     width: var(--explorer-board-size);
 
     span,
@@ -273,7 +270,7 @@ app-explorer-page {
     grid-area: navigation;
     grid-template-columns: repeat(3, 1fr);
     justify-self: center;
-    margin-top: 9px;
+    margin-top: 8px;
     width: var(--explorer-board-size);
 
     button {
@@ -292,7 +289,8 @@ app-explorer-page {
   .analysis-ledger {
     align-self: stretch;
     background: var(--surface-container);
-    border: 1px solid rgb(200 213 207 / 16%);
+    border: 1px solid var(--outline-variant);
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -306,7 +304,7 @@ app-explorer-page {
     display: flex;
     justify-content: space-between;
     min-height: 72px;
-    padding: 14px 17px;
+    padding: 16px 16px;
 
     > div {
       align-items: center;
@@ -324,14 +322,13 @@ app-explorer-page {
       color: var(--mist);
       font-family: var(--font-utility);
       font-size: var(--type-caption);
-      text-transform: uppercase;
     }
 
     strong {
       font-family: var(--font-utility);
       font-size: var(--type-small);
       font-weight: 500;
-      margin-top: 3px;
+      margin-top: 4px;
     }
   }
 
@@ -343,9 +340,7 @@ app-explorer-page {
     width: 9px;
 
     &.active {
-      animation: engine-pulse 1s ease-in-out infinite;
-      background: var(--amber);
-      box-shadow: 0 0 0 5px rgb(253 186 90 / 10%);
+      background: var(--primary);
     }
   }
 
@@ -354,7 +349,7 @@ app-explorer-page {
   .variation-tree,
   .setup-panel {
     border-bottom: 1px solid var(--outline-variant);
-    padding: 16px 17px;
+    padding: 16px 16px;
   }
 
   .batch-progress {
@@ -363,7 +358,6 @@ app-explorer-page {
       font-family: var(--font-utility);
       font-size: var(--type-caption);
       justify-content: space-between;
-      text-transform: uppercase;
     }
 
     button {
@@ -372,7 +366,7 @@ app-explorer-page {
       color: var(--primary);
       font-family: var(--font-utility);
       font-size: var(--type-caption);
-      margin-top: 9px;
+      margin-top: 8px;
       padding: 0;
       text-decoration: underline;
       text-underline-offset: 3px;
@@ -387,14 +381,13 @@ app-explorer-page {
   .progress-track {
     background: var(--surface-container-high);
     height: 4px;
-    margin-top: 9px;
+    margin-top: 8px;
     overflow: hidden;
 
     i {
       background: var(--amber);
       display: block;
       height: 100%;
-      transition: width 180ms ease;
     }
   }
 
@@ -406,46 +399,13 @@ app-explorer-page {
     h2 {
       font-family: var(--font-display);
       font-size: 1.25rem;
-      letter-spacing: -0.02em;
-      margin: 3px 0 0;
-      text-transform: uppercase;
+      margin: 4px 0 0;
     }
 
     small {
       color: var(--mist);
       font-family: var(--font-utility);
       font-size: var(--type-micro);
-    }
-  }
-
-  .candidate-lines {
-    ol {
-      display: grid;
-      gap: 1px;
-      list-style: none;
-      margin: 14px 0 0;
-      padding: 0;
-    }
-
-    li {
-      align-items: baseline;
-      background: var(--surface-low);
-      display: grid;
-      gap: 9px;
-      grid-template-columns: 25px 52px 1fr;
-      min-height: 45px;
-      padding: 9px 10px;
-    }
-
-    strong,
-    li > span:last-child {
-      font-family: var(--font-utility);
-      font-size: var(--type-caption);
-    }
-
-    li > span:last-child {
-      color: var(--mist);
-      line-height: 1.5;
     }
   }
 
@@ -458,10 +418,9 @@ app-explorer-page {
   .line-skeleton {
     display: grid;
     gap: 5px;
-    margin-top: 14px;
+    margin-top: 16px;
 
     i {
-      animation: skeleton 1.2s ease-in-out infinite alternate;
       background: var(--surface-container-high);
       display: block;
       height: 36px;
@@ -486,7 +445,7 @@ app-explorer-page {
     display: grid;
     flex: 1 1 auto;
     gap: 3px;
-    margin-top: 14px;
+    margin-top: 16px;
     max-height: none;
     min-height: 0;
     overflow: auto;
@@ -504,7 +463,7 @@ app-explorer-page {
 
   .root-node {
     min-height: 34px;
-    padding: 0 9px;
+    padding: 0 8px;
 
     &.current {
       background: var(--primary-container);
@@ -519,7 +478,7 @@ app-explorer-page {
     gap: 7px;
     grid-template-columns: var(--indent) 32px minmax(42px, auto) 1fr;
     min-height: 43px;
-    padding: 4px 7px 4px 0;
+    padding: 4px 8px 4px 0;
 
     &:hover {
       background: var(--surface-container);
@@ -558,12 +517,11 @@ app-explorer-page {
     font-size: var(--type-micro);
     justify-self: end;
     padding-left: 6px;
-    text-transform: uppercase;
   }
 
   .analysis-error {
     border-top: 1px solid var(--danger);
-    padding: 14px 17px;
+    padding: 16px 16px;
 
     p {
       color: #ffb4ab;
@@ -575,7 +533,7 @@ app-explorer-page {
       border: 0;
       color: var(--on-danger);
       min-height: 36px;
-      padding: 0 11px;
+      padding: 0 12px;
     }
   }
 
@@ -594,7 +552,7 @@ app-explorer-page {
       display: grid;
       gap: 4px;
       grid-template-columns: repeat(6, 1fr);
-      margin-top: 5px;
+      margin-top: 4px;
     }
 
     button {
@@ -622,7 +580,7 @@ app-explorer-page {
     display: grid;
     gap: 8px;
     grid-template-columns: 1fr 1fr;
-    margin-top: 18px;
+    margin-top: 20px;
   }
 
   .setup-fields label,
@@ -637,7 +595,7 @@ app-explorer-page {
     border: 1px solid var(--outline-variant);
     color: var(--paper);
     display: block;
-    margin-top: 5px;
+    margin-top: 4px;
     min-height: 38px;
     padding: 0 8px;
     width: 100%;
@@ -668,7 +626,7 @@ app-explorer-page {
   .setup-actions {
     display: flex;
     gap: 7px;
-    margin-top: 14px;
+    margin-top: 16px;
   }
 
   .setup-utilities button,
@@ -683,7 +641,7 @@ app-explorer-page {
   .setup-actions {
     border-top: 1px solid var(--outline-variant);
     justify-content: flex-end;
-    padding-top: 14px;
+    padding-top: 16px;
 
     .primary-action {
       background: var(--primary);
@@ -712,7 +670,10 @@ app-explorer-page {
   .promotion-dialog {
     background: var(--carbon);
     border: 1px solid var(--outline);
-    box-shadow: 18px 18px 0 rgb(1 16 23 / 72%);
+    border-radius: 12px;
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    box-shadow: none;
     max-width: 620px;
     padding: 20px;
     width: 100%;
@@ -730,7 +691,6 @@ app-explorer-page {
       font-family: var(--font-display);
       font-size: 1.7rem;
       margin: 4px 0;
-      text-transform: uppercase;
     }
 
     header button {
@@ -746,7 +706,7 @@ app-explorer-page {
       color: var(--mist);
       display: block;
       font-size: var(--type-small);
-      margin-top: 14px;
+      margin-top: 16px;
     }
 
     textarea {
@@ -756,7 +716,7 @@ app-explorer-page {
       font-family: var(--font-utility);
       font-size: var(--type-small);
       line-height: 1.55;
-      margin-top: 7px;
+      margin-top: 8px;
       padding: 12px;
       resize: vertical;
       width: 100%;
@@ -774,7 +734,7 @@ app-explorer-page {
       border: 1px solid var(--outline-variant);
       color: var(--paper);
       min-height: 40px;
-      padding: 0 13px;
+      padding: 0 12px;
     }
 
     footer .primary-action {
@@ -792,7 +752,7 @@ app-explorer-page {
   .import-tabs {
     border-bottom: 1px solid var(--outline-variant);
     display: flex;
-    margin-top: 18px;
+    margin-top: 20px;
 
     button {
       background: transparent;
@@ -801,11 +761,11 @@ app-explorer-page {
       color: var(--mist);
       font-family: var(--font-utility);
       min-height: 40px;
-      padding: 0 18px;
+      padding: 0 20px;
     }
 
     button[aria-selected='true'] {
-      border-color: var(--amber);
+      border-color: var(--primary);
       color: var(--paper);
     }
   }
@@ -817,7 +777,7 @@ app-explorer-page {
       display: grid;
       gap: 7px;
       grid-template-columns: repeat(4, 1fr);
-      margin: 18px 0;
+      margin: 20px 0;
     }
 
     button {
@@ -829,7 +789,7 @@ app-explorer-page {
 
     > div button {
       font-size: 2rem;
-      padding: 9px 4px;
+      padding: 8px 4px;
 
       span {
         display: block;
@@ -840,25 +800,12 @@ app-explorer-page {
     }
   }
 
-  @keyframes engine-pulse {
-    50% {
-      opacity: 0.45;
-      transform: scale(0.78);
-    }
-  }
-
-  @keyframes skeleton {
-    to {
-      opacity: 0.45;
-    }
-  }
-
   @container (max-width: 900px) {
     .analysis-workspace {
       grid-template-columns: 1fr;
       grid-template-rows: auto auto;
       height: auto;
-      row-gap: clamp(14px, 2cqw, 24px);
+      row-gap: 24px;
     }
 
     .explorer-page {
@@ -872,8 +819,9 @@ app-explorer-page {
     }
 
     .analysis-ledger {
-      max-height: 620px;
-      min-height: 500px;
+      height: auto;
+      max-height: none;
+      min-height: 0;
     }
   }
 
@@ -895,7 +843,7 @@ app-explorer-page {
       height: auto;
       min-height: calc(100dvh - 64px);
       overflow: visible;
-      padding: 14px 12px 28px;
+      padding: 16px 12px 28px;
     }
 
     .analysis-workspace {
@@ -919,8 +867,8 @@ app-explorer-page {
     .analysis-ledger {
       height: auto;
       max-height: none;
-      margin-top: 18px;
-      min-height: 560px;
+      margin-top: 20px;
+      min-height: 0;
       overflow: visible;
     }
 

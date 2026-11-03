@@ -43,6 +43,19 @@ test('keeps every route shell within the supported viewport widths', async ({ pa
   }
 });
 
+test('fits Settings with expanded navigation on tablets', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'Content-width layout regression');
+  await page.addInitScript(() => localStorage.setItem('lealchess.navigation.expanded', 'true'));
+  for (const width of [768, 820, 1024]) {
+    await page.setViewportSize({ width, height: 1180 });
+    await page.goto('/settings');
+    await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible();
+    const preview = page.locator('app-settings-preview-board');
+    await expect.poll(() => elementFitsViewportHorizontally(preview)).toBe(true);
+    await expectDocumentNotToOverflowHorizontally(page);
+  }
+});
+
 test('collapses the desktop panel, preserves the choice, and navigates between workspaces', async ({
   page,
 }, testInfo) => {
@@ -347,6 +360,7 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   await expect(page.locator('square.last-move')).toHaveCount(0);
   await page.getByLabel('Board palette').selectOption('rosewood');
   await expect(page.locator('.preview-board')).toHaveAttribute('data-board-theme', 'rosewood');
+  await expect.poll(() => storedPreference(page, 'boardTheme')).toBe('rosewood');
   await page.reload();
   await expect(page.getByLabel('Board palette')).toHaveValue('rosewood');
   await expect(page.getByLabel('Sound volume')).toHaveValue('35');

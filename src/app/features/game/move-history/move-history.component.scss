@@ -25,16 +25,16 @@ li {
   display: grid;
   font-family: var(--font-utility);
   font-size: var(--type-small);
-  grid-template-columns: 38px 1fr 1fr;
-  min-height: 34px;
+  grid-template-columns: 40px 1fr 1fr;
+  min-height: 36px;
   padding: 0 8px;
 
   &:nth-child(even) {
-    background: rgb(1 16 23 / 18%);
+    background: var(--surface-low);
   }
 
   &.current {
-    background: rgb(165 206 204 / 16%);
+    background: var(--surface-container-high);
   }
 }
 
@@ -54,12 +54,11 @@ li {
   height: 100%;
   justify-content: center;
   min-height: 0;
-  padding: 24px;
+  padding: 32px 24px;
   text-align: center;
 
   p {
     font-size: var(--type-small);
     margin: 0;
-    opacity: 0.72;
   }
 }

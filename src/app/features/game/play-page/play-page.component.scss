@@ -29,7 +29,7 @@
 
   align-items: stretch;
   display: grid;
-  gap: clamp(14px, 2cqw, 26px);
+  gap: clamp(16px, 2cqw, 24px);
   grid-template-columns: minmax(0, 1fr) var(--desk-width);
   height: 100%;
   margin: 0 auto;
@@ -39,7 +39,7 @@
 }
 
 .board-column {
-  --player-strip-height: 34px;
+  --player-strip-height: 40px;
   --player-strips-height: calc(var(--player-strip-height) + var(--player-strip-height));
   --play-fit-tolerance: 2px;
 
@@ -63,7 +63,7 @@
   align-items: center;
   color: var(--paper);
   display: flex;
-  gap: 9px;
+  gap: 8px;
   min-height: var(--player-strip-height);
   padding: 2px;
   position: relative;
@@ -75,7 +75,7 @@
   }
 
   strong {
-    font-family: var(--font-utility);
+    font-family: var(--font-body);
     font-size: var(--type-small);
     font-weight: 500;
   }
@@ -104,12 +104,12 @@
   align-items: center;
   background: var(--carbon);
   border: 1px solid rgb(255 255 255 / 12%);
-  border-radius: 4px 0 4px 0;
+  border-radius: 8px;
   color: var(--paper);
   display: flex;
   font-family: var(--font-display);
   font-size: var(--type-small);
-  font-weight: 700;
+  font-weight: 600;
   height: 28px;
   justify-content: center;
   width: 28px;
@@ -123,7 +123,6 @@
   color: var(--amber);
   font-family: var(--font-utility);
   font-size: var(--type-caption);
-  text-transform: uppercase;
 }
 
 .player-strip.opponent:has(.thinking-label) .turn-indicator {
@@ -148,7 +147,7 @@ app-chess-board {
   app-game-sidebar {
     display: block;
     height: auto;
-    margin-top: 18px;
+    margin-top: 24px;
   }
 }
 

@@ -79,3 +79,24 @@ test('recovers one provider from cache when its live request fails', async ({ pa
   await expect(page.getByText('Live puzzle unavailable; showing the saved puzzle.')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Mock daily' })).toBeVisible();
 });
+
+test('keeps an active solver usable beside expanded tablet navigation', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'Content-width solver regression');
+  await page.addInitScript(() => localStorage.setItem('lealchess.navigation.expanded', 'true'));
+  await page.setViewportSize({ width: 820, height: 1180 });
+  await page.goto('/puzzles');
+  await page.getByRole('button', { name: 'Find a puzzle' }).click();
+  await expect(page.locator('.solver-board')).toBeVisible();
+  for (const width of [820, 390, 320]) {
+    await page.setViewportSize({ width, height: 1180 });
+    const board = (await page.locator('.solver-board').boundingBox())!;
+    const panel = (await page.locator('.solver-panel').boundingBox())!;
+    expect(Math.abs(board.width - board.height)).toBeLessThanOrEqual(1);
+    expect(board.x).toBeGreaterThanOrEqual(0);
+    expect(board.x + board.width).toBeLessThanOrEqual(width);
+    expect(panel.y).toBeGreaterThanOrEqual(board.y + board.height);
+    expect(panel.x + panel.width).toBeLessThanOrEqual(width);
+  }
+});

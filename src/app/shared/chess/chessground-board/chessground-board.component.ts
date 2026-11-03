@@ -5,7 +5,9 @@ import {
   inject,
   input,
   output,
+  PLATFORM_ID,
 } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import type { AfterViewInit, OnDestroy } from '@angular/core';
 import { Chessground } from '@lichess-org/chessground';
 import type { Api } from '@lichess-org/chessground/api';
@@ -24,6 +26,7 @@ import type { DrawShape } from '@lichess-org/chessground/draw';
   },
 })
 export class ChessgroundBoardComponent implements AfterViewInit, OnDestroy {
+  private readonly platformId = inject(PLATFORM_ID);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private api: Api | null = null;
   private resizeObserver: ResizeObserver | null = null;
@@ -33,6 +36,7 @@ export class ChessgroundBoardComponent implements AfterViewInit, OnDestroy {
   readonly boardClick = output<MouseEvent>();
 
   ngAfterViewInit(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
     this.api = Chessground(this.host.nativeElement, this.initialConfig());
     this.resizeObserver = new ResizeObserver(() => this.scheduleRedraw());
     this.resizeObserver.observe(this.host.nativeElement);

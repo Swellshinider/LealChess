@@ -3,26 +3,24 @@
 @use './app/features/explorer/explorer-page.layout' as explorer-layout;
 
 @import '@fontsource/barlow-condensed/600.css';
-@import '@fontsource/barlow-condensed/700.css';
 @import '@fontsource/atkinson-hyperlegible/400.css';
-@import '@fontsource/atkinson-hyperlegible/700.css';
 @import '@fontsource/ibm-plex-mono/500.css';
 @import '@lichess-org/chessground/assets/chessground.base.css';
 @import '@lichess-org/chessground/assets/chessground.cburnett.css';
 
 :root {
-  --surface: #141711;
-  --surface-lowest: #0c0e0b;
-  --surface-low: #1c2018;
-  --surface-container: #23281f;
-  --surface-container-high: #30372b;
-  --surface-container-highest: #3b4435;
-  --outline: #9aa18f;
-  --outline-variant: #4d5646;
-  --night: #181b15;
-  --carbon: #293026;
+  --surface: #141415;
+  --surface-lowest: #0f0f10;
+  --surface-low: #19191b;
+  --surface-container: #1e1e20;
+  --surface-container-high: #28282b;
+  --surface-container-highest: #333337;
+  --outline: #92918a;
+  --outline-variant: #505054;
+  --night: #141415;
+  --carbon: #232325;
   --paper: #f4f1e6;
-  --mist: #c9cbbb;
+  --mist: #b0afa8;
   --primary: #70d69d;
   --on-primary: #082516;
   --primary-container: #367958;
@@ -30,7 +28,7 @@
   --teal: var(--primary-container);
   --amber: #f2bd55;
   --danger: #e76861;
-  --on-danger: #181b15;
+  --on-danger: #141415;
   --classification-book: #b69cff;
   --classification-brilliant: #4fd8e8;
   --classification-great: #65b9ff;
@@ -41,7 +39,7 @@
   --classification-mistake: #f19756;
   --classification-miss: #f17b6d;
   --classification-blunder: #f27f77;
-  --on-classification: #181b15;
+  --on-classification: #141415;
   --board-light: #d7ddc0;
   --board-dark: #637a52;
   --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
@@ -156,14 +154,15 @@ body {
 
 button,
 select,
-input {
+input,
+textarea {
   font: inherit;
 }
 
 button,
 input,
 select {
-  border-radius: 2px;
+  border-radius: 8px;
 }
 
 button,
@@ -209,9 +208,9 @@ app-review-page {
     color: var(--amber);
     font-family: var(--font-utility);
     font-size: var(--type-caption);
-    letter-spacing: 0.04em;
+    letter-spacing: 0;
     margin: 0 0 4px;
-    text-transform: uppercase;
+    text-transform: none;
   }
 }
 
@@ -225,7 +224,7 @@ app-review-page {
 app-learn-page {
   .review-action {
     display: grid;
-    gap: 7px;
+    gap: 8px;
     justify-items: end;
   }
 
@@ -255,7 +254,7 @@ app-learn-page {
       box-shadow: 0 20px 70px rgb(0 0 0 / 38%);
       color: var(--paper);
       max-width: 430px;
-      padding: 22px;
+      padding: 24px;
       width: 100%;
     }
 
@@ -274,8 +273,8 @@ app-learn-page {
       background: var(--surface-low);
       border: 1px solid var(--outline-variant);
       color: var(--paper);
-      min-height: 42px;
-      padding: 0 13px;
+      min-height: 44px;
+      padding: 0 16px;
     }
 
     button:first-child {
@@ -304,15 +303,15 @@ app-learn-page {
     display: flex;
     gap: 8px;
     justify-content: flex-end;
-    margin-top: 18px;
+    margin-top: 20px;
   }
 
   .eyebrow {
     color: var(--primary);
     font-family: var(--font-utility);
     font-size: var(--type-caption);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    letter-spacing: 0;
+    text-transform: none;
   }
 }
 
@@ -330,5 +329,64 @@ app-learn-page {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Shared interface rhythm; chess boards retain their own geometry. */
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 600;
+  text-wrap: balance;
+}
+strong,
+b {
+  font-weight: 600;
+}
+button,
+input,
+select,
+textarea {
+  accent-color: var(--primary);
+}
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+button,
+a {
+  transition:
+    color 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+button:disabled {
+  cursor: not-allowed;
+}
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+button,
+input,
+select,
+textarea,
+time {
+  font-variant-numeric: tabular-nums;
+}
+::selection {
+  background: var(--primary-container);
+  color: var(--paper);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  a {
+    transition: none;
   }
 }

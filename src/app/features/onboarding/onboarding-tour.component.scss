@@ -37,15 +37,8 @@
 
 .target-frame {
   border: 2px solid var(--primary);
-  box-shadow:
-    0 0 0 4px rgb(112 214 157 / 14%),
-    0 0 36px rgb(112 214 157 / 26%);
   pointer-events: none;
   position: fixed;
-  transition:
-    inset 180ms ease,
-    width 180ms ease,
-    height 180ms ease;
   z-index: 1;
 }
 
@@ -102,7 +95,7 @@
   > header > div {
     align-items: baseline;
     display: flex;
-    gap: 9px;
+    gap: 8px;
   }
 
   > footer {
@@ -118,8 +111,8 @@
 .tour-copy > span {
   font-family: var(--font-utility);
   font-size: var(--type-caption);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .line-label,
@@ -198,7 +191,7 @@ li {
     background: var(--amber);
     border-color: var(--amber);
     color: var(--night);
-    font-weight: 800;
+    font-weight: 600;
   }
 }
 
@@ -230,7 +223,6 @@ li {
   padding: 6px 0 6px 10px;
 
   i {
-    animation: tour-pulse 900ms ease-in-out infinite alternate;
     background: var(--amber);
     height: 7px;
     width: 7px;
@@ -258,7 +250,7 @@ li {
   background: var(--primary);
   border: 1px solid var(--primary);
   color: var(--on-primary);
-  font-weight: 800;
+  font-weight: 600;
   margin-left: auto;
 }
 
@@ -304,4 +296,10 @@ li {
   .tour-hint i {
     animation: none;
   }
+}
+
+.tour-card {
+  border-radius: 12px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
 }
