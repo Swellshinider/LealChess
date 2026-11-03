@@ -142,7 +142,7 @@ test('grades a manual board move and displays ranked engine lines', async ({ pag
   });
   await expect(page.locator('.candidate-lines li')).toHaveCount(3, { timeout: 30_000 });
   await expect(page.locator('.explorer-board svg.cg-shapes line')).toHaveCount(3);
-  const secondCandidate = page.getByRole('button', { name: /Play engine candidate 2:/ });
+  const secondCandidate = page.getByRole('button', { name: /Play engine candidate 2/ });
   await secondCandidate.hover();
   await expect(page.locator('.explorer-board svg.cg-shapes line')).toHaveCount(1);
   await page.locator('.board-heading').hover();

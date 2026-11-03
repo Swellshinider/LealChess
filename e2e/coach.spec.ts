@@ -325,7 +325,8 @@ test('analyzes locally, caches the result, and opens a concern position', async 
   await expect(scoreMove).toHaveClass(/current/);
 
   const alternateCandidate = page
-    .locator('.live-analysis .candidate-action:not([aria-label$=": e5"])')
+    .locator('.live-analysis .candidate-action')
+    .filter({ hasNot: page.locator('span:last-child', { hasText: /^e5(?: |$)/ }) })
     .first();
   await expect(alternateCandidate).toBeVisible();
   await alternateCandidate.click();

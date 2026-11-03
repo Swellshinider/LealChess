@@ -15,7 +15,7 @@ describe('ExplorerAnalysisPanelComponent', () => {
     fixture.componentInstance.candidatePreviewed.subscribe(previewed);
     fixture.componentInstance.candidateRequested.subscribe(requested);
     const button = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
-      'button[aria-label="Play engine candidate 1: e4"]',
+      'button.candidate-action',
     )!;
 
     button.dispatchEvent(new Event('pointerenter'));

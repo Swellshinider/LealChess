@@ -106,10 +106,6 @@ export class ReviewAnalysisPanelComponent {
     return `${{ 1: 14, 2: 9, 3: 5 }[rank] ?? 5}px`;
   }
 
-  protected candidateAriaLabel(line: ReviewCandidateLine): string {
-    return `Play engine candidate ${line.rank}: ${line.san[0] ?? 'move'}`;
-  }
-
   protected selectCandidate(line: ReviewCandidateLine): void {
     this.candidatePreviewed.emit(null);
     this.candidateRequested.emit(line.firstMove);
