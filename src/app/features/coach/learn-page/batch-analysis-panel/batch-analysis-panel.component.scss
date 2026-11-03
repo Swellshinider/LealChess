@@ -1,13 +1,14 @@
 :host {
   display: block;
-  margin-bottom: 18px;
+  margin-bottom: 24px;
 }
 
 .batch-analysis-panel {
   background: var(--surface-container);
-  border: 1px solid rgb(200 213 207 / 15%);
+  border: 1px solid var(--outline-variant);
+  border-radius: 12px;
   display: grid;
-  gap: 10px;
+  gap: 12px;
   padding: clamp(14px, 2.4vw, 20px);
 }
 
@@ -15,15 +16,15 @@ form {
   align-items: end;
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 16px;
 
   label {
     color: var(--mist);
     display: grid;
     font-family: var(--font-utility);
     font-size: var(--type-small);
-    gap: 7px;
-    text-transform: uppercase;
+    gap: 8px;
+    text-transform: none;
   }
 
   input {
@@ -31,7 +32,7 @@ form {
     border: 1px solid rgb(200 213 207 / 22%);
     color: var(--paper);
     min-height: 44px;
-    padding: 8px 11px;
+    padding: 8px 12px;
     width: 90px;
   }
 
@@ -39,7 +40,7 @@ form {
     background: var(--primary);
     border: 0;
     color: var(--on-primary);
-    font-weight: 700;
+    font-weight: 600;
     min-height: 44px;
     padding: 8px 18px;
 
@@ -78,14 +79,14 @@ form {
     background: var(--primary);
     display: block;
     height: 100%;
-    transition: width 160ms ease-out;
+    transition: none;
   }
 }
 
 .batch-summary {
   align-items: center;
   display: flex;
-  gap: 14px;
+  gap: 16px;
   justify-content: space-between;
 
   p {
@@ -103,7 +104,7 @@ form {
   border: 1px solid rgb(200 213 207 / 28%);
   color: var(--paper);
   justify-self: start;
-  min-height: 38px;
+  min-height: 44px;
   padding: 6px 16px;
 }
 
@@ -111,4 +112,10 @@ form {
   .progress-track span {
     transition: none;
   }
+}
+
+.batch-summary,
+.progress-copy {
+  flex-wrap: wrap;
+  gap: 12px;
 }

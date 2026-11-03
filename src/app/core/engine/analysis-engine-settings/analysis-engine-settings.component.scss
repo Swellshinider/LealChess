@@ -57,7 +57,7 @@
     border: 1px solid rgb(200 213 207 / 28%);
     color: var(--paper);
     flex: 0 0 auto;
-    min-height: 42px;
+    min-height: 44px;
     padding-inline: 16px;
   }
 }
@@ -68,7 +68,7 @@
   display: flex;
   inset: 0;
   justify-content: center;
-  padding: 18px;
+  padding: 16px;
   position: fixed;
   z-index: 120;
 }
@@ -95,9 +95,9 @@
       color: var(--primary);
       font-family: var(--font-utility);
       font-size: var(--type-caption);
-      letter-spacing: 0.06em;
+      letter-spacing: 0;
       margin: 0;
-      text-transform: uppercase;
+      text-transform: none;
     }
 
     h2 {
@@ -196,7 +196,7 @@
   display: block;
   font-family: var(--font-utility);
   font-size: 0.66rem;
-  letter-spacing: 0.12em;
+  letter-spacing: 0;
   margin-bottom: 5px;
 }
 
@@ -216,7 +216,7 @@
     display: flex;
     font-family: var(--font-utility);
     justify-content: space-between;
-    text-transform: uppercase;
+    text-transform: none;
   }
 
   output {
@@ -260,4 +260,8 @@
   .profile-controls {
     grid-template-columns: 1fr;
   }
+}
+
+.engine-dialog {
+  border-radius: 12px;
 }

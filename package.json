@@ -1,6 +1,6 @@
 {
   "name": "leal-chess",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -17,7 +17,8 @@
     "verify:quality": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm verify:seo && pnpm run audit",
     "verify": "pnpm verify:quality && pnpm e2e",
     "verify:seo": "node scripts/verify-seo.mjs",
-    "generate:openings": "node scripts/generate-opening-index.mjs"
+    "generate:openings": "node scripts/generate-opening-index.mjs",
+    "generate:puzzles": "node scripts/generate-puzzle-catalog.mjs"
   },
   "private": true,
   "packageManager": "pnpm@11.17.0",
@@ -26,39 +27,39 @@
     "pnpm": ">=11.17.0 <12"
   },
   "dependencies": {
-    "@angular/common": "^22.0.0",
-    "@angular/compiler": "^22.0.0",
-    "@angular/core": "^22.0.0",
-    "@angular/forms": "^22.0.0",
-    "@angular/platform-browser": "^22.0.0",
-    "@angular/platform-server": "^22.0.8",
-    "@angular/router": "^22.0.8",
-    "@angular/ssr": "^22.0.8",
+    "@angular/common": "^22.2.4",
+    "@angular/compiler": "^22.2.4",
+    "@angular/core": "^22.2.4",
+    "@angular/forms": "^22.2.4",
+    "@angular/platform-browser": "^22.2.4",
+    "@angular/platform-server": "^22.2.4",
+    "@angular/router": "^22.2.4",
+    "@angular/ssr": "^22.2.5",
     "@fontsource/atkinson-hyperlegible": "^5.3.0",
     "@fontsource/barlow-condensed": "^5.3.0",
     "@fontsource/ibm-plex-mono": "^5.3.0",
-    "@lichess-org/chessground": "^10.1.1",
+    "@lichess-org/chessground": "^10.5.0",
     "chess.js": "^1.4.0",
-    "idb": "^8.0.3",
-    "rxjs": "~7.8.0",
+    "idb": "^8.0.4",
+    "rxjs": "~7.8.2",
     "stockfish": "^18.0.8",
-    "tslib": "^2.3.0"
+    "tslib": "^2.9.1"
   },
   "devDependencies": {
-    "@angular/build": "^22.0.8",
-    "@angular/cli": "^22.0.8",
-    "@angular/compiler-cli": "^22.0.0",
-    "@axe-core/playwright": "^4.12.1",
-    "@playwright/test": "^1.55.0",
-    "@vitest/coverage-v8": "^4.1.10",
-    "angular-eslint": "^22.1.0",
-    "eslint": "^9.0.0",
-    "fake-indexeddb": "^6.2.5",
-    "jsdom": "^28.0.0",
-    "prettier": "^3.8.1",
-    "typescript": "~6.0.2",
-    "typescript-eslint": "^8.0.0",
-    "vitest": "^4.0.8"
+    "@angular/build": "^22.2.5",
+    "@angular/cli": "^22.2.5",
+    "@angular/compiler-cli": "^22.2.4",
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.64.1",
+    "@vitest/coverage-v8": "^4.1.12",
+    "angular-eslint": "^22.6.0",
+    "eslint": "^9.39.5",
+    "fake-indexeddb": "^6.2.7",
+    "jsdom": "^28.1.0",
+    "prettier": "^3.9.10",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^4.1.12"
   },
   "license": "GPL-3.0-only"
 }

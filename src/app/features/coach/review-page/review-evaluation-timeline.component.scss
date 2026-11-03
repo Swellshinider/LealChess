@@ -4,21 +4,19 @@
 
 .evaluation-timeline {
   display: grid;
-  gap: 5px;
+  gap: 8px;
 }
 
 .timeline-heading {
   color: var(--primary);
   font-family: var(--font-utility);
   font-size: var(--type-micro);
-  letter-spacing: 0.06em;
   text-align: center;
-  text-transform: uppercase;
 }
 
 .timeline-chart {
-  background: #3a3b36;
-  height: 70px;
+  background: var(--surface-container-high);
+  height: 96px;
   overflow: hidden;
   position: relative;
 }
@@ -31,17 +29,17 @@ svg {
 }
 
 .zero-line {
-  stroke: #898b83;
+  stroke: var(--outline);
   stroke-width: 0.8;
 }
 
 .white-territory {
-  fill: #f4f1e6;
+  fill: var(--paper);
 }
 
 .key-point {
   fill: var(--classification-color);
-  stroke: #3a3b36;
+  stroke: var(--surface-container-high);
   stroke-width: 0.8;
   vector-effect: non-scaling-stroke;
 }
@@ -71,14 +69,14 @@ svg {
 }
 
 .current-line {
-  stroke: var(--amber);
+  stroke: var(--primary);
   stroke-width: 0.8;
   vector-effect: non-scaling-stroke;
 }
 
 .current-point {
-  fill: var(--amber);
-  stroke: #3a3b36;
+  fill: var(--primary);
+  stroke: var(--surface-container-high);
   stroke-width: 0.8;
   vector-effect: non-scaling-stroke;
 }

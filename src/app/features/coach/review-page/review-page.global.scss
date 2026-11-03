@@ -3,10 +3,6 @@ app-review-page {
   height: 100dvh;
   overflow: hidden;
 
-  app-side-navigation {
-    --navigation-expanded-width: 208px;
-  }
-
   .review-shell {
     display: flex;
     height: 100dvh;
@@ -39,16 +35,18 @@ app-review-page {
 
   .review-toolbar {
     align-items: center;
-    border-bottom: 1px solid rgb(200 213 207 / 14%);
+    border-bottom: 1px solid var(--outline-variant);
     display: grid;
     gap: 14px;
     grid-template-columns: auto minmax(0, 1fr);
     min-height: 52px;
-    padding: 7px 12px;
+    padding: 8px 12px;
   }
 
   .workspace-review-toolbar {
-    background: var(--surface-lowest);
+    background: var(--surface-low);
+    border: 1px solid var(--outline-variant);
+    border-radius: 12px 12px 0 0;
     grid-column: 2;
     grid-row: 1;
   }
@@ -58,7 +56,6 @@ app-review-page {
     font-family: var(--font-utility);
     font-size: var(--type-caption);
     text-decoration: none;
-    text-transform: uppercase;
   }
 
   .game-meta {
@@ -77,8 +74,6 @@ app-review-page {
       color: var(--primary);
       font-family: var(--font-utility);
       font-size: var(--type-micro);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
     }
 
     strong {
@@ -93,7 +88,7 @@ app-review-page {
       color: var(--mist);
       font-family: var(--font-utility);
       font-size: var(--type-micro);
-      margin-top: 3px;
+      margin-top: 4px;
       text-transform: capitalize;
     }
   }
@@ -102,10 +97,10 @@ app-review-page {
   .secondary-action,
   .move-note > button,
   .practice-actions button {
-    border-radius: 4px;
-    font-weight: 700;
-    min-height: 38px;
-    padding: 7px 13px;
+    border-radius: 8px;
+    font-weight: 600;
+    min-height: 44px;
+    padding: 8px 12px;
   }
 
   .secondary-action,
@@ -123,9 +118,9 @@ app-review-page {
 
   .review-workspace {
     align-items: stretch;
-    column-gap: clamp(14px, 1.6cqw, 22px);
+    column-gap: clamp(16px, 1.6cqw, 24px);
     display: grid;
-    grid-template-columns: minmax(0, 1fr) clamp(430px, 40cqw, 640px);
+    grid-template-columns: minmax(0, 1fr) clamp(400px, 40cqw, 640px);
     grid-template-rows: auto minmax(0, 1fr);
     height: 100%;
     min-height: 0;
@@ -133,7 +128,7 @@ app-review-page {
 
   .board-column {
     --evaluation-gutter: 0px;
-    --player-strip-height: 34px;
+    --player-strip-height: 40px;
     --player-strips-height: calc(var(--player-strip-height) + var(--player-strip-height));
     --review-fit-tolerance: 2px;
 
@@ -198,13 +193,13 @@ app-review-page {
     align-items: center;
     background: var(--surface-container-high);
     border: 1px solid rgb(255 255 255 / 12%);
-    border-radius: 4px 0 4px 0;
+    border-radius: 8px;
     color: var(--primary);
     display: flex;
     flex: 0 0 28px;
     font-family: var(--font-display);
     font-size: var(--type-small);
-    font-weight: 700;
+    font-weight: 600;
     height: 28px;
     justify-content: center;
   }
@@ -223,12 +218,12 @@ app-review-page {
 
   .player-strip.active .turn-indicator {
     background: var(--primary);
-    box-shadow: 0 0 0 3px rgb(165 206 204 / 10%);
+    box-shadow: none;
   }
 
   .board-stage {
     aspect-ratio: 1;
-    box-shadow: 0 12px 30px rgb(1 16 23 / 28%);
+    box-shadow: none;
     min-width: 0;
     position: relative;
     width: 100%;
@@ -270,7 +265,6 @@ app-review-page {
       bottom: 0;
       left: 0;
       position: absolute;
-      transition: height 260ms ease;
       width: 100%;
     }
 
@@ -284,7 +278,7 @@ app-review-page {
     color: var(--paper);
     font-family: var(--font-utility);
     font-size: var(--type-caption);
-    font-weight: 700;
+    font-weight: 600;
     left: 50%;
     position: absolute;
     text-shadow: 0 1px 2px rgb(0 0 0 / 80%);
@@ -307,7 +301,7 @@ app-review-page {
 
   .review-board {
     --coordinate-on-dark: #fff;
-    --coordinate-on-light: var(--night);
+    --coordinate-on-light: #181b15;
 
     height: 100%;
     overflow: hidden;
@@ -355,11 +349,10 @@ app-review-page {
     color: var(--paper);
     font-family: var(--font-utility);
     font-size: clamp(var(--type-micro), 1.1vw, var(--type-caption));
-    font-weight: 700;
-    padding: 3px 6px;
+    font-weight: 600;
+    padding: 4px 6px;
     pointer-events: none;
     position: absolute;
-    text-transform: uppercase;
     white-space: nowrap;
     z-index: 12;
   }
@@ -380,7 +373,8 @@ app-review-page {
 
   .review-desk {
     background: var(--surface-container);
-    border: 1px solid rgb(200 213 207 / 16%);
+    border: 1px solid var(--outline-variant);
+    border-radius: 0 0 12px 12px;
     display: flex;
     flex-direction: column;
     grid-column: 2;
@@ -410,10 +404,9 @@ app-review-page {
       font-family: var(--font-utility);
       font-size: var(--type-caption);
       min-height: 42px;
-      text-transform: uppercase;
 
       &.active {
-        border-color: var(--amber);
+        border-color: var(--primary);
         color: var(--paper);
       }
 
@@ -432,11 +425,11 @@ app-review-page {
   }
 
   .analysis-status {
-    border-bottom: 1px solid rgb(200 213 207 / 13%);
+    border-bottom: 1px solid var(--outline-variant);
     display: grid;
     gap: 8px 12px;
     grid-template-columns: minmax(0, 1fr) auto;
-    padding: 12px 14px;
+    padding: 12px 16px;
   }
 
   .analysis-copy {
@@ -449,8 +442,6 @@ app-review-page {
       color: var(--primary);
       font-family: var(--font-utility);
       font-size: var(--type-micro);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
     }
 
     h2 {
@@ -466,7 +457,7 @@ app-review-page {
     color: var(--mist);
     font-family: var(--font-utility);
     font-size: var(--type-caption);
-    padding-top: 3px;
+    padding-top: 4px;
   }
 
   .analysis-rail {
@@ -516,7 +507,7 @@ app-review-page {
     p {
       font-family: var(--font-body);
       line-height: 1.4;
-      margin: 8px 0 3px;
+      margin: 8px 0 4px;
     }
   }
 
@@ -529,10 +520,10 @@ app-review-page {
 
   .move-heading {
     align-items: center;
-    border-bottom: 1px solid rgb(200 213 207 / 12%);
+    border-bottom: 1px solid var(--outline-variant);
     display: flex;
     justify-content: space-between;
-    padding: 10px 14px;
+    padding: 10px 16px;
 
     span,
     strong {
@@ -581,7 +572,7 @@ app-review-page {
       border-radius: 3px;
       color: var(--paper);
       min-width: 0;
-      padding: 6px 7px;
+      padding: 6px 8px;
       text-align: left;
 
       &:hover,
@@ -601,7 +592,7 @@ app-review-page {
 
   .move-note {
     border-left: 4px solid var(--classification-color, var(--primary-container));
-    border-top: 1px solid rgb(200 213 207 / 12%);
+    border-top: 1px solid var(--outline-variant);
     color: var(--mist);
     padding: 10px 12px;
 
@@ -625,13 +616,12 @@ app-review-page {
 
     dl div {
       background: var(--surface-lowest);
-      padding: 7px;
+      padding: 8px;
     }
 
     dt {
       font-family: var(--font-utility);
       font-size: var(--type-micro);
-      text-transform: uppercase;
     }
 
     dd {
@@ -641,7 +631,7 @@ app-review-page {
     }
 
     > button {
-      margin-top: 9px;
+      margin-top: 8px;
     }
   }
 
@@ -654,14 +644,13 @@ app-review-page {
       color: var(--paper);
       font-family: var(--font-display);
       font-size: 1.15rem;
-      font-weight: 700;
+      font-weight: 600;
     }
 
     strong {
       color: var(--amber);
       font-family: var(--font-utility);
       font-size: var(--type-micro);
-      text-transform: uppercase;
     }
   }
 
@@ -670,7 +659,7 @@ app-review-page {
     font-family: var(--font-utility);
     font-size: var(--type-micro);
     gap: 14px;
-    margin-top: 5px;
+    margin-top: 4px;
 
     strong {
       color: var(--paper);
@@ -686,7 +675,7 @@ app-review-page {
   }
 
   .keyboard-help {
-    padding: 2px 10px 9px;
+    padding: 2px 10px 8px;
   }
 
   .practice-sheet {
@@ -697,7 +686,7 @@ app-review-page {
     justify-content: flex-start;
     min-height: 0;
     overflow: auto;
-    padding: clamp(15px, 2.2cqw, 22px);
+    padding: 24px;
 
     h2 {
       font-family: var(--font-display);
@@ -712,7 +701,6 @@ app-review-page {
     font-family: var(--font-utility);
     font-size: var(--type-caption);
     margin: 0;
-    text-transform: uppercase;
   }
 
   .practice-context {
@@ -738,14 +726,14 @@ app-review-page {
     display: grid;
     gap: 4px;
     margin: 0;
-    padding: 9px 12px;
+    padding: 8px 12px;
 
     &[data-status='incorrect'] {
       border-color: var(--classification-mistake);
     }
 
     &[data-status='correct'] {
-      border-color: var(--amber);
+      border-color: var(--primary);
     }
 
     strong {
@@ -772,8 +760,8 @@ app-review-page {
   }
 
   .candidate-lines {
-    border-bottom: 1px solid rgb(200 213 207 / 14%);
-    border-top: 1px solid rgb(200 213 207 / 14%);
+    border-bottom: 1px solid var(--outline-variant);
+    border-top: 1px solid var(--outline-variant);
     padding: 10px 0;
 
     ol {
@@ -822,8 +810,6 @@ app-review-page {
     }
 
     span {
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
     }
 
     h3 {
@@ -854,7 +840,7 @@ app-review-page {
   }
 
   .terminal-position {
-    border-bottom: 1px solid rgb(200 213 207 / 14%);
+    border-bottom: 1px solid var(--outline-variant);
     color: var(--mist);
     font-size: var(--type-small);
     margin: 0;
@@ -888,17 +874,18 @@ app-review-page {
 
   .promotion-card {
     background: var(--carbon);
-    border: 1px solid rgb(200 213 207 / 24%);
-    box-shadow: 0 20px 50px rgb(0 0 0 / 45%);
+    border: 1px solid var(--outline-variant);
+    border-radius: 12px;
+    box-shadow: none;
     color: var(--paper);
     display: grid;
     gap: 14px;
-    padding: 18px;
+    padding: 20px;
 
     > span {
       font-family: var(--font-display);
       font-size: 1.4rem;
-      font-weight: 700;
+      font-weight: 600;
     }
   }
 
@@ -968,7 +955,7 @@ app-review-page {
       grid-template-columns: 1fr;
       grid-template-rows: auto auto auto;
       height: auto;
-      row-gap: clamp(14px, 2cqw, 24px);
+      row-gap: 24px;
     }
 
     .board-column {
@@ -992,8 +979,9 @@ app-review-page {
     .review-desk {
       grid-column: 1;
       grid-row: 3;
-      max-height: 620px;
-      min-height: 500px;
+      height: auto;
+      max-height: none;
+      min-height: 0;
     }
 
     .workspace-review-toolbar {
@@ -1037,7 +1025,7 @@ app-review-page {
 
     .review-desk {
       max-height: none;
-      min-height: 560px;
+      min-height: 0;
     }
   }
 
@@ -1057,6 +1045,6 @@ app-review-page {
     font-family: var(--font-utility);
     font-size: var(--type-micro);
     min-height: 34px;
-    padding: 6px 9px;
+    padding: 6px 8px;
   }
 }

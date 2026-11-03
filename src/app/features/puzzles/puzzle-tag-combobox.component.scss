@@ -1,0 +1,75 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+.combobox-field {
+  position: relative;
+}
+label {
+  display: block;
+  font-family: var(--font-body);
+  font-size: var(--type-small);
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-transform: none;
+}
+input {
+  background: var(--surface-lowest);
+  border: 1px solid var(--outline);
+  color: var(--paper);
+  min-height: 44px;
+  padding: 8px 12px;
+  width: 100%;
+}
+.selected-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.selected-tags span {
+  align-items: center;
+  background: var(--primary-container);
+  display: flex;
+  gap: 8px;
+  padding: 4px 4px 4px 8px;
+  border-radius: 4px;
+}
+.selected-tags button {
+  background: transparent;
+  border: 0;
+  color: var(--on-primary-container);
+  min-height: 28px;
+  padding: 0 6px;
+}
+.option-list {
+  background: var(--surface-container-high);
+  border: 1px solid var(--outline);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
+  display: grid;
+  left: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 30;
+}
+.option-list button {
+  background: transparent;
+  border: 0;
+  color: var(--paper);
+  min-height: 40px;
+  padding: 8px 12px;
+  text-align: left;
+}
+.option-list button:hover,
+.option-list button.active {
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+}
+.option-list p {
+  margin: 0;
+  padding: 12px;
+}

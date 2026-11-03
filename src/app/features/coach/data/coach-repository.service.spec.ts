@@ -35,6 +35,8 @@ describe('CoachRepositoryService', () => {
     expect(database.objectStoreNames.contains('coachProfiles')).toBe(true);
     expect(database.objectStoreNames.contains('importedGames')).toBe(true);
     expect(database.objectStoreNames.contains('gameAnalyses')).toBe(true);
+    expect(database.objectStoreNames.contains('puzzleDaily')).toBe(true);
+    expect(database.objectStoreNames.contains('puzzleAttempts')).toBe(true);
     database.close();
   });
 

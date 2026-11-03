@@ -50,6 +50,13 @@
       </svg>
       <span class="nav-copy">Explorer</span>
     </a>
+    <a routerLink="/puzzles" routerLinkActive="active" aria-label="Puzzles" data-tooltip="Puzzles">
+      <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9 4h6v4h4v12H5V8h4V4Z" />
+        <path d="M9 12h6M9 16h4" />
+      </svg>
+      <span class="nav-copy">Puzzles</span>
+    </a>
   </div>
 
   <div class="utility-links">
@@ -136,6 +143,9 @@
       </a>
       <a routerLink="/explorer" routerLinkActive="active" (click)="navigation.closeMobile()">
         Explorer
+      </a>
+      <a routerLink="/puzzles" routerLinkActive="active" (click)="navigation.closeMobile()">
+        Puzzles
       </a>
       <a routerLink="/settings" routerLinkActive="active" (click)="navigation.closeMobile()">
         Settings

@@ -118,9 +118,7 @@ describe('ReviewAnalysisPanelComponent', () => {
     fixture.detectChanges();
     const host = fixture.nativeElement as HTMLElement;
 
-    const candidate = host.querySelector<HTMLButtonElement>(
-      'button[aria-label="Play engine candidate 1: e4"]',
-    )!;
+    const candidate = host.querySelector<HTMLButtonElement>('button.candidate-action')!;
     candidate.dispatchEvent(new Event('pointerenter'));
     candidate.dispatchEvent(new Event('pointerleave'));
     candidate.focus();

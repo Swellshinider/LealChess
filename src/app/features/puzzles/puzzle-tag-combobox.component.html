@@ -1,0 +1,55 @@
+<div class="combobox-field">
+  <label [for]="listboxId() + '-input'">{{ label() }}</label>
+  @if (selected().length) {
+    <div class="selected-tags" [attr.aria-label]="'Selected ' + label().toLowerCase()">
+      @for (tag of selected(); track tag) {
+        <span
+          >{{ displayTag(tag)
+          }}<button
+            type="button"
+            [attr.aria-label]="'Remove ' + displayTag(tag)"
+            (click)="remove(tag)"
+          >
+            ×
+          </button></span
+        >
+      }
+    </div>
+  }
+  <input
+    [id]="listboxId() + '-input'"
+    type="text"
+    role="combobox"
+    autocomplete="off"
+    [placeholder]="'Search ' + label().toLowerCase()"
+    [value]="query()"
+    [attr.aria-expanded]="open()"
+    [attr.aria-controls]="listboxId()"
+    [attr.aria-activedescendant]="
+      open() && filtered()[activeIndex()] ? listboxId() + '-' + activeIndex() : null
+    "
+    (focus)="open.set(true)"
+    (blur)="open.set(false)"
+    (input)="updateQuery($any($event.target).value)"
+    (keydown)="handleKey($event)"
+  />
+  @if (open()) {
+    <div class="option-list" [id]="listboxId()" role="listbox" [attr.aria-label]="label()">
+      @for (option of filtered(); track option; let index = $index) {
+        <button
+          type="button"
+          role="option"
+          [id]="listboxId() + '-' + index"
+          [class.active]="index === activeIndex()"
+          [attr.aria-selected]="false"
+          (mousedown)="$event.preventDefault()"
+          (click)="select(option)"
+        >
+          {{ displayTag(option) }}
+        </button>
+      } @empty {
+        <p>No matching {{ label().toLowerCase() }}.</p>
+      }
+    </div>
+  }
+</div>

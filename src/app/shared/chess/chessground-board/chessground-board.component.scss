@@ -1,3 +1,7 @@
 :host {
   display: block;
 }
+
+:host ::ng-deep coords.files {
+  bottom: 0;
+}

@@ -25,7 +25,7 @@ describe('SideNavigationComponent', () => {
     fixture.detectChanges();
     const host = fixture.nativeElement as HTMLElement;
 
-    expect(host.querySelectorAll('a[href]').length).toBe(7);
+    expect(host.querySelectorAll('a[href]').length).toBe(8);
     expect(host.querySelector<HTMLImageElement>('.brand-logo')?.getAttribute('src')).toBe(
       '/favicon.svg',
     );
@@ -33,6 +33,7 @@ describe('SideNavigationComponent', () => {
     expect(host.querySelector('[data-tooltip="Play"]')).not.toBeNull();
     expect(host.querySelector('[data-tooltip="Learn"]')).not.toBeNull();
     expect(host.querySelector('[data-tooltip="Explorer"]')).not.toBeNull();
+    expect(host.querySelector('[data-tooltip="Puzzles"]')).not.toBeNull();
     expect(host.querySelector('[data-tooltip="Settings"]')).not.toBeNull();
     expect(
       host.querySelector<HTMLAnchorElement>('[data-tooltip="About"]')?.getAttribute('href'),

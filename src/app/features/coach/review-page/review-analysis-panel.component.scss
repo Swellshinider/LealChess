@@ -23,17 +23,16 @@
 
 header {
   align-items: center;
-  border-bottom: 1px solid rgb(200 213 207 / 13%);
+  border-bottom: 1px solid var(--outline-variant);
   display: grid;
   gap: 10px;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  padding: 11px 14px;
+  padding: 12px 16px;
 
   small {
     color: var(--mist);
     font-family: var(--font-utility);
     font-size: var(--type-micro);
-    text-transform: uppercase;
   }
 
   h2 {
@@ -61,13 +60,13 @@ header {
   font-family: var(--font-utility);
   font-size: var(--type-micro);
   min-height: 34px;
-  padding: 6px 9px;
+  padding: 6px 8px;
 }
 
 .coach-note {
-  border-bottom: 1px solid rgb(200 213 207 / 13%);
+  border-bottom: 1px solid var(--outline-variant);
   min-height: 132px;
-  padding: 14px;
+  padding: 16px;
 
   h3 {
     color: var(--paper);
@@ -89,9 +88,7 @@ header {
   color: var(--classification-color, var(--primary));
   font-family: var(--font-utility);
   font-size: var(--type-micro);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .evaluation {
@@ -113,9 +110,9 @@ header {
   button {
     font-family: var(--font-utility);
     font-size: var(--type-micro);
-    font-weight: 700;
+    font-weight: 600;
     min-height: 30px;
-    padding: 5px 9px;
+    padding: 4px 8px;
     width: fit-content;
   }
 }
@@ -127,8 +124,8 @@ header {
 }
 
 .live-analysis {
-  border-bottom: 1px solid rgb(200 213 207 / 13%);
-  padding: 9px 12px;
+  border-bottom: 1px solid var(--outline-variant);
+  padding: 8px 12px;
 
   ol {
     display: grid;
@@ -152,7 +149,7 @@ header {
     gap: 7px;
     grid-template-columns: 14px 14px 42px minmax(0, 1fr);
     min-height: 28px;
-    padding: 3px 4px;
+    padding: 4px 4px;
     text-align: left;
     width: 100%;
 
@@ -200,7 +197,7 @@ header {
 .analysis-error {
   color: var(--mist);
   font-size: var(--type-caption);
-  margin: 7px 0 0;
+  margin: 8px 0 0;
 }
 
 .retry-action {
@@ -214,14 +211,14 @@ header {
   background: transparent;
   border: 1px solid var(--amber);
   color: var(--paper);
-  font-weight: 700;
+  font-weight: 600;
   margin: 0 12px 8px;
   min-height: 36px;
 }
 
 app-review-evaluation-timeline {
-  border-top: 1px solid rgb(200 213 207 / 13%);
-  padding: 9px 12px;
+  border-top: 1px solid var(--outline-variant);
+  padding: 8px 12px;
 }
 
 button:disabled {

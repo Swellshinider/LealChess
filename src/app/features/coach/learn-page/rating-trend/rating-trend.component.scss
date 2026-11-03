@@ -11,15 +11,15 @@ figcaption {
   align-items: end;
   display: flex;
   justify-content: space-between;
-  margin-bottom: 18px;
+  margin-bottom: 24px;
 
   p {
     color: var(--primary);
     font-family: var(--font-utility);
     font-size: var(--type-caption);
-    letter-spacing: 0.04em;
+    letter-spacing: 0;
     margin: 0 0 4px;
-    text-transform: uppercase;
+    text-transform: none;
   }
 
   h2 {
@@ -34,7 +34,7 @@ figcaption {
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 16px;
   justify-content: flex-end;
 
   span {
@@ -43,8 +43,8 @@ figcaption {
     display: flex;
     font-family: var(--font-utility);
     font-size: var(--type-caption);
-    gap: 7px;
-    text-transform: uppercase;
+    gap: 8px;
+    text-transform: none;
 
     &::before {
       background: var(--primary);
@@ -60,15 +60,15 @@ figcaption {
 }
 
 .chart-frame {
-  background: var(--surface-lowest);
+  background: var(--surface-container);
   border: 1px solid rgb(200 213 207 / 12%);
-  min-height: 250px;
+  min-height: 300px;
   padding: 8px 8px 0;
 }
 
 svg {
   display: block;
-  height: 260px;
+  height: 300px;
   overflow: visible;
   width: 100%;
 }
@@ -84,7 +84,7 @@ svg {
     fill: var(--mist);
     font-family: var(--font-utility);
     font-size: var(--type-micro);
-    opacity: 0.72;
+    opacity: 1;
     text-anchor: end;
   }
 }
@@ -117,7 +117,7 @@ svg {
   fill: var(--mist);
   font-family: var(--font-utility);
   font-size: var(--type-micro);
-  opacity: 0.72;
+  opacity: 1;
 }
 
 .rating-summaries {
@@ -127,7 +127,7 @@ svg {
   margin-top: 1px;
 
   > div {
-    background: var(--surface-lowest);
+    background: var(--surface-container);
     border-top: 2px solid var(--primary);
     display: grid;
     gap: 2px;
@@ -144,7 +144,7 @@ svg {
     color: var(--mist);
     font-family: var(--font-utility);
     font-size: var(--type-caption);
-    text-transform: uppercase;
+    text-transform: none;
   }
 
   strong {
@@ -167,12 +167,12 @@ svg {
 
 .empty-chart {
   align-items: center;
-  background: var(--surface-lowest);
+  background: var(--surface-container);
   border: 1px solid rgb(200 213 207 / 12%);
   color: var(--mist);
   display: flex;
-  gap: 18px;
-  min-height: 250px;
+  gap: 20px;
+  min-height: 300px;
   padding: 28px;
 
   > span {
@@ -190,7 +190,7 @@ svg {
   }
 }
 
-@media (max-width: 580px) {
+@container (max-width: 580px) {
   figcaption {
     align-items: start;
     display: grid;
@@ -208,4 +208,18 @@ svg {
   svg {
     height: 220px;
   }
+}
+
+.chart-frame,
+.empty-chart {
+  border-radius: 12px;
+}
+
+.rating-summaries {
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.rating-summaries > div {
+  border-radius: 8px;
 }

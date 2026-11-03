@@ -8,7 +8,7 @@
   display: flex;
   inset: 0;
   justify-content: center;
-  padding: 18px;
+  padding: 20px;
   position: fixed;
   z-index: 100;
 }
@@ -17,14 +17,16 @@ section {
   background: var(--carbon);
   border-color: rgb(200 213 207 / 22%) var(--surface-lowest) var(--surface-lowest)
     rgb(200 213 207 / 22%);
-  border-radius: 4px 0 4px 0;
+  border-radius: 12px;
   border-style: solid;
   border-width: 1px;
-  box-shadow: 0 28px 90px rgb(0 0 0 / 45%);
+  box-shadow: none;
   color: var(--paper);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
   max-width: 470px;
   overflow: hidden;
-  padding: 28px;
+  padding: 32px;
   position: relative;
   text-align: center;
   width: 100%;
@@ -35,8 +37,8 @@ section {
   border: 0;
   color: var(--mist);
   font-size: 1.5rem;
-  min-height: 42px;
-  min-width: 42px;
+  min-height: 44px;
+  min-width: 44px;
   position: absolute;
   right: 10px;
   top: 8px;
@@ -46,22 +48,19 @@ section {
   color: var(--primary);
   font-family: var(--font-utility);
   font-size: var(--type-caption);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
 }
 
 h2 {
   font-family: var(--font-display);
   font-size: clamp(2rem, 8vw, 2.8rem);
-  line-height: 0.95;
+  line-height: 1.08;
   margin: 20px 0 0;
-  text-transform: uppercase;
 }
 
 .result-label {
   color: var(--paper);
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600;
   margin: 10px 0 0;
 }
 
@@ -78,7 +77,7 @@ h2 {
   border-left: 3px solid var(--danger);
   color: #ffb4ab;
   font-size: var(--type-small);
-  margin: 18px 0 0;
+  margin: 20px 0 0;
   padding: 10px 12px;
 }
 
@@ -95,10 +94,10 @@ button {
 
 .secondary-action,
 .primary-action {
-  border-radius: 3px 0 3px 0;
+  border-radius: 8px;
   font-family: var(--font-utility);
   font-size: var(--type-small);
-  font-weight: 700;
+  font-weight: 600;
   padding: 8px 12px;
 }
 

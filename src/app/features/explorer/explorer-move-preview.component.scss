@@ -5,7 +5,7 @@
 .move-preview {
   background: var(--surface-lowest);
   border: 1px solid var(--outline-variant);
-  box-shadow: 0 18px 48px rgb(0 0 0 / 48%);
+  box-shadow: none;
   padding: 8px;
   pointer-events: none;
   position: fixed;
@@ -25,8 +25,6 @@
     color: var(--primary);
     font-family: var(--font-utility);
     font-size: var(--type-micro);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
   }
 
   strong {

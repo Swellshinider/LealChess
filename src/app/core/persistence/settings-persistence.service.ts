@@ -19,6 +19,7 @@ export interface ImportProfileHint {
 
 export interface LealChessStorageUsage {
   readonly records: number;
+  readonly puzzles: number;
   readonly engines: number;
   readonly total: number;
 }
@@ -38,6 +39,10 @@ export class SettingsPersistenceService {
         database.getAll('explorerSessions'),
         database.getAll('reviewAnalysisSessions'),
       ]);
+      const puzzleRecords = await Promise.all([
+        database.getAll('puzzleDaily'),
+        database.getAll('puzzleAttempts'),
+      ]);
       const engineAssets = await database.getAll('engineAssets');
       const encoder = new TextEncoder();
       const records = recordsByStore
@@ -46,8 +51,11 @@ export class SettingsPersistenceService {
           (total, record) => total + encoder.encode(JSON.stringify(record)).byteLength,
           0,
         );
+      const puzzles = puzzleRecords
+        .flat()
+        .reduce<number>((total, record) => total + encodedSize(record, encoder), 0);
       const engines = engineAssets.reduce((total, asset) => total + asset.bytes, 0);
-      return { records, engines, total: records + engines };
+      return { records, puzzles, engines, total: records + puzzles + engines };
     } catch {
       return null;
     }
@@ -88,6 +96,8 @@ export class SettingsPersistenceService {
       'explorerSessions',
       'reviewAnalysisSessions',
       'engineAssets',
+      'puzzleDaily',
+      'puzzleAttempts',
     ] as const;
     const transaction = database.transaction(stores, 'readwrite');
     await Promise.all(stores.map((store) => transaction.objectStore(store).clear()));
@@ -95,6 +105,10 @@ export class SettingsPersistenceService {
     localStorage.removeItem('lealchess.stockfish.downloads');
     clearOnboardingCompletion();
   }
+}
+
+function encodedSize(value: unknown, encoder: TextEncoder): number {
+  return encoder.encode(JSON.stringify(value)).byteLength;
 }
 
 export function normalizeImportPreferences(value: unknown): ImportPreferences {

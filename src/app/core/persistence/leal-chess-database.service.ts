@@ -5,7 +5,7 @@ import type { ImportPreferences, PersistedGame } from './persistence.types';
 import type { AnalysisEngineId, AnalysisSettings } from '../engine/analysis-profiles';
 
 export const LEAL_CHESS_DATABASE_NAME = 'leal-chess';
-export const LEAL_CHESS_DATABASE_VERSION = 6;
+export const LEAL_CHESS_DATABASE_VERSION = 7;
 export const PROFILE_KEYS_INDEX = 'by-profile-key';
 
 /**
@@ -19,6 +19,8 @@ export interface LealChessStoreRecords {
   gameAnalyses: unknown;
   explorerSessions: unknown;
   reviewAnalysisSessions: unknown;
+  puzzleDaily: unknown;
+  puzzleAttempts: unknown;
 }
 
 export interface LealChessDatabase<
@@ -52,6 +54,14 @@ export interface LealChessDatabase<
   reviewAnalysisSessions: {
     key: string;
     value: R['reviewAnalysisSessions'];
+  };
+  puzzleDaily: {
+    key: 'lichess' | 'chess-com';
+    value: R['puzzleDaily'];
+  };
+  puzzleAttempts: {
+    key: string;
+    value: R['puzzleAttempts'];
   };
   engineAssets: {
     key: AnalysisEngineId;
@@ -99,6 +109,12 @@ export class LealChessDatabaseService {
           }
           if (!database.objectStoreNames.contains('engineAssets')) {
             database.createObjectStore('engineAssets', { keyPath: 'id' });
+          }
+          if (!database.objectStoreNames.contains('puzzleDaily')) {
+            database.createObjectStore('puzzleDaily', { keyPath: 'provider' });
+          }
+          if (!database.objectStoreNames.contains('puzzleAttempts')) {
+            database.createObjectStore('puzzleAttempts', { keyPath: 'id' });
           }
         },
       },

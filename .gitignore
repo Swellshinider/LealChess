@@ -13,6 +13,7 @@
 /.yarn
 .pnp.*
 *.log
+lichess_db_puzzle.csv*
 pnpm-debug.log*
 npm-debug.log*
 yarn-debug.log*

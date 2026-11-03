@@ -5,7 +5,7 @@
 
 .board-stage {
   aspect-ratio: 1;
-  box-shadow: 0 12px 28px rgb(1 16 23 / 24%);
+  box-shadow: none;
   min-width: 0;
   overflow: hidden;
   position: relative;
@@ -14,7 +14,7 @@
 
 .board-frame {
   --coordinate-on-dark: #fff;
-  --coordinate-on-light: var(--night);
+  --coordinate-on-light: #181b15;
   --move-marker: rgb(23 36 44 / 62%);
   --premove-marker: rgb(217 154 61 / 72%);
 
@@ -111,18 +111,18 @@
   display: flex;
   inset: 0;
   justify-content: center;
-  padding: 18px;
+  padding: 20px;
   position: absolute;
   z-index: 20;
 }
 
 .promotion-card {
   background: var(--paper);
-  border-radius: 10px 3px 10px 3px;
-  box-shadow: 0 18px 60px rgb(0 0 0 / 35%);
+  border-radius: 12px;
+  box-shadow: none;
   color: var(--night);
   max-width: 360px;
-  padding: 18px;
+  padding: 20px;
   text-align: center;
   width: 100%;
 
@@ -130,8 +130,8 @@
     display: block;
     font-family: var(--font-display);
     font-size: 1.2rem;
-    font-weight: 700;
-    margin-bottom: 14px;
+    font-weight: 600;
+    margin-bottom: 16px;
   }
 }
 
@@ -165,5 +165,5 @@
   color: #45545b;
   margin-top: 12px;
   min-height: 42px;
-  padding: 0 14px;
+  padding: 0 16px;
 }

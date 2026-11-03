@@ -79,7 +79,7 @@ test('reviews, archives, and deletes a completed Stockfish game', async ({ page 
   await page.getByRole('button', { name: 'Resign', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Keep playing' })).toHaveCSS(
     'color',
-    'rgb(24, 27, 21)',
+    'rgb(20, 20, 21)',
   );
   await page.getByRole('button', { name: 'Resign game' }).click();
   const gameOverDialog = page.getByRole('dialog', { name: 'Game over' });

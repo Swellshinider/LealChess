@@ -14,6 +14,7 @@ const publicWorkspaceRoutes = [
   '/settings',
   '/learn',
   '/explorer',
+  '/puzzles',
   '/about',
   '/not-a-route',
 ] as const;
@@ -39,6 +40,19 @@ test('keeps every route shell within the supported viewport widths', async ({ pa
     const tooltip = page.getByRole('tooltip');
     await expect(tooltip).toBeVisible();
     await expect.poll(() => elementFitsViewportHorizontally(tooltip)).toBe(true);
+  }
+});
+
+test('fits Settings with expanded navigation on tablets', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'Content-width layout regression');
+  await page.addInitScript(() => localStorage.setItem('lealchess.navigation.expanded', 'true'));
+  for (const width of [768, 820, 1024]) {
+    await page.setViewportSize({ width, height: 1180 });
+    await page.goto('/settings');
+    await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible();
+    const preview = page.locator('app-settings-preview-board');
+    await expect.poll(() => elementFitsViewportHorizontally(preview)).toBe(true);
+    await expectDocumentNotToOverflowHorizontally(page);
   }
 });
 
@@ -175,6 +189,7 @@ test('launches each workspace and provides project information', async ({ page }
   await expect(page.getByRole('heading', { name: 'LealChess' })).toBeVisible();
   await expect(page.getByRole('link', { name: /Play/ })).toHaveAttribute('href', '/play');
   await expect(page.getByRole('link', { name: /Learn/ })).toHaveAttribute('href', '/learn');
+  await expect(page.getByRole('link', { name: /Puzzles/ })).toHaveAttribute('href', '/puzzles');
   await expect(page.getByRole('link', { name: /Settings/ })).toHaveAttribute('href', '/settings');
 
   await page.goto('/about/');
@@ -345,6 +360,7 @@ test('previews and persists board preferences, then clears LealChess data', asyn
   await expect(page.locator('square.last-move')).toHaveCount(0);
   await page.getByLabel('Board palette').selectOption('rosewood');
   await expect(page.locator('.preview-board')).toHaveAttribute('data-board-theme', 'rosewood');
+  await expect.poll(() => storedPreference(page, 'boardTheme')).toBe('rosewood');
   await page.reload();
   await expect(page.getByLabel('Board palette')).toHaveValue('rosewood');
   await expect(page.getByLabel('Sound volume')).toHaveValue('35');

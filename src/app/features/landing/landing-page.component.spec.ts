@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
+import { PLATFORM_ID } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { OnboardingService } from '../../core/onboarding/onboarding.service';
 import { LandingPageComponent } from './landing-page.component';
 
@@ -9,11 +10,20 @@ describe('LandingPageComponent', () => {
 
   beforeEach(async () => {
     start.mockReset();
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      },
+    );
     await TestBed.configureTestingModule({
       imports: [LandingPageComponent],
       providers: [provideRouter([]), { provide: OnboardingService, useValue: { start } }],
     }).compileComponents();
   });
+
+  afterEach(() => vi.unstubAllGlobals());
 
   it('starts onboarding only when the visitor chooses the guided tour', () => {
     const fixture = TestBed.createComponent(LandingPageComponent);
@@ -28,5 +38,12 @@ describe('LandingPageComponent', () => {
 
     button.click();
     expect(start).toHaveBeenCalledOnce();
+  });
+
+  it('prerenders the home page without initializing a browser chessboard', () => {
+    TestBed.overrideProvider(PLATFORM_ID, { useValue: 'server' });
+    const fixture = TestBed.createComponent(LandingPageComponent);
+    expect(() => fixture.detectChanges()).not.toThrow();
+    expect((fixture.nativeElement as HTMLElement).querySelector('cg-board')).toBeNull();
   });
 });

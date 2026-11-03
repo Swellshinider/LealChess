@@ -59,14 +59,13 @@
               <button
                 type="button"
                 class="candidate-action"
-                [attr.aria-label]="candidateAriaLabel(line)"
                 (pointerenter)="candidatePreviewed.emit(line)"
                 (pointerleave)="candidatePreviewed.emit(null)"
                 (focus)="candidatePreviewed.emit(line)"
                 (blur)="candidatePreviewed.emit(null)"
                 (click)="selectCandidate(line)"
               >
-                <span>{{ line.rank }}</span>
+                <span><span class="sr-only">Play engine candidate </span>{{ line.rank }}</span>
                 <i [style.height]="candidateRuleWidth(line.rank)" aria-hidden="true"></i>
                 <strong>{{ candidateEvaluationLabel(line) }}</strong>
                 <span>{{ line.san.join(' ') }}</span>
