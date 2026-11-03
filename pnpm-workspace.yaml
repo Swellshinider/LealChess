@@ -4,23 +4,8 @@ allowBuilds:
   lmdb: true
   msgpackr-extract: true
   stockfish: true
-minimumReleaseAgeExclude:
-  - '@angular-devkit/architect@0.2200.8'
-  - '@angular-devkit/core@22.0.8'
-  - '@angular-devkit/schematics@22.0.8'
-  - '@angular/build@22.0.8'
-  - '@angular/cli@22.0.8'
-  - '@schematics/angular@22.0.8'
-  - hono@4.12.34
+
 overrides:
-  # Transitive security fixes pending adoption by Angular CLI.
-  '@hono/node-server': 2.0.10
-  brace-expansion: 5.0.9
-  postcss: 8.5.25
-  fast-uri: 3.1.5
-  hono: 4.12.34
-  ip-address: 10.3.1
-  js-yaml: 4.3.1
-  nanoid: 3.3.17
-  undici@^6.0.0: 6.28.0
-  undici@^7.0.0: 7.29.0
+  # ESLint and TypeScript ESLint still pin vulnerable Minimatch majors; both use its compatible class API.
+  'minimatch@3': 11.0.1
+  'minimatch@10': 11.0.1
